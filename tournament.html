@@ -1125,19 +1125,21 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 
 /* Winner badge on player side */
-.sched-winner-badge {
+.sched-winner-badge,
+.sched-loser-badge {
   display:inline-flex;align-items:center;
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: #22c55e;
   padding:0;
   border:none;
   background:transparent;
   box-shadow:none;
 }
+.sched-winner-badge { color: #22c55e; }
+.sched-loser-badge { color: #f87171; opacity: 0.9; }
 
 /* Center icon */
 .sched-vs-col {
@@ -2824,7 +2826,27 @@ function updateScore(r, mi, pk, e) {
   if (!S.isAdmin) return;
   if (pk === 'p1') S.bracket[r][mi].s1 = e.target.value;
   else S.bracket[r][mi].s2 = e.target.value;
-  saveState(); supaPushDebounced();
+
+  const m = S.bracket[r][mi];
+  const s1 = Number(m.s1);
+  const s2 = Number(m.s2);
+  if (Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2 && m.p1 && m.p2) {
+    const winnerKey = s1 > s2 ? 'p1' : 'p2';
+    const w = winnerKey === 'p1' ? m.p1 : m.p2;
+    m.winner = w;
+    const nr = r + 1, nm = Math.floor(mi / 2);
+    if (nr < S.bracket.length) {
+      const np = mi % 2 === 0 ? 'p1' : 'p2';
+      S.bracket[nr][nm][np] = w;
+      S.bracket[nr][nm].winner = null;
+    }
+  }
+
+  renderBracket();
+  const schedPanel = document.getElementById('schedule-panel');
+  if (schedPanel && schedPanel.classList.contains('active')) renderSchedule();
+  saveState();
+  supaPushDebounced();
 }
 
 function setWinner(r, mi, pk) {
@@ -3125,7 +3147,7 @@ function renderSchedule() {
   let globalMatchNum = 1;
 
   // Update subtitle
-  if (subtitle) subtitle.textContent = `${filledRounds} vòng · ${totalMatchCount} trận đấu`;
+  if (subtitle) subtitle.textContent = `${rounds} vòng · ${totalMatchCount} trận đấu`;
 
   // Build match card HTML
   function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay) {
@@ -3140,6 +3162,8 @@ function renderSchedule() {
     const n1 = Number(m.s1), n2 = Number(m.s2);
     const p1ScoreClass = scoreReady ? (n1 > n2 ? 'win' : n1 < n2 ? 'lose' : '') : '';
     const p2ScoreClass = scoreReady ? (n2 > n1 ? 'win' : n2 < n1 ? 'lose' : '') : '';
+    const p1IsLoser = scoreReady && n1 < n2;
+    const p2IsLoser = scoreReady && n2 < n1;
 
     const getNameSizeClass = (name = '') => {
       const n = String(name || '').trim().length;
@@ -3162,6 +3186,7 @@ function renderSchedule() {
             <div class="sched-name-row">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
               ${p1IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
+              ${p1IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
               ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
             </div>
             <div class="sched-meta-row">
@@ -3178,6 +3203,7 @@ function renderSchedule() {
             <div class="sched-name-row">
               ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
               ${p2IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
+              ${p2IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
             <div class="sched-meta-row">
@@ -3193,8 +3219,6 @@ function renderSchedule() {
   grid.className = 'schedule-grid';
 
   bracket.forEach((round, rIdx) => {
-    const hasAny = round.some(m => m.p1 || m.p2);
-    if (!hasAny) return;
     round.forEach((m, mIdx) => {
       const num = globalMatchNum++;
       grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, num * 16));
