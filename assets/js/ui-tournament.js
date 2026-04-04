@@ -336,8 +336,8 @@ export function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay, ballSv
   const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
   const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
 
-  const p1NameCls = !hasP1 ? 'empty-name' : p1IsWinner ? 'left-name' : '';
-  const p2NameCls = !hasP2 ? 'empty-name' : p2IsWinner ? 'right-name' : '';
+  const p1NameCls = !hasP1 ? 'empty-name' : 'left-name';
+  const p2NameCls = !hasP2 ? 'empty-name' : 'right-name';
 
   return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
@@ -350,7 +350,7 @@ export function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay, ballSv
             <div class="sched-name-row">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
               ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
-              ${p1IsWinner ? `<span class="sched-winner-badge"><img src="${BATTE_ICON_URL}" alt="win">WIN</span>` : ''}
+              ${p1IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>WIN</span>` : ''}
             </div>
             ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
           </div>
@@ -359,7 +359,7 @@ export function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay, ballSv
           </div>
           <div class="sched-player right ${p2IsWinner ? 'winner-side' : ''}">
             <div class="sched-name-row">
-              ${p2IsWinner ? `<span class="sched-winner-badge"><img src="${BATTE_ICON_URL}" alt="win">WIN</span>` : ''}
+              ${p2IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>WIN</span>` : ''}
               ${hasP2 && p2.rank ? `<span class="sched-rank">${p2.rank}</span>` : ''}
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
