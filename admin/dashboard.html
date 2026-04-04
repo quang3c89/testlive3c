@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live3C Admin — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/animations.css">
+<style>
+  body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .admin-nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 64px;
+    padding: 0 20px;
+    background: rgba(8,11,16,.88);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  .admin-logo {
+    text-decoration: none;
+    font-family: var(--display);
+    font-size: 26px;
+    letter-spacing: -1px;
+    font-weight: 900;
+  }
+  .admin-logo .y{color:var(--accent);} .admin-logo .r{color:var(--accent2);} .admin-logo .w{color:rgba(255,255,255,.35);}
+  .admin-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .admin-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 7px 12px;
+  }
+  .admin-link:hover,
+  .admin-link.active {
+    color: var(--text);
+    border-color: var(--border2);
+    background: rgba(255,255,255,.04);
+  }
+  .admin-spacer { flex: 1; }
+
+  .admin-main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+    display: grid;
+    gap: 20px;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .card-value {
+    margin-top: 8px;
+    font-family: var(--display);
+    font-size: 38px;
+    letter-spacing: -1px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .quick-action {
+    background: linear-gradient(135deg, rgba(240,165,0,.1), rgba(224,90,43,.08));
+    border: 1px solid rgba(240,165,0,.3);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .qa-title {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -.5px;
+  }
+
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .table-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    text-align: left;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  tr:last-child td { border-bottom: none; }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .status-ongoing { color:#22c55e; background: rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); }
+  .status-registration { color:#3b82f6; background: rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); }
+  .status-finished { color:var(--muted); background: rgba(255,255,255,.06); border:1px solid var(--border2); }
+  .action-links {
+    display: inline-flex;
+    gap: 8px;
+  }
+  .action-links a {
+    text-decoration: none;
+  }
+
+  @media (max-width: 920px) {
+    .cards { grid-template-columns: 1fr; }
+    .quick-action { flex-direction: column; align-items: flex-start; }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 700px; }
+  }
+</style>
+</head>
+<body>
+  <nav class="admin-nav">
+    <a class="admin-logo" href="dashboard.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+    <div class="admin-links">
+      <a class="admin-link active" href="dashboard.html">Dashboard</a>
+      <a class="admin-link" href="create-tournament.html">Tạo giải mới</a>
+    </div>
+    <div class="admin-spacer"></div>
+    <button class="btn btn-ghost" id="logout-btn" type="button">Đăng xuất</button>
+  </nav>
+
+  <main class="admin-main">
+    <section class="cards">
+      <article class="card">
+        <div class="card-label">Tổng giải</div>
+        <div class="card-value" id="stat-total">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">Đang diễn ra</div>
+        <div class="card-value" id="stat-ongoing">0</div>
+      </article>
+      <article class="card">
+        <div class="card-label">Đã kết thúc</div>
+        <div class="card-value" id="stat-finished">0</div>
+      </article>
+    </section>
+
+    <section class="quick-action">
+      <div>
+        <div class="card-label">Quick Action</div>
+        <div class="qa-title">Quản trị giải đấu nhanh</div>
+      </div>
+      <a href="create-tournament.html" class="btn btn-pri" style="font-size:16px;padding:14px 24px;">+ Tạo giải mới</a>
+    </section>
+
+    <section class="table-wrap">
+      <div class="table-head">Danh sách giải đấu gần đây</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tên</th>
+            <th>Ngày</th>
+            <th>Status</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="recent-table">
+          <tr><td colspan="4" style="color:var(--muted)">Đang tải dữ liệu...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+<script type="module">
+import { requireAdmin, logout } from '../assets/js/auth.js';
+import { getTournaments } from '../assets/js/supabase.js';
+
+requireAdmin();
+
+function sampleTournaments() {
+  return [
+    { id:'s1', name:'3-Cushion Masters 2025', date_str:'Thứ 7, 14:00 — 19/07/2025', status:'ongoing' },
+    { id:'s2', name:'Hà Nội Open Cup #3', date_str:'Chủ nhật, 09:00 — 27/07/2025', status:'registration' },
+    { id:'s3', name:'Mùa Hè Billiards 2025', date_str:'15/06/2025', status:'finished' },
+  ];
+}
+
+function statusLabel(status) {
+  if (status === 'ongoing') return 'Đang diễn ra';
+  if (status === 'registration') return 'Mở đăng ký';
+  return 'Đã kết thúc';
+}
+
+function statusClass(status) {
+  if (status === 'ongoing') return 'status-ongoing';
+  if (status === 'registration') return 'status-registration';
+  return 'status-finished';
+}
+
+function updateStats(data) {
+  document.getElementById('stat-total').textContent = data.length;
+  document.getElementById('stat-ongoing').textContent = data.filter(t => t.status === 'ongoing').length;
+  document.getElementById('stat-finished').textContent = data.filter(t => t.status === 'finished').length;
+}
+
+function renderTable(data) {
+  const table = document.getElementById('recent-table');
+  if (!data.length) {
+    table.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">Chưa có giải đấu nào.</td></tr>';
+    return;
+  }
+
+  table.innerHTML = data.slice(0, 10).map((t) => {
+    const id = encodeURIComponent(t.id);
+    return `
+      <tr>
+        <td>${t.name || '—'}</td>
+        <td>${t.date_str || '—'}</td>
+        <td><span class="status-badge ${statusClass(t.status)}">${statusLabel(t.status)}</span></td>
+        <td>
+          <span class="action-links">
+            <a class="btn btn-sec" target="_blank" rel="noopener" href="../tournament.html?id=${id}">Xem</a>
+            <a class="btn btn-ghost" href="edit-tournament.html?id=${id}">Sửa</a>
+          </span>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function init() {
+  document.getElementById('logout-btn').addEventListener('click', () => logout());
+
+  try {
+    const data = await getTournaments();
+    const list = Array.isArray(data) && data.length ? data : sampleTournaments();
+    updateStats(list);
+    renderTable(list);
+  } catch {
+    const list = sampleTournaments();
+    updateStats(list);
+    renderTable(list);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

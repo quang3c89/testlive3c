@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live3C — Nền tảng quản lý giải đấu Billiards Carom 3 Băng">
+<meta property="og:title" content="Live3C">
+<meta property="og:image" content="/assets/og-image.jpg">
+<title>Giải đấu — Live3C</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/animations.css">
+<link rel="stylesheet" href="assets/css/tournaments.css">
+</head>
+<body class="page-tournaments">
+
+<div id="toast-box"></div>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+  <div class="breadcrumb nav-breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Trang chủ</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Giải đấu</span>
+  </div>
+  <span class="nav-spacer"></span>
+  <a class="nav-link active" href="tournaments.html" aria-current="page">Giải đấu</a>
+  <a class="nav-link" href="players.html">Cơ thủ</a>
+  <a class="nav-link" href="leaderboard.html">Bảng xếp hạng</a>
+  <a class="nav-link" href="index.html#contact">Liên hệ</a>
+  <div class="nav-rt"><div class="rt-dot off" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
+  <a class="nav-btn pri" href="admin/login.html">Đăng nhập</a>
+</nav>
+
+<main class="tournaments-inner">
+  <header class="tournaments-header">
+    <h1 class="page-title">Tất cả giải đấu</h1>
+    <p class="page-sub">Lọc theo trạng thái, tìm theo tên — dữ liệu cập nhật từ hệ thống Live3C.</p>
+  </header>
+
+  <div class="filter-bar">
+    <button type="button" class="filter-tab active" data-filter="all">Tất cả</button>
+    <button type="button" class="filter-tab" data-filter="ongoing">Đang diễn ra</button>
+    <button type="button" class="filter-tab" data-filter="registration">Đăng ký mở</button>
+    <button type="button" class="filter-tab" data-filter="finished">Đã kết thúc</button>
+    <div class="filter-search-wrap">
+      <input type="search" class="filter-search" id="tournament-search" placeholder="Tìm tên giải đấu..." autocomplete="off">
+    </div>
+  </div>
+
+  <div class="tournament-grid" id="tournament-grid" aria-live="polite">
+    <div class="sk-card"><div class="skeleton sk-cover"></div><div class="sk-body"><div class="skeleton sk-title"></div><div class="skeleton sk-line" style="width:55%"></div></div></div>
+    <div class="sk-card"><div class="skeleton sk-cover"></div><div class="sk-body"><div class="skeleton sk-title"></div><div class="skeleton sk-line" style="width:55%"></div></div></div>
+    <div class="sk-card"><div class="skeleton sk-cover"></div><div class="sk-body"><div class="skeleton sk-title"></div><div class="skeleton sk-line" style="width:55%"></div></div></div>
+  </div>
+
+  <div class="load-more-wrap">
+    <button type="button" class="load-more-btn" id="load-more" hidden>Xem thêm</button>
+  </div>
+</main>
+
+<footer class="footer-lite">
+  <div class="footer-logo"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></div>
+  <span class="footer-copy">© 2026 Live3C · <a class="footer-link" href="index.html">Trang chủ</a></span>
+</footer>
+
+<script src="assets/js/nav-active.js"></script>
+<script type="module">
+import { getTournaments, resolveSupabaseClient } from './assets/js/supabase.js';
+import { toast, setupObserver } from './assets/js/ui.js';
+import { isAdmin } from './assets/js/auth.js';
+
+let allTournaments = [];
+let filtered = [];
+const PAGE_SIZE = 12;
+let page = 1;
+let currentStatus = 'all';
+let searchQuery = '';
+
+function getSampleData() {
+  return [
+    { id: 's1', name: '3-Cushion Masters 2025', date_str: 'Thứ 7, 14:00 — 19/07/2025', location: 'CLB Arena Billiards, TP.HCM', prize: '10,000,000đ', format: 'Single Elimination', status: 'ongoing', cover_url: '', description: '' },
+    { id: 's2', name: 'Hà Nội Open Cup #3', date_str: 'Chủ nhật, 09:00 — 27/07/2025', location: 'CLB Billiards Đống Đa, Hà Nội', prize: '5,000,000đ', format: 'Round Robin + Playoff', status: 'registration', cover_url: '', description: '' },
+    { id: 's3', name: 'Đà Nẵng Carom Classic', date_str: '10/08/2025', location: 'Billiards Center Đà Nẵng', prize: '3,000,000đ', format: 'Single Elimination', status: 'registration', cover_url: '', description: '' },
+    { id: 's4', name: 'Mùa Hè Billiards 2025', date_str: '15/06/2025', location: 'CLB Star Billiards, TP.HCM', prize: '2,000,000đ', format: 'Single Elimination', status: 'finished', cover_url: '', description: '' },
+    { id: 's5', name: 'Miền Tây Open 2025', date_str: '20/09/2025', location: 'Cần Thơ Billiards Club', prize: '4,000,000đ', format: 'Single Elimination', status: 'registration', cover_url: '', description: '' },
+    { id: 's6', name: 'Carom Challenge Series', date_str: '05/10/2025', location: 'Hải Phòng Arena', prize: '6,000,000đ', format: 'Double Elimination', status: 'ongoing', cover_url: '', description: '' },
+    { id: 's7', name: 'Youth Carom Cup', date_str: '12/11/2025', location: 'TP.HCM', prize: '1,500,000đ', format: 'Round Robin', status: 'registration', cover_url: '', description: '' },
+    { id: 's8', name: 'Grand Prix 3-Băng', date_str: '01/12/2025', location: 'Hà Nội', prize: '15,000,000đ', format: 'Single Elimination', status: 'finished', cover_url: '', description: '' },
+    { id: 's9', name: 'Pro League Mùa Đông', date_str: '18/01/2026', location: 'Đà Lạt Billiards', prize: '8,000,000đ', format: 'League', status: 'ongoing', cover_url: '', description: '' },
+    { id: 's10', name: 'Cúp Hữu Nghị Việt — Lào', date_str: '25/02/2026', location: 'Huế', prize: '3,500,000đ', format: 'Single Elimination', status: 'registration', cover_url: '', description: '' },
+    { id: 's11', name: 'Weekend Carom HCM', date_str: 'Mỗi CN — 2026', location: 'Quận 1, TP.HCM', prize: '500,000đ', format: 'Single Elimination', status: 'registration', cover_url: '', description: '' },
+    { id: 's12', name: 'National Championship Qualifier', date_str: '08/03/2026', location: 'Đà Nẵng', prize: '12,000,000đ', format: 'Swiss', status: 'finished', cover_url: '', description: '' },
+    { id: 's13', name: 'Billiards Festival Bình Dương', date_str: '22/03/2026', location: 'Bình Dương', prize: '2,200,000đ', format: 'Single Elimination', status: 'registration', cover_url: '', description: '' },
+    { id: 's14', name: 'Masters Invitational', date_str: '05/04/2026', location: 'TP.HCM', prize: '20,000,000đ', format: 'Single Elimination', status: 'ongoing', cover_url: '', description: '' },
+  ];
+}
+
+const CARD_GRADIENTS = [
+  '#0d1a28,#1a3040', '#1a0d28,#301a40', '#0d2018,#1a3828',
+  '#281a0d,#403018', '#0d1a20,#1a2830', '#200d1a,#381a28',
+];
+
+function getCardGradient(i) {
+  return CARD_GRADIENTS[i % CARD_GRADIENTS.length];
+}
+
+function getBadgeClass(status) {
+  if (status === 'ongoing') return 'badge-ongoing';
+  if (status === 'registration') return 'badge-open';
+  return 'badge-done';
+}
+
+function getStatusLabel(status) {
+  if (status === 'ongoing') return 'Đang diễn ra';
+  if (status === 'registration') return 'Mở đăng ký';
+  return 'Đã kết thúc';
+}
+
+function filterTournaments(status, search) {
+  if (status !== undefined) currentStatus = status;
+  if (search !== undefined) searchQuery = search;
+  let list = [...allTournaments];
+  if (currentStatus !== 'all') {
+    list = list.filter((t) => t.status === currentStatus);
+  }
+  const q = searchQuery.trim().toLowerCase();
+  if (q) {
+    list = list.filter((t) => (t.name || '').toLowerCase().includes(q));
+  }
+  filtered = list;
+  page = 1;
+  render();
+}
+
+function render() {
+  const grid = document.getElementById('tournament-grid');
+  const loadMoreBtn = document.getElementById('load-more');
+  const totalShown = page * PAGE_SIZE;
+  const slice = filtered.slice(0, totalShown);
+  const admin = isAdmin();
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏆</div><div class="empty-title">Không có giải đấu phù hợp</div><div class="empty-sub">Thử đổi bộ lọc hoặc từ khóa tìm kiếm.</div></div>`;
+    loadMoreBtn.hidden = true;
+    return;
+  }
+
+  grid.innerHTML = slice
+    .map((t, i) => {
+      const badgeClass = getBadgeClass(t.status);
+      const badgeLabel = getStatusLabel(t.status);
+      const idEnc = encodeURIComponent(t.id);
+      const detailHref = `tournament.html?id=${idEnc}`;
+      const coverInner = t.cover_url
+        ? `<img class="tc-cover-img" src="${t.cover_url}" alt="" loading="lazy">`
+        : '';
+      const coverStyle = t.cover_url
+        ? ''
+        : `background:linear-gradient(135deg,${getCardGradient(i)});`;
+      const adminBtn = admin
+        ? `<a class="fi-btn sec" href="admin/edit-tournament.html?id=${idEnc}">Quản lý ⚙</a>`
+        : '';
+      return `<div class="tournament-card tc-list-card fade-up">
+        <a class="tc-card-overlay-link" href="${detailHref}"><span class="sr-only">Xem chi tiết ${t.name}</span></a>
+        <div class="tc-cover" style="${coverStyle}">
+          ${coverInner}
+          <div class="tc-cover-overlay"></div>
+          <div class="tc-badge"><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
+        </div>
+        <div class="tc-body">
+          <div class="tc-name">${t.name}</div>
+          <div class="tc-meta">
+            ${t.date_str ? `<div class="tc-row"><span class="ico">📅</span>${t.date_str}</div>` : ''}
+            ${t.location ? `<div class="tc-row"><span class="ico">📍</span>${t.location}</div>` : ''}
+            <div class="tc-row prize-row"><span class="ico">🏆</span>${t.prize ? `Prize pool: ${t.prize}` : 'Prize pool: —'}</div>
+          </div>
+          <div class="tc-card-actions">
+            <a class="fi-btn pri" href="${detailHref}">Xem chi tiết</a>
+            ${adminBtn}
+          </div>
+        </div>
+      </div>`;
+    })
+    .join('');
+
+  loadMoreBtn.hidden = filtered.length <= totalShown;
+
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.fade-up').forEach((el, i) => {
+      setTimeout(() => el.classList.add('in'), i * 40);
+    });
+  });
+  setupObserver();
+}
+
+function loadMore() {
+  page += 1;
+  render();
+}
+
+async function init() {
+  const { baseUrl, apiKey } = resolveSupabaseClient();
+  const loadMoreBtn = document.getElementById('load-more');
+
+  try {
+    if (!baseUrl || !apiKey) {
+      allTournaments = getSampleData();
+      toast('Đang xem dữ liệu mẫu — cấu hình Supabase trong trang chủ / admin.', 'info', { duration: 4000 });
+    } else {
+      const data = await getTournaments();
+      allTournaments = Array.isArray(data) ? data : [];
+      if (!allTournaments.length) {
+        allTournaments = getSampleData();
+        toast('Chưa có giải trên cloud — hiển thị dữ liệu mẫu.', 'info');
+      }
+    }
+  } catch (e) {
+    toast('Không tải được danh sách — hiển thị dữ liệu mẫu.', 'error');
+    allTournaments = getSampleData();
+  }
+
+  filtered = [...allTournaments];
+  render();
+
+  const searchEl = document.getElementById('tournament-search');
+
+  document.querySelectorAll('.filter-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterTournaments(btn.dataset.filter, searchEl.value);
+    });
+  });
+
+  let searchTimer;
+  searchEl.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      filterTournaments(undefined, searchEl.value);
+    }, 200);
+  });
+
+  loadMoreBtn.addEventListener('click', loadMore);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

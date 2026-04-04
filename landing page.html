@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live3C — Billiards Carom 3 Băng</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080b10;
+  --bg2:       #0d1117;
+  --card:      #111620;
+  --card2:     #161d2a;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --text:      #dce6f0;
+  --muted:     #6b7a8d;
+  --accent:    #f0a500;
+  --accent2:   #e05a2b;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --blue:      #3b82f6;
+  --radius:    12px;
+  --font:      'DM Sans', sans-serif;
+  --display:   'Barlow Condensed', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ── LOADING ── */
+#splash{position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s,visibility .5s;}
+#splash.out{opacity:0;visibility:hidden;}
+.splash-logo{font-family:var(--display);font-size:64px;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#f0a500 30%,#e05a2b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+.splash-sub{font-family:var(--mono);font-size:10px;letter-spacing:3px;opacity:.35;text-transform:uppercase;}
+.splash-bar{width:160px;height:2px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden;}
+.splash-fill{height:100%;width:0;background:linear-gradient(90deg,#f0a500,#e05a2b);border-radius:1px;animation:sfill 1.4s ease-out forwards;}
+@keyframes sfill{to{width:100%;}}
+
+/* ── TOAST ── */
+#toast-box{position:fixed;top:16px;right:16px;z-index:8000;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--card2);border:1px solid var(--border2);border-left:3px solid var(--accent);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.6);animation:tIn .3s cubic-bezier(.34,1.56,.64,1);max-width:280px;}
+.toast.tout{animation:tOut .3s ease forwards;}
+@keyframes tIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:none;}}
+@keyframes tOut{to{opacity:0;transform:translateX(30px);}}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:56px;display:flex;align-items:center;padding:0 24px;gap:16px;background:rgba(8,11,16,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--display);font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;text-decoration:none;}
+.nav-logo .y{color:var(--accent);}
+.nav-logo .r{color:var(--accent2);}
+.nav-logo .w{color:rgba(255,255,255,.35);}
+.nav-spacer{flex:1;}
+.nav-link{font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;letter-spacing:.3px;transition:color .15s;padding:4px 2px;}
+.nav-link:hover{color:var(--text);}
+.nav-btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;border:none;}
+.nav-btn.outline{background:transparent;border:1px solid var(--border2);color:var(--text);}
+.nav-btn.outline:hover{border-color:var(--accent);color:var(--accent);}
+.nav-btn.pri{background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;}
+.nav-btn.pri:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.nav-rt{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;letter-spacing:.8px;opacity:.5;}
+.rt-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite;}
+.rt-dot.off{background:var(--red);animation:none;}
+@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4);}50%{box-shadow:0 0 0 4px rgba(34,197,94,0);}}
+
+/* ── HERO ── */
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 0 80px;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 60% 40%,rgba(240,165,0,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 20% 80%,rgba(224,90,43,.04) 0%,transparent 60%),linear-gradient(180deg,var(--bg) 0%,rgba(8,11,16,.7) 40%,var(--bg) 100%);}
+/* Decorative billiard table lines */
+.hero-table{position:absolute;right:5%;top:50%;transform:translateY(-50%);width:42%;max-width:560px;opacity:.06;pointer-events:none;}
+.hero-content{position:relative;z-index:2;padding:0 40px;max-width:760px;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:20px;border:1px solid rgba(240,165,0,.25);background:rgba(240,165,0,.07);font-family:var(--mono);font-size:10px;letter-spacing:1.5px;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:20px;}
+.hero-badge .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 2s ease-in-out infinite;}
+.hero-h1{font-family:var(--display);font-size:clamp(56px,7vw,100px);font-weight:900;line-height:.93;letter-spacing:-2px;margin-bottom:18px;}
+.hero-h1 .line1{display:block;color:var(--text);}
+.hero-h1 .line2{display:block;background:linear-gradient(135deg,#f0a500,#e05a2b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-desc{font-size:16px;color:var(--muted);line-height:1.7;max-width:480px;margin-bottom:32px;}
+.hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.hero-cta{padding:13px 28px;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:8px;text-decoration:none;}
+.hero-cta.pri{background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;box-shadow:0 8px 30px rgba(240,165,0,.25);}
+.hero-cta.pri:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(240,165,0,.35);}
+.hero-cta.sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border2);}
+.hero-cta.sec:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);}
+.hero-stats{display:flex;gap:32px;margin-top:48px;padding-top:32px;border-top:1px solid var(--border);}
+.hero-stat .val{font-family:var(--display);font-size:36px;font-weight:900;color:var(--accent);letter-spacing:-1px;line-height:1;}
+.hero-stat .lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+/* Scroll indicator */
+.scroll-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.3;animation:fadeUp 3s ease-in-out infinite;}
+.scroll-hint span{font-family:var(--mono);font-size:9px;letter-spacing:2px;}
+.scroll-arrow{width:16px;height:16px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);}
+@keyframes fadeUp{0%,100%{opacity:.2;transform:translateX(-50%) translateY(0);}50%{opacity:.5;transform:translateX(-50%) translateY(6px);}}
+
+/* ── SECTION ── */
+section{padding:80px 40px;}
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-label::before{content:'';display:block;width:20px;height:1px;background:var(--accent);}
+.section-h2{font-family:var(--display);font-size:clamp(32px,4vw,52px);font-weight:900;letter-spacing:-1px;line-height:1.05;margin-bottom:8px;}
+.section-sub{font-size:15px;color:var(--muted);margin-bottom:40px;line-height:1.6;}
+
+/* ── FEATURED TOURNAMENT ── */
+#featured{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.featured-inner{max-width:1200px;margin:0 auto;}
+.featured-card{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:16px;overflow:hidden;border:1px solid var(--border2);background:var(--card);box-shadow:0 30px 80px rgba(0,0,0,.5);}
+.featured-cover{position:relative;min-height:320px;overflow:hidden;background:linear-gradient(135deg,#0d1117,#1a2030);}
+.featured-cover-img{width:100%;height:100%;object-fit:cover;opacity:.7;}
+.featured-cover-overlay{position:absolute;inset:0;background:linear-gradient(to right,transparent 40%,var(--card));pointer-events:none;}
+.featured-cover-badge{position:absolute;top:16px;left:16px;padding:5px 12px;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.badge-ongoing{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--green);}
+.badge-open{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.4);color:var(--blue);}
+.badge-done{background:rgba(107,118,141,.12);border:1px solid rgba(107,118,141,.3);color:var(--muted);}
+.badge-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:middle;}
+.badge-ongoing .badge-dot{animation:blink 2s ease-in-out infinite;}
+.featured-info{padding:40px 36px;display:flex;flex-direction:column;justify-content:center;gap:18px;}
+.fi-tournament-name{font-family:var(--display);font-size:clamp(26px,3vw,42px);font-weight:900;letter-spacing:-.5px;line-height:1.1;}
+.fi-meta{display:flex;flex-direction:column;gap:8px;}
+.fi-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);}
+.fi-row .fi-icon{width:16px;text-align:center;opacity:.6;font-size:12px;}
+.fi-row strong{color:var(--text);font-weight:600;}
+.fi-prize{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.2);border-radius:8px;margin-top:4px;width:fit-content;}
+.fi-prize .val{font-family:var(--display);font-size:24px;font-weight:900;color:var(--accent);letter-spacing:-.5px;}
+.fi-prize .lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.8px;}
+.fi-actions{display:flex;gap:10px;margin-top:8px;}
+.fi-btn{padding:10px 22px;border-radius:9px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.fi-btn.pri{background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;}
+.fi-btn.pri:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,165,0,.3);}
+.fi-btn.sec{background:transparent;border:1px solid var(--border2);color:var(--text);}
+.fi-btn.sec:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── TOURNAMENT LIST ── */
+#tournaments{max-width:1200px;margin:0 auto;padding:80px 40px;}
+.list-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+.filter-tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px;}
+.ftab{padding:5px 14px;border-radius:7px;font-size:12px;font-weight:700;font-family:var(--mono);cursor:pointer;transition:all .15s;border:none;background:transparent;color:var(--muted);letter-spacing:.5px;}
+.ftab.active{background:var(--card2);color:var(--text);border:1px solid var(--border2);}
+.ftab:hover:not(.active){color:var(--text);}
+.list-spacer{flex:1;}
+.create-btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.create-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(240,165,0,.3);}
+
+/* Tournament grid */
+.tourney-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.tourney-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;cursor:pointer;text-decoration:none;color:var(--text);display:block;position:relative;}
+.tourney-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 16px 48px rgba(0,0,0,.4);}
+.tourney-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(240,165,0,.03),transparent);opacity:0;transition:opacity .2s;pointer-events:none;border-radius:14px;}
+.tourney-card:hover::before{opacity:1;}
+.tc-cover{position:relative;height:140px;overflow:hidden;background:linear-gradient(135deg,#0d1420,#1a2040);}
+.tc-cover-img{width:100%;height:100%;object-fit:cover;opacity:.6;transition:transform .4s;}
+.tourney-card:hover .tc-cover-img{transform:scale(1.03);}
+.tc-cover-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,var(--card));}
+.tc-badge{position:absolute;top:10px;right:10px;}
+.tc-body{padding:16px;}
+.tc-name{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.3px;line-height:1.15;margin-bottom:6px;}
+.tc-meta{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.tc-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.tc-row .ico{font-size:11px;opacity:.7;width:14px;}
+.tc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);}
+.tc-prize{font-family:var(--display);font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.3px;}
+.tc-open-btn{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--accent);letter-spacing:.5px;display:flex;align-items:center;gap:4px;transition:gap .15s;}
+.tourney-card:hover .tc-open-btn{gap:8px;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:64px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.3;}
+.empty-title{font-family:var(--display);font-size:24px;font-weight:800;margin-bottom:8px;opacity:.5;}
+.empty-sub{font-size:14px;opacity:.6;}
+
+/* Loading skeleton */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;}
+@keyframes shimmer{to{background-position:-200% 0;}}
+.sk-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.sk-cover{height:140px;}
+.sk-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.sk-line{height:12px;}
+.sk-title{height:20px;width:70%;}
+
+/* ── CONTACT SECTION ── */
+#contact{background:var(--bg2);border-top:1px solid var(--border);padding:80px 40px;}
+.contact-inner{max-width:900px;margin:0 auto;}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;}
+.contact-desc{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:28px;}
+.contact-cards{display:flex;flex-direction:column;gap:10px;}
+.contact-card{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);transition:all .15s;cursor:pointer;}
+.contact-card:hover{border-color:var(--border2);transform:translateX(4px);}
+.contact-card.zalo:hover{border-color:rgba(59,130,246,.5);}
+.contact-card.facebook:hover{border-color:rgba(99,102,241,.5);}
+.contact-card.phone:hover{border-color:rgba(34,197,94,.5);}
+.cc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.cc-icon.zalo{background:rgba(59,130,246,.12);}
+.cc-icon.fb{background:rgba(99,102,241,.12);}
+.cc-icon.ph{background:rgba(34,197,94,.12);}
+.cc-text .cc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-family:var(--mono);}
+.cc-text .cc-val{font-size:15px;font-weight:700;margin-top:2px;}
+.cc-arrow{margin-left:auto;opacity:.3;font-size:14px;transition:all .15s;}
+.contact-card:hover .cc-arrow{opacity:.7;transform:translateX(2px);}
+/* Map / billiard art */
+.contact-art{position:relative;display:flex;align-items:center;justify-content:center;}
+.billiard-art{width:100%;max-width:340px;opacity:.85;}
+
+/* ── FOOTER ── */
+footer{background:var(--bg);border-top:1px solid var(--border);padding:28px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.footer-logo{font-family:var(--display);font-size:20px;font-weight:900;letter-spacing:-.5px;}
+.footer-logo .y{color:var(--accent);}
+.footer-logo .r{color:var(--accent2);}
+.footer-logo .w{color:rgba(255,255,255,.2);}
+.footer-copy{font-size:12px;color:var(--muted);}
+.footer-spacer{flex:1;}
+.footer-link{font-size:12px;color:var(--muted);text-decoration:none;transition:color .15s;}
+.footer-link:hover{color:var(--text);}
+
+/* ── CREATE MODAL ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.modal.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:mIn .25s cubic-bezier(.34,1.56,.64,1);}
+@keyframes mIn{from{opacity:0;transform:scale(.92) translateY(10px);}to{opacity:1;transform:none;}}
+.modal-box h2{font-family:var(--display);font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:20px;}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.field label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.45;}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color .15s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:rgba(240,165,0,.04);}
+.field select option{background:#1a2030;}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+.mbtn{padding:9px 20px;border-radius:9px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;transition:all .15s;}
+.mbtn.cancel{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);}
+.mbtn.cancel:hover{background:rgba(255,255,255,.1);}
+.mbtn.save{background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;}
+.mbtn.save:hover{filter:brightness(1.1);}
+
+/* ── ADMIN LOGIN POPUP ── */
+#admin-popup{display:none;position:fixed;top:64px;right:16px;z-index:1500;background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:16px;min-width:260px;box-shadow:0 16px 48px rgba(0,0,0,.7);animation:mIn .2s cubic-bezier(.34,1.56,.64,1);}
+#admin-popup.open{display:block;}
+#admin-popup h4{font-size:14px;font-weight:800;font-family:var(--display);margin-bottom:12px;letter-spacing:.2px;}
+.pw-row{display:flex;gap:6px;}
+.pw-input{flex:1;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{padding:8px 14px;border-radius:8px;background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;border:none;font-weight:700;font-size:12px;cursor:pointer;}
+
+/* ── SETTINGS INLINE CONFIG ── */
+#config-bar{display:none;background:rgba(240,165,0,.06);border-bottom:1px solid rgba(240,165,0,.15);padding:10px 24px;align-items:center;gap:12px;font-size:12px;}
+#config-bar.show{display:flex;}
+#config-bar input{flex:1;min-width:200px;padding:6px 10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;}
+#config-bar input:focus{border-color:var(--accent);}
+#config-bar label{font-family:var(--mono);font-size:10px;letter-spacing:1px;opacity:.5;white-space:nowrap;}
+.cfg-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text);transition:all .15s;white-space:nowrap;}
+.cfg-btn:hover{border-color:var(--accent);color:var(--accent);}
+.cfg-btn.apply{background:linear-gradient(135deg,#f0a500,#e05a2b);color:#000;border:none;}
+
+/* Billiard table decorative SVG */
+.hero-deco{position:absolute;right:0;top:0;width:50%;height:100%;pointer-events:none;overflow:hidden;opacity:.04;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  nav{padding:0 16px;}
+  .nav-link{display:none;}
+  .hero-content{padding:0 20px;}
+  .hero-stats{gap:20px;}
+  .featured-card{grid-template-columns:1fr;}
+  .featured-cover{min-height:200px;}
+  .contact-grid{grid-template-columns:1fr;}
+  .contact-art{display:none;}
+  section,#tournaments{padding:60px 20px;}
+  #contact{padding:60px 20px;}
+  footer{padding:20px;}
+  .tourney-grid{grid-template-columns:1fr;}
+}
+@media(max-width:600px){
+  .hero-h1{font-size:52px;}
+  .hero-actions{flex-direction:column;align-items:flex-start;}
+  .hero-cta{width:100%;justify-content:center;}
+  .list-toolbar{gap:8px;}
+  #config-bar{flex-direction:column;align-items:stretch;}
+  #config-bar input{min-width:unset;}
+  .field-row{grid-template-columns:1fr;}
+}
+
+/* Entrance animations */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
+.fade-up.in{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">live3c</div>
+  <div class="splash-sub">Billiards Carom 3 Băng</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-box"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+  <span class="nav-spacer"></span>
+  <a class="nav-link" href="#featured">Giải nổi bật</a>
+  <a class="nav-link" href="#tournaments">Tất cả giải</a>
+  <a class="nav-link" href="#contact">Liên hệ</a>
+  <div class="nav-rt"><div class="rt-dot off" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
+  <button class="nav-btn outline" id="admin-trigger" onclick="toggleAdminPopup()">⚙ Admin</button>
+  <button class="nav-btn pri" onclick="openCreateModal()">+ Tạo giải</button>
+</nav>
+
+<!-- ADMIN POPUP -->
+<div id="admin-popup">
+  <h4>🔐 Đăng nhập Admin</h4>
+  <div class="pw-row">
+    <input class="pw-input" type="password" id="pw-input" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="pw-btn" onclick="doLogin()">→</button>
+  </div>
+</div>
+
+<!-- CONFIG BAR (admin only) -->
+<div id="config-bar">
+  <label>SUPA URL</label>
+  <input type="text" id="cfg-url" placeholder="https://xxx.supabase.co">
+  <label>ANON KEY</label>
+  <input type="text" id="cfg-key" placeholder="eyJ...">
+  <button class="cfg-btn apply" onclick="saveConfig()">Lưu & Kết nối</button>
+  <button class="cfg-btn" onclick="closeConfigBar()">✕</button>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+
+  <!-- Decorative billiard table SVG -->
+  <svg class="hero-deco" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+    <rect x="40" y="40" width="520" height="320" rx="28" fill="none" stroke="#f0a500" stroke-width="8"/>
+    <rect x="70" y="70" width="460" height="260" rx="12" fill="none" stroke="#f0a500" stroke-width="3"/>
+    <line x1="300" y1="70" x2="300" y2="330" stroke="#f0a500" stroke-width="2" stroke-dasharray="6 4"/>
+    <circle cx="300" cy="200" r="30" fill="none" stroke="#f0a500" stroke-width="2"/>
+    <circle cx="40" cy="40" r="14" fill="#f0a500"/>
+    <circle cx="560" cy="40" r="14" fill="#f0a500"/>
+    <circle cx="40" cy="360" r="14" fill="#f0a500"/>
+    <circle cx="560" cy="360" r="14" fill="#f0a500"/>
+    <circle cx="300" cy="40" r="10" fill="#f0a500"/>
+    <circle cx="300" cy="360" r="10" fill="#f0a500"/>
+    <circle cx="40" cy="200" r="10" fill="#f0a500"/>
+    <circle cx="560" cy="200" r="10" fill="#f0a500"/>
+    <!-- Billiard balls -->
+    <circle cx="200" cy="170" r="20" fill="#f0a500"/>
+    <circle cx="380" cy="230" r="20" fill="#e05a2b"/>
+    <circle cx="310" cy="200" r="20" fill="none" stroke="#f0a500" stroke-width="4"/>
+  </svg>
+
+  <div class="hero-content">
+    <div class="hero-badge fade-up"><span class="dot"></span>Nền tảng quản lý giải đấu</div>
+    <h1 class="hero-h1 fade-up">
+      <span class="line1">Billiards</span>
+      <span class="line2">Carom 3 Băng</span>
+    </h1>
+    <p class="hero-desc fade-up">Hệ thống quản lý giải đấu chuyên nghiệp. Bracket tự động, bốc thăm live, đồng bộ thời gian thực — dành cho cộng đồng cơ thủ Việt Nam.</p>
+    <div class="hero-actions fade-up">
+      <button class="hero-cta pri" onclick="openCreateModal()">🏆 Tạo giải mới</button>
+      <a class="hero-cta sec" href="#tournaments">Xem tất cả giải →</a>
+    </div>
+    <div class="hero-stats fade-up" id="hero-stats">
+      <div class="hero-stat"><div class="val" id="stat-tournaments">—</div><div class="lbl">Giải đấu</div></div>
+      <div class="hero-stat"><div class="val" id="stat-ongoing">—</div><div class="lbl">Đang diễn ra</div></div>
+      <div class="hero-stat"><div class="val" id="stat-players">—</div><div class="lbl">Cơ thủ</div></div>
+    </div>
+  </div>
+  <div class="scroll-hint"><span>SCROLL</span><div class="scroll-arrow"></div></div>
+</section>
+
+<!-- FEATURED TOURNAMENT -->
+<section id="featured">
+  <div class="featured-inner">
+    <div class="section-label">Giải nổi bật</div>
+    <h2 class="section-h2">Đang diễn ra</h2>
+    <p class="section-sub">Theo dõi trực tiếp giải đấu đang trong giai đoạn tranh tài</p>
+    <div id="featured-area">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ALL TOURNAMENTS -->
+<div id="tournaments">
+  <div class="section-label">Tất cả giải đấu</div>
+  <h2 class="section-h2">Danh sách giải</h2>
+  <div class="list-toolbar">
+    <div class="filter-tabs">
+      <button class="ftab active" data-filter="all" onclick="filterTourneys('all',this)">Tất cả</button>
+      <button class="ftab" data-filter="ongoing" onclick="filterTourneys('ongoing',this)">Đang diễn ra</button>
+      <button class="ftab" data-filter="registration" onclick="filterTourneys('registration',this)">Mở đăng ký</button>
+      <button class="ftab" data-filter="finished" onclick="filterTourneys('finished',this)">Đã kết thúc</button>
+    </div>
+    <div class="list-spacer"></div>
+    <button class="create-btn" onclick="openCreateModal()">+ Tạo giải đấu</button>
+  </div>
+  <div class="tourney-grid" id="tourney-grid">
+    <!-- skeleton -->
+    ${[1,2,3].map(()=>`<div class="sk-card"><div class="skeleton sk-cover"></div><div class="sk-body"><div class="skeleton sk-title"></div><div class="skeleton sk-line" style="width:55%"></div><div class="skeleton sk-line" style="width:40%"></div></div></div>`).join('')}
+  </div>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-inner">
+    <div class="section-label">Liên hệ</div>
+    <h2 class="section-h2" style="margin-bottom:12px;">Kết nối với chúng tôi</h2>
+    <div class="contact-grid">
+      <div>
+        <p class="contact-desc">Có câu hỏi về giải đấu hoặc cần hỗ trợ đăng ký? Liên hệ qua các kênh dưới đây để được phản hồi nhanh nhất.</p>
+        <div class="contact-cards" id="contact-cards">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+      <div class="contact-art">
+        <!-- Billiard art SVG -->
+        <svg class="billiard-art" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="tableGrad" cx="50%" cy="45%" r="55%">
+              <stop offset="0%" stop-color="#1a3a2a"/>
+              <stop offset="100%" stop-color="#0d2018"/>
+            </radialGradient>
+            <radialGradient id="ballG1" cx="35%" cy="30%" r="55%">
+              <stop offset="0%" stop-color="#fff" stop-opacity=".8"/>
+              <stop offset="40%" stop-color="#f0a500"/>
+              <stop offset="100%" stop-color="#7a5000"/>
+            </radialGradient>
+            <radialGradient id="ballG2" cx="35%" cy="30%" r="55%">
+              <stop offset="0%" stop-color="#fff" stop-opacity=".7"/>
+              <stop offset="40%" stop-color="#e05a2b"/>
+              <stop offset="100%" stop-color="#7a2000"/>
+            </radialGradient>
+            <radialGradient id="ballG3" cx="35%" cy="30%" r="55%">
+              <stop offset="0%" stop-color="#fff" stop-opacity=".8"/>
+              <stop offset="100%" stop-color="#e8e0d0"/>
+            </radialGradient>
+          </defs>
+          <!-- Table felt -->
+          <ellipse cx="150" cy="160" rx="130" ry="90" fill="url(#tableGrad)" opacity=".8"/>
+          <ellipse cx="150" cy="160" rx="110" ry="72" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="1.5"/>
+          <!-- Center line -->
+          <line x1="150" y1="96" x2="150" y2="234" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <!-- Center circle -->
+          <ellipse cx="150" cy="165" rx="22" ry="15" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+          <!-- Cushion pockets -->
+          <circle cx="42" cy="112" r="7" fill="#060e09" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+          <circle cx="258" cy="112" r="7" fill="#060e09" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+          <circle cx="42" cy="208" r="7" fill="#060e09" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+          <circle cx="258" cy="208" r="7" fill="#060e09" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+          <!-- Cue ball (white) -->
+          <circle cx="110" cy="152" r="18" fill="url(#ballG3)"/>
+          <ellipse cx="105" cy="146" rx="7" ry="5" fill="rgba(255,255,255,.5)"/>
+          <!-- Yellow ball -->
+          <circle cx="175" cy="145" r="18" fill="url(#ballG1)"/>
+          <ellipse cx="170" cy="139" rx="7" ry="5" fill="rgba(255,255,255,.45)"/>
+          <!-- Red ball -->
+          <circle cx="165" cy="185" r="18" fill="url(#ballG2)"/>
+          <ellipse cx="160" cy="179" rx="7" ry="5" fill="rgba(255,255,255,.4)"/>
+          <!-- Cue stick -->
+          <line x1="60" y1="130" x2="108" y2="152" stroke="#c8a060" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+          <line x1="20" y1="116" x2="60" y2="130" stroke="#c8a060" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+          <!-- Glow on balls -->
+          <circle cx="110" cy="152" r="18" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+          <circle cx="175" cy="145" r="18" fill="none" stroke="rgba(240,165,0,.3)" stroke-width="1"/>
+          <circle cx="165" cy="185" r="18" fill="none" stroke="rgba(224,90,43,.3)" stroke-width="1"/>
+          <!-- Table border -->
+          <ellipse cx="150" cy="160" rx="130" ry="90" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></div>
+  <span class="footer-copy">© 2025 Live3C. Billiards Carom 3 Băng.</span>
+  <div class="footer-spacer"></div>
+  <a class="footer-link" href="#home">Về đầu trang ↑</a>
+</footer>
+
+<!-- CREATE TOURNAMENT MODAL -->
+<div class="modal" id="create-modal" onclick="if(event.target===this)closeCreateModal()">
+  <div class="modal-box">
+    <h2>🏆 Tạo giải đấu mới</h2>
+    <div class="field">
+      <label>Tên giải đấu *</label>
+      <input type="text" id="f-name" placeholder="VD: 3-Cushion Masters 2025" autocomplete="off">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Ngày diễn ra</label>
+        <input type="text" id="f-date" placeholder="VD: Thứ 7, 14:00 — 20/07/2025">
+      </div>
+      <div class="field">
+        <label>Địa điểm</label>
+        <input type="text" id="f-location" placeholder="VD: CLB Arena Billiards">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Giải thưởng</label>
+        <input type="text" id="f-prize" placeholder="VD: 5,000,000đ">
+      </div>
+      <div class="field">
+        <label>Thể thức</label>
+        <input type="text" id="f-format" placeholder="VD: Single Elimination">
+      </div>
+    </div>
+    <div class="field">
+      <label>Trạng thái</label>
+      <select id="f-status">
+        <option value="registration">🔵 Mở đăng ký</option>
+        <option value="ongoing">🟢 Đang diễn ra</option>
+        <option value="finished">⚫ Đã kết thúc</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Ảnh bìa (URL)</label>
+      <input type="text" id="f-cover" placeholder="https://... (tùy chọn)">
+    </div>
+    <div class="field">
+      <label>Mô tả ngắn</label>
+      <textarea id="f-desc" placeholder="Thông tin thêm về giải đấu..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn cancel" onclick="closeCreateModal()">Hủy</button>
+      <button class="mbtn save" onclick="createTournament()">Tạo giải →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   CONFIG — điền Supabase credentials ở đây để hardcode
+   ================================================================ */
+const DEFAULT_URL = '';
+const DEFAULT_KEY = '';
+const ADMIN_PW    = 'quang3c89';
+
+/* Contact info — chỉnh tại đây */
+const CONTACT_INFO = [
+  { type:'zalo',     icon:'💬', label:'Zalo',     val:'0901 234 567',   href:'https://zalo.me/0901234567' },
+  { type:'facebook', icon:'📘', label:'Facebook',  val:'Live3C Official', href:'https://facebook.com/live3c' },
+  { type:'phone',    icon:'📞', label:'Điện thoại',val:'0901 234 567',   href:'tel:0901234567' },
+];
+
+/* ================================================================
+   STATE
+   ================================================================ */
+let supaUrl = localStorage.getItem('l3c_url') || DEFAULT_URL;
+let supaKey = localStorage.getItem('l3c_key') || DEFAULT_KEY;
+let isAdmin = false;
+let allTournaments = [];
+let currentFilter = 'all';
+
+/* ================================================================
+   UTILS
+   ================================================================ */
+function toast(msg, type='info') {
+  const box = document.getElementById('toast-box');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if (type==='error') el.style.borderLeftColor='#ef4444';
+  if (type==='success') el.style.borderLeftColor='#22c55e';
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(()=>{ el.classList.add('tout'); setTimeout(()=>el.remove(),350); }, 3200);
+}
+
+function setRT(online) {
+  const d = document.getElementById('rt-dot');
+  const l = document.getElementById('rt-label');
+  d.classList.toggle('off', !online);
+  l.textContent = online ? 'LIVE' : 'OFFLINE';
+}
+
+async function supaFetch(path, method='GET', body=null) {
+  if (!supaUrl || !supaKey) return null;
+  const url = `${supaUrl}/rest/v1/${path}`;
+  const headers = {
+    'apikey': supaKey,
+    'Authorization': `Bearer ${supaKey}`,
+    'Content-Type': 'application/json',
+    'Prefer': method==='GET' ? 'count=exact' : 'return=representation,resolution=merge-duplicates'
+  };
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('json') ? res.json() : null;
+}
+
+/* ================================================================
+   ADMIN
+   ================================================================ */
+function toggleAdminPopup() {
+  const p = document.getElementById('admin-popup');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) document.getElementById('pw-input').focus();
+}
+function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  if (pw === ADMIN_PW) {
+    isAdmin = true;
+    document.getElementById('admin-popup').classList.remove('open');
+    document.getElementById('pw-input').value = '';
+    document.getElementById('admin-trigger').textContent = '✓ Admin';
+    document.getElementById('admin-trigger').style.borderColor = 'var(--green)';
+    document.getElementById('admin-trigger').style.color = 'var(--green)';
+    const bar = document.getElementById('config-bar');
+    bar.classList.add('show');
+    document.getElementById('cfg-url').value = supaUrl;
+    document.getElementById('cfg-key').value = supaKey;
+    toast('✅ Đã vào chế độ Admin', 'success');
+  } else {
+    toast('❌ Sai mật khẩu', 'error');
+    document.getElementById('pw-input').value = '';
+  }
+}
+function closeConfigBar() { document.getElementById('config-bar').classList.remove('show'); }
+document.addEventListener('click', e => {
+  const p = document.getElementById('admin-popup');
+  const t = document.getElementById('admin-trigger');
+  if (p.classList.contains('open') && !p.contains(e.target) && !t.contains(e.target))
+    p.classList.remove('open');
+});
+
+/* ================================================================
+   CONFIG
+   ================================================================ */
+function saveConfig() {
+  supaUrl = document.getElementById('cfg-url').value.trim();
+  supaKey = document.getElementById('cfg-key').value.trim();
+  localStorage.setItem('l3c_url', supaUrl);
+  localStorage.setItem('l3c_key', supaKey);
+  toast('☁️ Đã lưu — đang kết nối...', 'info');
+  loadTournaments();
+}
+
+/* ================================================================
+   LOAD TOURNAMENTS FROM SUPABASE
+   ================================================================ */
+async function loadTournaments() {
+  if (!supaUrl || !supaKey) {
+    renderTournaments(getSampleData());
+    return;
+  }
+  try {
+    const data = await supaFetch('tournaments?order=created_at.desc&select=id,name,date_str,location,prize,format,status,cover_url,description,created_at');
+    if (data && Array.isArray(data)) {
+      allTournaments = data;
+      setRT(true);
+      renderTournaments(data);
+      updateStats(data);
+      renderFeatured(data);
+    } else {
+      renderTournaments(getSampleData());
+    }
+  } catch(e) {
+    setRT(false);
+    toast('⚠️ Không thể kết nối cloud — hiển thị dữ liệu mẫu', 'error');
+    const sample = getSampleData();
+    renderTournaments(sample);
+    updateStats(sample);
+    renderFeatured(sample);
+  }
+}
+
+/* ================================================================
+   SAMPLE DATA (khi chưa có Supabase)
+   ================================================================ */
+function getSampleData() {
+  return [
+    { id:'s1', name:'3-Cushion Masters 2025', date_str:'Thứ 7, 14:00 — 19/07/2025', location:'CLB Arena Billiards, TP.HCM', prize:'10,000,000đ', format:'Single Elimination', status:'ongoing', cover_url:'', description:'Giải đấu carom 3 băng lớn nhất khu vực miền Nam.' },
+    { id:'s2', name:'Hà Nội Open Cup #3', date_str:'Chủ nhật, 09:00 — 27/07/2025', location:'CLB Billiards Đống Đa, Hà Nội', prize:'5,000,000đ', format:'Round Robin + Playoff', status:'registration', cover_url:'', description:'Mở cửa tất cả hạng mục, chào đón cơ thủ mọi trình độ.' },
+    { id:'s3', name:'Đà Nẵng Carom Classic', date_str:'10/08/2025', location:'Billiards Center Đà Nẵng', prize:'3,000,000đ', format:'Single Elimination', status:'registration', cover_url:'', description:'' },
+    { id:'s4', name:'Mùa Hè Billiards 2025', date_str:'15/06/2025', location:'CLB Star Billiards, TP.HCM', prize:'2,000,000đ', format:'Single Elimination', status:'finished', cover_url:'', description:'' },
+  ];
+}
+
+/* ================================================================
+   RENDER FEATURED
+   ================================================================ */
+function renderFeatured(list) {
+  const area = document.getElementById('featured-area');
+  const featured = list.find(t => t.status === 'ongoing') || list[0];
+  if (!featured) {
+    area.innerHTML = `<div class="empty-state"><div class="empty-title">Chưa có giải đang diễn ra</div></div>`;
+    return;
+  }
+  const badgeClass = getBadgeClass(featured.status);
+  const badgeLabel = getStatusLabel(featured.status);
+  const coverBg = featured.cover_url
+    ? `background-image:url(${featured.cover_url});background-size:cover;background-position:center;`
+    : `background:linear-gradient(135deg,${getFeaturedGradient(featured.status)});`;
+
+  area.innerHTML = `
+    <div class="featured-card fade-up in">
+      <div class="featured-cover" style="${coverBg}">
+        <div class="featured-cover-overlay"></div>
+        <span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span>
+      </div>
+      <div class="featured-info">
+        <div class="fi-tournament-name">${featured.name}</div>
+        <div class="fi-meta">
+          ${featured.date_str ? `<div class="fi-row"><span class="fi-icon">🕒</span><span><strong>${featured.date_str}</strong></span></div>` : ''}
+          ${featured.location ? `<div class="fi-row"><span class="fi-icon">📍</span><span>${featured.location}</span></div>` : ''}
+          ${featured.format ? `<div class="fi-row"><span class="fi-icon">⚔️</span><span>${featured.format}</span></div>` : ''}
+        </div>
+        ${featured.prize ? `<div class="fi-prize"><span class="val">${featured.prize}</span><span class="lbl">Giải thưởng</span></div>` : ''}
+        ${featured.description ? `<p style="font-size:13px;color:var(--muted);line-height:1.6;">${featured.description}</p>` : ''}
+        <div class="fi-actions">
+          <a class="fi-btn pri" href="tournament.html?id=${featured.id}" target="_blank">🎯 Xem bracket live</a>
+          ${isAdmin ? `<button class="fi-btn sec" onclick="openTournamentAdmin('${featured.id}')">✏️ Quản lý</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function getFeaturedGradient(status) {
+  if (status==='ongoing') return '#0d2018,#1a3a2a';
+  if (status==='registration') return '#0d1a30,#1a2a40';
+  return '#1a1a1a,#2a2a2a';
+}
+
+/* ================================================================
+   RENDER TOURNAMENT GRID
+   ================================================================ */
+function renderTournaments(list) {
+  const grid = document.getElementById('tourney-grid');
+  const filtered = currentFilter === 'all' ? list : list.filter(t => t.status === currentFilter);
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏆</div><div class="empty-title">Chưa có giải đấu nào</div><div class="empty-sub">Nhấn "+ Tạo giải đấu" để thêm giải mới</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((t, i) => {
+    const badgeClass = getBadgeClass(t.status);
+    const badgeLabel = getStatusLabel(t.status);
+    const coverStyle = t.cover_url
+      ? `background-image:url(${t.cover_url});background-size:cover;background-position:center;`
+      : `background:linear-gradient(135deg,${getCardGradient(i)});`;
+
+    return `<a class="tourney-card fade-up" href="tournament.html?id=${t.id}" target="_blank" style="animation-delay:${i*60}ms">
+      <div class="tc-cover" style="${coverStyle}">
+        <div class="tc-cover-overlay"></div>
+        <div class="tc-badge"><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-name">${t.name}</div>
+        <div class="tc-meta">
+          ${t.date_str ? `<div class="tc-row"><span class="ico">🕒</span>${t.date_str}</div>` : ''}
+          ${t.location ? `<div class="tc-row"><span class="ico">📍</span>${t.location}</div>` : ''}
+          ${t.format ? `<div class="tc-row"><span class="ico">⚔️</span>${t.format}</div>` : ''}
+        </div>
+        <div class="tc-footer">
+          <span class="tc-prize">${t.prize || '—'}</span>
+          <span class="tc-open-btn">Xem bracket →</span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+
+  // Trigger fade-up
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.fade-up').forEach((el, i) => {
+      setTimeout(() => el.classList.add('in'), i * 60);
+    });
+  });
+}
+
+const CARD_GRADIENTS = [
+  '#0d1a28,#1a3040','#1a0d28,#301a40','#0d2018,#1a3828',
+  '#281a0d,#403018','#0d1a20,#1a2830','#200d1a,#381a28',
+];
+function getCardGradient(i) { return CARD_GRADIENTS[i % CARD_GRADIENTS.length]; }
+
+function getBadgeClass(status) {
+  if (status==='ongoing') return 'badge-ongoing';
+  if (status==='registration') return 'badge-open';
+  return 'badge-done';
+}
+function getStatusLabel(status) {
+  if (status==='ongoing') return 'Đang diễn ra';
+  if (status==='registration') return 'Mở đăng ký';
+  return 'Đã kết thúc';
+}
+
+function filterTourneys(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.ftab').forEach(b => b.classList.toggle('active', b===btn));
+  renderTournaments(allTournaments.length ? allTournaments : getSampleData());
+}
+
+/* ================================================================
+   STATS
+   ================================================================ */
+function updateStats(list) {
+  animCount('stat-tournaments', list.length);
+  animCount('stat-ongoing', list.filter(t=>t.status==='ongoing').length);
+  // Estimate players from bracket data (just show + if not available)
+  document.getElementById('stat-players').textContent = '∞';
+}
+function animCount(id, target) {
+  const el = document.getElementById(id);
+  let cur = 0;
+  const step = Math.ceil(target / 20);
+  const timer = setInterval(()=>{
+    cur = Math.min(cur + step, target);
+    el.textContent = cur;
+    if (cur >= target) clearInterval(timer);
+  }, 50);
+}
+
+/* ================================================================
+   CREATE TOURNAMENT
+   ================================================================ */
+function openCreateModal() { document.getElementById('create-modal').classList.add('open'); }
+function closeCreateModal() { document.getElementById('create-modal').classList.remove('open'); }
+
+async function createTournament() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('⚠️ Vui lòng nhập tên giải đấu', 'error'); return;  }
+  const obj = {
+    name,
+    date_str:    document.getElementById('f-date').value.trim(),
+    location:    document.getElementById('f-location').value.trim(),
+    prize:       document.getElementById('f-prize').value.trim(),
+    format:      document.getElementById('f-format').value.trim(),
+    status:      document.getElementById('f-status').value,
+    cover_url:   document.getElementById('f-cover').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+  };
+
+  if (supaUrl && supaKey) {
+    try {
+      const result = await supaFetch('tournaments', 'POST', [obj]);
+      if (result && result.length) {
+        toast('✅ Đã tạo giải đấu thành công!', 'success');
+        closeCreateModal();
+        clearCreateForm();
+        loadTournaments();
+        // Open tournament manager in new tab
+        const newId = result[0].id;
+        if (newId) window.open(`tournament.html?id=${newId}`, '_blank');
+      }
+    } catch(e) {
+      toast('❌ Lỗi khi tạo giải: ' + e.message, 'error');
+    }
+  } else {
+    // Demo mode — add locally
+    obj.id = 'local_' + Date.now();
+    allTournaments.unshift(obj);
+    toast('✅ Đã thêm giải (chế độ demo — chưa lưu cloud)', 'success');
+    closeCreateModal();
+    clearCreateForm();
+    renderTournaments(allTournaments);
+    updateStats(allTournaments);
+    renderFeatured(allTournaments);
+  }
+}
+
+function clearCreateForm() {
+  ['f-name','f-date','f-location','f-prize','f-format','f-cover','f-desc'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-status').value = 'registration';
+}
+
+function openTournamentAdmin(id) {
+  window.open(`tournament.html?id=${id}`, '_blank');
+}
+
+/* ================================================================
+   CONTACT
+   ================================================================ */
+function renderContact() {
+  const container = document.getElementById('contact-cards');
+  container.innerHTML = CONTACT_INFO.map(c => `
+    <a class="contact-card ${c.type}" href="${c.href}" target="_blank" rel="noopener">
+      <div class="cc-icon ${c.type==='zalo'?'zalo':c.type==='facebook'?'fb':'ph'}">${c.icon}</div>
+      <div class="cc-text">
+        <div class="cc-label">${c.label}</div>
+        <div class="cc-val">${c.val}</div>
+      </div>
+      <span class="cc-arrow">→</span>
+    </a>`).join('');
+}
+
+/* ================================================================
+   ENTRANCE ANIMATIONS (IntersectionObserver)
+   ================================================================ */
+function setupObserver() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+}
+
+/* ================================================================
+   REALTIME (polling fallback — 30s)
+   ================================================================ */
+let realtimeWS = null;
+function setupRealtime() {
+  if (!supaUrl || !supaKey) return;
+  try {
+    const wsUrl = supaUrl.replace('https://','wss://').replace('http://','ws://');
+    const ws = new WebSocket(`${wsUrl}/realtime/v1/websocket?apikey=${supaKey}&vsn=1.0.0`);
+    realtimeWS = ws;
+    let hb;
+    ws.onopen = () => {
+      setRT(true);
+      ws.send(JSON.stringify({ topic:'realtime:public', event:'phx_join',
+        payload:{ config:{ postgres_changes:[{ event:'*', schema:'public', table:'tournaments' }]}}, ref:'1' }));
+      hb = setInterval(()=>{ if(ws.readyState===1) ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'})); }, 25000);
+    };
+    ws.onmessage = async () => { await loadTournaments(); };
+    ws.onclose = () => { clearInterval(hb); setRT(false); setTimeout(setupRealtime, 5000); };
+    ws.onerror = () => setRT(false);
+  } catch(e) { setRT(false); }
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+async function init() {
+  renderContact();
+  setupObserver();
+
+  // Hero fade-up stagger
+  document.querySelectorAll('.hero-content .fade-up').forEach((el, i) => {
+    setTimeout(() => el.classList.add('in'), 600 + i * 120);
+  });
+
+  await loadTournaments();
+
+  if (supaUrl && supaKey) setupRealtime();
+
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('out');
+  }, 1200);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

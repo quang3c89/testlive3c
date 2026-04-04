@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live3C — Nền tảng quản lý giải đấu Billiards Carom 3 Băng">
+<meta property="og:title" content="Live3C">
+<meta property="og:image" content="/assets/og-image.jpg">
+<title>Cơ thủ — Live3C</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/animations.css">
+<link rel="stylesheet" href="assets/css/players-leaderboard.css">
+</head>
+<body>
+<div id="toast-box"></div>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+  <div class="breadcrumb nav-breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Trang chủ</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Cơ thủ</span>
+  </div>
+  <span class="nav-spacer"></span>
+  <a class="nav-link" href="tournaments.html">Giải đấu</a>
+  <a class="nav-link active" href="players.html" aria-current="page">Cơ thủ</a>
+  <a class="nav-link" href="leaderboard.html">Bảng xếp hạng</a>
+  <a class="nav-link" href="index.html#contact">Liên hệ</a>
+  <div class="nav-rt"><div class="rt-dot off" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
+  <a class="nav-btn pri" href="admin/login.html">Đăng nhập</a>
+</nav>
+
+<main class="page-shell">
+  <header class="page-head">
+    <div class="section-label">Cơ thủ</div>
+    <h1 class="section-h2">Cơ thủ</h1>
+    <p class="section-sub">Danh sách cơ thủ tham gia các giải Live3C</p>
+  </header>
+
+  <div class="filter-row">
+    <input id="player-search" class="filter-input" type="search" placeholder="Tìm tên cơ thủ / đơn vị" autocomplete="off">
+    <select id="tournament-filter" class="filter-select">
+      <option value="all">Tất cả giải đấu</option>
+    </select>
+  </div>
+
+  <section id="players-grid" class="players-grid" aria-live="polite"></section>
+</main>
+
+<div id="player-modal" class="player-modal" role="dialog" aria-modal="true" aria-labelledby="pm-title">
+  <div class="player-modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;">
+      <h3 id="pm-title" style="font-family:var(--display);font-size:30px;line-height:1;margin:0;">Cơ thủ</h3>
+      <button id="pm-close" class="btn btn-ghost" type="button">Đóng</button>
+    </div>
+    <div id="pm-content"></div>
+  </div>
+</div>
+
+<script src="assets/js/nav-active.js"></script>
+<script type="module">
+import { getTournaments } from './assets/js/supabase.js';
+import { toast } from './assets/js/ui.js';
+
+const SCORE = { champion: 100, runnerUp: 70, top4: 50, participant: 10 };
+let tournaments = [];
+let players = [];
+
+function initials(name = '') {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'P';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function parseBracketPlayers(bracketState, fallbackTournament) {
+  if (!bracketState) return [];
+  let data = null;
+  try { data = typeof bracketState === 'string' ? JSON.parse(bracketState) : bracketState; } catch { return []; }
+  if (!Array.isArray(data)) return [];
+
+  const map = new Map();
+  data.forEach((round) => {
+    if (!Array.isArray(round)) return;
+    round.forEach((m) => {
+      ['p1', 'p2'].forEach((k) => {
+        const p = m?.[k];
+        if (!p || !p.name) return;
+        const key = `${(p.name || '').trim().toLowerCase()}|${(p.unit || '').trim().toLowerCase()}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            name: p.name || '—',
+            unit: p.unit || '',
+            rank: p.rank || '',
+            tournaments: new Set([fallbackTournament.id]),
+            tournamentNames: new Set([fallbackTournament.name || 'Giải đấu']),
+            points: SCORE.participant,
+            champion: 0,
+            runnerUp: 0,
+            top4: 0,
+          });
+        }
+      });
+    });
+  });
+
+  const rounds = data.length;
+  if (rounds > 0) {
+    const finalRound = data[rounds - 1]?.[0];
+    if (finalRound?.winner?.name) {
+      const wKey = `${finalRound.winner.name.trim().toLowerCase()}|${(finalRound.winner.unit || '').trim().toLowerCase()}`;
+      const w = map.get(wKey);
+      if (w) { w.points += SCORE.champion; w.champion += 1; }
+      const loser = finalRound.p1?.id === finalRound.winner?.id ? finalRound.p2 : finalRound.p1;
+      if (loser?.name) {
+        const lKey = `${loser.name.trim().toLowerCase()}|${(loser.unit || '').trim().toLowerCase()}`;
+        const l = map.get(lKey);
+        if (l) { l.points += SCORE.runnerUp; l.runnerUp += 1; }
+      }
+    }
+  }
+
+  if (rounds > 1) {
+    const semiRound = data[rounds - 2] || [];
+    semiRound.forEach((m) => {
+      if (!m?.winner) return;
+      const losers = [m.p1, m.p2].filter(Boolean).filter((p) => p.id !== m.winner.id);
+      losers.forEach((loser) => {
+        const lk = `${loser.name.trim().toLowerCase()}|${(loser.unit || '').trim().toLowerCase()}`;
+        const l = map.get(lk);
+        if (l) { l.points += SCORE.top4; l.top4 += 1; }
+      });
+    });
+  }
+
+  return [...map.values()];
+}
+
+function aggregatePlayers(ts) {
+  const map = new Map();
+  ts.forEach((t) => {
+    const list = parseBracketPlayers(t.bracket_state, t);
+    list.forEach((p) => {
+      if (!map.has(p.key)) {
+        map.set(p.key, {
+          ...p,
+          tournaments: new Set(p.tournaments),
+          tournamentNames: new Set(p.tournamentNames),
+        });
+      } else {
+        const cur = map.get(p.key);
+        cur.rank = cur.rank || p.rank;
+        p.tournaments.forEach((x) => cur.tournaments.add(x));
+        p.tournamentNames.forEach((x) => cur.tournamentNames.add(x));
+        cur.points += p.points;
+        cur.champion += p.champion;
+        cur.runnerUp += p.runnerUp;
+        cur.top4 += p.top4;
+      }
+    });
+  });
+
+  return [...map.values()].map((p) => ({
+    ...p,
+    tournamentsCount: p.tournaments.size,
+    tournamentList: [...p.tournamentNames],
+  }));
+}
+
+function buildTournamentFilter(ts) {
+  const sel = document.getElementById('tournament-filter');
+  sel.innerHTML = '<option value="all">Tất cả giải đấu</option>';
+  ts.forEach((t) => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name || `Giải #${t.id}`;
+    sel.appendChild(opt);
+  });
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('players-grid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">👥</div><div class="empty-title">Không có cơ thủ</div><div class="empty-sub">Thử đổi điều kiện lọc hoặc kiểm tra dữ liệu giải đấu.</div></div>';
+    return;
+  }
+
+  grid.innerHTML = list.map((p) => `
+    <article class="player-card" data-key="${encodeURIComponent(p.key)}">
+      <div class="player-avatar">${initials(p.name)}</div>
+      <div class="player-name">${p.name}</div>
+      <div class="player-unit">${p.unit || '—'}</div>
+      <div class="player-meta">
+        <span class="player-pill">Hạng: ${p.rank || '—'}</span>
+        <span class="player-pill">${p.tournamentsCount} giải</span>
+      </div>
+    </article>
+  `).join('');
+
+  grid.querySelectorAll('.player-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const key = decodeURIComponent(card.dataset.key);
+      const p = players.find((x) => x.key === key);
+      if (!p) return;
+      openPlayerModal(p);
+    });
+  });
+}
+
+function openPlayerModal(p) {
+  document.getElementById('pm-title').textContent = p.name;
+  document.getElementById('pm-content').innerHTML = `
+    <div style="display:grid;gap:8px;font-size:14px;">
+      <div><b>Đơn vị:</b> ${p.unit || '—'}</div>
+      <div><b>Hạng:</b> ${p.rank || '—'}</div>
+      <div><b>Số giải tham gia:</b> ${p.tournamentsCount}</div>
+      <div><b>Điểm tích lũy:</b> ${p.points}</div>
+      <div><b>Vô địch:</b> ${p.champion} · <b>Á quân:</b> ${p.runnerUp} · <b>Top 4:</b> ${p.top4}</div>
+      <div><b>Giải đã tham gia:</b><br>${p.tournamentList.map((x) => `• ${x}`).join('<br>')}</div>
+    </div>
+  `;
+  document.getElementById('player-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('player-modal').classList.remove('open');
+}
+
+function filterAndRender() {
+  const q = document.getElementById('player-search').value.trim().toLowerCase();
+  const tId = document.getElementById('tournament-filter').value;
+
+  let list = [...players];
+  if (tId !== 'all') {
+    list = list.filter((p) => p.tournaments.has(tId));
+  }
+  if (q) {
+    list = list.filter((p) => (p.name || '').toLowerCase().includes(q) || (p.unit || '').toLowerCase().includes(q));
+  }
+
+  list.sort((a, b) => b.points - a.points || a.name.localeCompare(b.name, 'vi'));
+  renderGrid(list);
+}
+
+async function init() {
+  try {
+    const data = await getTournaments();
+    tournaments = Array.isArray(data) ? data : [];
+    if (!tournaments.length) {
+      toast('Chưa có dữ liệu giải đấu để tổng hợp cơ thủ.', 'info');
+    }
+  } catch {
+    tournaments = [];
+    toast('Không thể tải dữ liệu cloud.', 'error');
+  }
+
+  players = aggregatePlayers(tournaments);
+  buildTournamentFilter(tournaments);
+  filterAndRender();
+
+  document.getElementById('player-search').addEventListener('input', filterAndRender);
+  document.getElementById('tournament-filter').addEventListener('change', filterAndRender);
+  document.getElementById('pm-close').addEventListener('click', closeModal);
+  document.getElementById('player-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'player-modal') closeModal();
+  });
+}
+
+init();
+</script>
+</body>
+</html>

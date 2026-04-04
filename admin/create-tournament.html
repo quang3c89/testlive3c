@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live3C Admin — Tạo giải đấu</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/animations.css">
+<style>
+body{background:var(--bg);color:var(--text);min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:22px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.field{display:grid;gap:6px;margin-bottom:12px}
+.field label{font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);color:var(--muted)}
+.field input,.field textarea,.field select{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);outline:none}
+.field textarea{min-height:90px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:720px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<nav class="admin-nav" style="position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;height:64px;padding:0 18px;background:rgba(8,11,16,.9);border-bottom:1px solid var(--border);">
+  <a class="admin-logo" href="dashboard.html" style="text-decoration:none;font-family:var(--display);font-size:26px;font-weight:900;letter-spacing:-1px;"><span style="color:var(--accent)">live</span><span style="color:var(--accent2)">3c</span><span style="color:rgba(255,255,255,.35)">.xyz</span></a>
+  <a class="admin-link" href="dashboard.html" style="color:var(--muted);text-decoration:none;font-size:13px;font-weight:700;padding:7px 11px;border-radius:8px;">Dashboard</a>
+  <a class="admin-link" href="create-tournament.html" style="color:var(--text);text-decoration:none;font-size:13px;font-weight:700;padding:7px 11px;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.04);">Tạo giải mới</a>
+  <span style="flex:1"></span>
+  <button id="logout-btn" class="btn btn-ghost" type="button">Đăng xuất</button>
+</nav>
+
+<main class="wrap">
+  <div class="breadcrumb" style="margin-bottom:12px"><a href="dashboard.html">Dashboard</a><span class="breadcrumb-sep">/</span><span>Tạo giải mới</span></div>
+  <section class="card">
+    <h1 class="section-h2" style="font-size:40px;margin-bottom:8px;">Tạo giải mới</h1>
+    <p class="section-sub" style="margin-bottom:16px;">Tạo giải đấu mới và chuyển thẳng sang trang chỉnh sửa.</p>
+
+    <form id="create-form">
+      <div class="field"><label for="name">Tên giải *</label><input id="name" required></div>
+      <div class="row">
+        <div class="field"><label for="date_str">Ngày / giờ</label><input id="date_str"></div>
+        <div class="field"><label for="location">Địa điểm</label><input id="location"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="format">Thể thức</label><input id="format"></div>
+        <div class="field"><label for="status">Trạng thái</label>
+          <select id="status">
+            <option value="registration">Mở đăng ký</option>
+            <option value="ongoing">Đang diễn ra</option>
+            <option value="finished">Đã kết thúc</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="prize">Giải thưởng</label><input id="prize"></div>
+        <div class="field"><label for="cover_url">Cover URL</label><input id="cover_url"></div>
+      </div>
+      <div class="field"><label for="description">Mô tả</label><textarea id="description"></textarea></div>
+
+      <div class="actions">
+        <button class="btn btn-pri" type="submit">Tạo giải đấu</button>
+        <a class="btn btn-ghost" href="dashboard.html">Hủy</a>
+      </div>
+    </form>
+  </section>
+</main>
+
+<script type="module">
+import { requireAdmin, logout } from '../assets/js/auth.js';
+import { supaFetch } from '../assets/js/supabase.js';
+import { toast } from '../assets/js/ui.js';
+
+requireAdmin();
+
+document.getElementById('logout-btn').addEventListener('click', () => logout());
+
+document.getElementById('create-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    name: document.getElementById('name').value.trim(),
+    date_str: document.getElementById('date_str').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    format: document.getElementById('format').value.trim(),
+    content: document.getElementById('format').value.trim(),
+    status: document.getElementById('status').value,
+    prize: document.getElementById('prize').value.trim(),
+    cover_url: document.getElementById('cover_url').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    bracket_size: 4,
+    bracket_state: JSON.stringify([[{ p1:null,p2:null,s1:'',s2:'',winner:null },{ p1:null,p2:null,s1:'',s2:'',winner:null }],[{ p1:null,p2:null,s1:'',s2:'',winner:null }]]),
+  };
+
+  try {
+    const rows = await supaFetch('tournaments', 'POST', [payload]);
+    const id = rows?.[0]?.id;
+    if (!id) throw new Error('Không nhận được ID giải đấu mới');
+    toast('✅ Tạo giải thành công', 'success', { containerId: 'toast-container', exitClass: 'out' });
+    setTimeout(() => { window.location.href = `edit-tournament.html?id=${encodeURIComponent(id)}`; }, 250);
+  } catch (err) {
+    toast(`❌ Tạo giải thất bại: ${err.message}`, 'error', { containerId: 'toast-container', exitClass: 'out' });
+  }
+});
+</script>
+</body>
+</html>

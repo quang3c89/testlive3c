@@ -1,0 +1,137 @@
+/* Live3C — tournament.html top chrome (nav + breadcrumb + back) */
+
+.tournament-page-header {
+  flex-shrink: 0;
+  background: rgba(8, 11, 16, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  z-index: 120;
+}
+
+/* Ghi đè rule global `nav{position:fixed}` từ components.css */
+.tournament-page-header > nav.tournament-site-nav {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: auto;
+  height: auto;
+  min-height: 40px;
+  padding: 6px 16px 0;
+  background: transparent;
+  border-bottom: none;
+  backdrop-filter: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tournament-site-nav .nav-logo {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.tournament-site-nav .nav-logo .y {
+  color: var(--accent);
+}
+
+.tournament-site-nav .nav-logo .r {
+  color: var(--accent2);
+}
+
+.tournament-site-nav .nav-logo .w {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.tournament-site-nav .nav-spacer {
+  flex: 1;
+}
+
+.tournament-site-nav .nav-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 2px;
+  transition: color 0.15s;
+}
+
+.tournament-site-nav .nav-link:hover {
+  color: var(--text);
+}
+
+.tournament-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 8px 16px 10px;
+}
+
+.tournament-header-row .btn.btn-ghost {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.tournament-header-row .btn.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tournament-bc-nav {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tournament-bc-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.tournament-bc-nav a:hover {
+  color: var(--text);
+}
+
+.tournament-bc-nav .bc-sep {
+  margin: 0 6px;
+  opacity: 0.45;
+  user-select: none;
+}
+
+#bc-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Nút Quản lý trong tourney-bar */
+#tb-admin-edit {
+  margin-right: 6px;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .tournament-site-nav .nav-link {
+    display: none;
+  }
+}

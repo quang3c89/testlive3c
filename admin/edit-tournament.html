@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live3C Admin — Chỉnh sửa giải đấu</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/animations.css">
+<style>
+  body { background: var(--bg); color: var(--text); min-height: 100vh; }
+  .admin-nav { position: sticky; top: 0; z-index: 50; display:flex; align-items:center; gap:12px; height:64px; padding:0 18px; background: rgba(8,11,16,.9); border-bottom:1px solid var(--border); backdrop-filter: blur(10px); }
+  .admin-logo { text-decoration:none; font-family:var(--display); font-size:26px; font-weight:900; letter-spacing:-1px; }
+  .admin-logo .y{color:var(--accent);} .admin-logo .r{color:var(--accent2);} .admin-logo .w{color:rgba(255,255,255,.35);}
+  .admin-link { text-decoration:none; color:var(--muted); font-size:13px; font-weight:700; padding:7px 11px; border-radius:8px; }
+  .admin-link:hover { background: rgba(255,255,255,.05); color:var(--text); }
+  .spacer { flex:1; }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 20px; display: grid; gap: 16px; }
+  .breadcrumb-box { font-size: 13px; color: var(--muted); display:flex; gap:8px; align-items:center; }
+  .breadcrumb-box a { color: var(--muted); text-decoration:none; }
+  .breadcrumb-box a:hover { color: var(--text); }
+
+  .header-card { background: var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+  .header-title { font-family: var(--display); font-size: 36px; line-height: .95; letter-spacing: -1px; margin: 0; }
+
+  .tabs { background: var(--card); border:1px solid var(--border); border-radius: 12px; padding: 6px; display:flex; gap: 6px; overflow:auto; }
+  .tab-btn { border:none; background: transparent; color: var(--muted); padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor:pointer; white-space:nowrap; }
+  .tab-btn.active { background: rgba(255,255,255,.06); color: var(--text); border:1px solid var(--border2); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+  .card h3 { margin: 0 0 12px; font-family: var(--display); font-size: 24px; }
+  .field { display:grid; gap:6px; margin-bottom: 10px; }
+  .field label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.1px; font-family: var(--mono); color: var(--muted); }
+  .field input, .field textarea, .field select { width:100%; border:1px solid var(--border); border-radius:9px; background: rgba(255,255,255,.04); color:var(--text); padding:10px 12px; outline: none; font-family: inherit; }
+  .field textarea { min-height: 92px; resize: vertical; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top: 8px; }
+
+  .players-tools { display:grid; gap:10px; }
+  .players-list { width:100%; border-collapse: collapse; margin-top: 8px; }
+  .players-list th,.players-list td { border-bottom:1px solid var(--border); padding:8px; text-align:left; font-size:13px; }
+  .players-list th { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; }
+
+  .bracket-shell { background: rgba(0,0,0,.12); border:1px solid var(--border); border-radius:12px; padding:10px; overflow:auto; min-height: 60vh; }
+  .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; }
+  #bracket-lines { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; overflow: visible; }
+  .bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; min-width: 100%; }
+
+  .result-shell { background: rgba(0,0,0,.12); border:1px solid var(--border); border-radius:12px; padding:10px; min-height:60vh; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; border-radius: 6px; padding: 4px 8px;
+    font-size: 11px; font-weight: 700; font-family: var(--mono); text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .status-ongoing { color:#22c55e; background: rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.3); }
+  .status-registration { color:#3b82f6; background: rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3); }
+  .status-finished { color:var(--muted); background: rgba(255,255,255,.06); border:1px solid var(--border2); }
+
+  @media (max-width: 980px) {
+    .grid-info { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div id="toast-container"></div>
+
+  <nav class="admin-nav">
+    <a class="admin-logo" href="dashboard.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+    <a class="admin-link" href="dashboard.html">Dashboard</a>
+    <a class="admin-link" href="create-tournament.html">Tạo giải mới</a>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" id="logout-btn" type="button">Đăng xuất</button>
+  </nav>
+
+  <main class="container">
+    <div class="breadcrumb-box">
+      <a href="dashboard.html">Dashboard</a>
+      <span>/</span>
+      <span id="bc-name">Đang tải...</span>
+    </div>
+
+    <section class="header-card">
+      <a href="dashboard.html" class="btn btn-ghost">← Dashboard</a>
+      <h1 class="header-title" id="header-name">Đang tải giải đấu...</h1>
+      <span id="header-status" class="status-badge status-finished">Đã kết thúc</span>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="Edit tabs">
+      <button class="tab-btn active" data-tab="info">Thông tin</button>
+      <button class="tab-btn" data-tab="players">Cơ thủ</button>
+      <button class="tab-btn" data-tab="bracket">Bracket</button>
+      <button class="tab-btn" data-tab="results">Kết quả</button>
+    </div>
+
+    <section class="tab-panel active" id="tab-info">
+      <div class="grid-info">
+        <article class="card">
+          <h3>Thông tin giải đấu</h3>
+          <form id="info-form">
+            <div class="field"><label for="name">Tên giải *</label><input id="name" required></div>
+            <div class="field"><label for="date_str">Ngày/giờ</label><input id="date_str"></div>
+            <div class="field"><label for="location">Địa điểm</label><input id="location"></div>
+            <div class="field"><label for="format">Thể thức</label><input id="format"></div>
+            <div class="field"><label for="status">Trạng thái</label>
+              <select id="status">
+                <option value="registration">Mở đăng ký</option>
+                <option value="ongoing">Đang diễn ra</option>
+                <option value="finished">Đã kết thúc</option>
+              </select>
+            </div>
+            <div class="field"><label for="prize">Giải thưởng</label><input id="prize"></div>
+            <div class="field"><label for="cover_url">Cover URL</label><input id="cover_url" placeholder="https://..."></div>
+            <div class="field"><label for="description">Mô tả</label><textarea id="description"></textarea></div>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-pri">Lưu thay đổi</button>
+              <button type="button" id="delete-btn" class="btn" style="border:1px solid #ef4444;color:#ef4444;background:rgba(239,68,68,.1);">Xóa giải đấu</button>
+              <a id="public-link" target="_blank" rel="noopener" class="btn btn-sec">Xem trang public</a>
+            </div>
+          </form>
+        </article>
+
+        <article class="card">
+          <h3>Đồng bộ realtime</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.7;">Trang edit sẽ ghi toàn bộ thay đổi lên Supabase ngay khi thao tác. Trang public <code>tournament.html?id=X</code> sẽ nhận cập nhật realtime.</p>
+          <div class="actions">
+            <button type="button" class="btn btn-ghost" id="push-now">Push ngay</button>
+            <button type="button" class="btn btn-ghost" id="reload-now">Tải lại cloud</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-players">
+      <article class="card players-tools">
+        <h3>Quản lý cơ thủ</h3>
+        <div class="field">
+          <label>Import nhanh (mỗi dòng: Tên,Đơn vị,Hạng)</label>
+          <textarea id="bulk-input" placeholder="Nguyễn Văn A, CLB ABC, A\nTrần Văn B, CLB XYZ, B"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-pri" id="paste-import" type="button">Thêm từ danh sách</button>
+          <button class="btn btn-sec" id="xlsx-import-btn" type="button">Upload file (.xlsx/.csv/.txt)</button>
+          <input type="file" id="xlsx-input" accept=".xlsx,.xls,.csv,.txt" hidden>
+          <button class="btn btn-ghost" id="create-bracket" type="button">Tạo bracket từ danh sách hiện tại</button>
+        </div>
+
+        <table class="players-list">
+          <thead><tr><th>#</th><th>Tên</th><th>Đơn vị</th><th>Hạng</th><th></th></tr></thead>
+          <tbody id="players-table"></tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="tab-panel" id="tab-bracket">
+      <article class="bracket-shell">
+        <div class="bracket-wrap" id="bracket-container">
+          <svg id="bracket-lines"></svg>
+          <div class="bracket-cols" id="bracket-columns"></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="tab-panel" id="tab-results">
+      <article class="result-shell">
+        <div class="schedule-header">
+          <div class="schedule-title">⚔️ Lịch Thi Đấu</div>
+          <div class="schedule-subtitle" id="schedule-subtitle">Đang cập nhật...</div>
+        </div>
+        <div id="schedule-columns"></div>
+      </article>
+    </section>
+  </main>
+
+  <div id="winner-popup">
+    <div class="wp-backdrop" onclick="window.closeWinnerPopup?.()"></div>
+    <div class="wp-box">
+      <div class="wp-accent-bar"></div>
+      <div class="wp-canvas"><canvas id="wp-particle-canvas"></canvas></div>
+      <div class="wp-content">
+        <div class="wp-img-wrap" id="wp-img-wrap"><div class="wp-img-placeholder" id="wp-img-placeholder">🏆</div></div>
+        <div class="wp-round-label" id="wp-round-label">Trận đấu</div>
+        <div class="wp-headline">Người chiến thắng</div>
+        <div class="wp-name" id="wp-name">—</div>
+        <div class="wp-unit" id="wp-unit"></div>
+        <div id="wp-rank-wrap"></div>
+        <div class="wp-score" id="wp-score" style="display:none">
+          <div class="wp-score-side"><div class="wp-score-name" id="wp-s1-name">—</div><div class="wp-score-val win" id="wp-s1-val">—</div></div>
+          <div class="wp-score-sep">VS</div>
+          <div class="wp-score-side"><div class="wp-score-name" id="wp-s2-name">—</div><div class="wp-score-val lose" id="wp-s2-val">—</div></div>
+        </div>
+        <div class="wp-actions"><button class="wp-btn close" onclick="window.closeWinnerPopup?.()">Đóng</button></div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+import { requireAdmin, logout } from '../assets/js/auth.js';
+import { getTournamentById, supaFetch, resolveSupabaseClient } from '../assets/js/supabase.js';
+import { generateBracket, getRoundName, advanceWinner } from '../assets/js/tournament.js';
+import { renderBracket, renderSchedule, createBracketApi, drawBracketLines, closeWinnerPopup } from '../assets/js/ui-tournament.js';
+import { toast } from '../assets/js/ui.js';
+
+requireAdmin();
+
+const params = new URLSearchParams(window.location.search);
+const TOURNAMENT_ID = params.get('id');
+if (!TOURNAMENT_ID) window.location.href = 'dashboard.html';
+
+const state = {
+  tournament: null,
+  players: [],
+  bracket: [],
+  isAdmin: true,
+};
+
+const history = { undo: [] };
+const bracketApi = createBracketApi(state, {
+  pushHistory,
+  saveState: persistAll,
+  supaPushDebounced,
+});
+window.closeWinnerPopup = closeWinnerPopup;
+
+let realtime = null;
+let pushTimer = null;
+
+function pushHistory() {
+  history.undo.push(JSON.stringify({ players: state.players, bracket: state.bracket }));
+  if (history.undo.length > 40) history.undo.shift();
+}
+
+function statusLabel(status) {
+  if (status === 'ongoing') return 'Đang diễn ra';
+  if (status === 'registration') return 'Mở đăng ký';
+  return 'Đã kết thúc';
+}
+
+function statusClass(status) {
+  if (status === 'ongoing') return 'status-ongoing';
+  if (status === 'registration') return 'status-registration';
+  return 'status-finished';
+}
+
+function bindTabs() {
+  const buttons = document.querySelectorAll('.tab-btn');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      if (tab === 'bracket') setTimeout(() => drawBracketLines(state), 80);
+      if (tab === 'results') renderSchedule(state);
+    });
+  });
+}
+
+function fillInfoForm() {
+  const t = state.tournament;
+  document.getElementById('name').value = t.name || '';
+  document.getElementById('date_str').value = t.date_str || t.time || '';
+  document.getElementById('location').value = t.location || '';
+  document.getElementById('format').value = t.format || t.content || '';
+  document.getElementById('status').value = t.status || 'registration';
+  document.getElementById('prize').value = t.prize || '';
+  document.getElementById('cover_url').value = t.cover_url || '';
+  document.getElementById('description').value = t.description || '';
+
+  document.getElementById('bc-name').textContent = t.name || 'Không tên';
+  document.getElementById('header-name').textContent = t.name || 'Không tên';
+  const badge = document.getElementById('header-status');
+  badge.className = `status-badge ${statusClass(t.status)}`;
+  badge.textContent = statusLabel(t.status);
+
+  document.getElementById('public-link').href = `../tournament.html?id=${encodeURIComponent(TOURNAMENT_ID)}`;
+}
+
+function getPlayerColumnsSample(list) {
+  const one = list?.[0] || {};
+  return Object.keys(one);
+}
+
+async function loadPlayers() {
+  try {
+    const rows = await supaFetch('players', 'GET', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}&order=id.asc`);
+    state.players = (rows || []).map((p, idx) => ({
+      id: p.id ?? `tmp_${idx}_${Date.now()}`,
+      name: p.name || '',
+      unit: p.unit || '',
+      rank: p.rank || '',
+      drawn: !!p.drawn,
+      bracketSlot: p.bracket_slot || null,
+      tournament_id: p.tournament_id,
+    }));
+  } catch {
+    const rows = await supaFetch('players', 'GET', null, 'order=id.asc');
+    state.players = (rows || []).map((p, idx) => ({
+      id: p.id ?? `tmp_${idx}_${Date.now()}`,
+      name: p.name || '',
+      unit: p.unit || '',
+      rank: p.rank || '',
+      drawn: !!p.drawn,
+      bracketSlot: p.bracket_slot || null,
+      tournament_id: p.tournament_id,
+    }));
+    if (state.players.length) {
+      toast('⚠️ Không lọc được theo tournament_id. Đang dùng danh sách players chung.', 'error');
+      console.debug('players columns sample:', getPlayerColumnsSample(rows));
+    }
+  }
+}
+
+function ensureBracket() {
+  const bs = state.tournament?.bracket_state;
+  if (bs) {
+    try {
+      const parsed = JSON.parse(bs);
+      if (Array.isArray(parsed) && parsed.length) {
+        state.bracket = parsed;
+        return;
+      }
+    } catch {}
+  }
+  const size = Math.max(4, Math.pow(2, Math.ceil(Math.log2(state.players.length || 4))));
+  state.bracket = generateBracket(size);
+}
+
+function renderPlayersTable() {
+  const tbody = document.getElementById('players-table');
+  if (!state.players.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted)">Chưa có cơ thủ.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.players.map((p, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${p.name || '—'}</td>
+      <td>${p.unit || '—'}</td>
+      <td>${p.rank || '—'}</td>
+      <td><button type="button" class="btn btn-ghost" data-remove="${p.id}">Xóa</button></td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('[data-remove]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      pushHistory();
+      const id = btn.getAttribute('data-remove');
+      state.players = state.players.filter((p) => String(p.id) !== String(id));
+      renderPlayersTable();
+      supaPushDebounced();
+    });
+  });
+}
+
+function seedBracketFromPlayers() {
+  if (!state.players.length) {
+    toast('⚠️ Chưa có cơ thủ', 'error');
+    return;
+  }
+  pushHistory();
+  const size = Math.max(4, Math.pow(2, Math.ceil(Math.log2(state.players.length))));
+  state.bracket = generateBracket(size);
+
+  let i = 0;
+  for (let m = 0; m < state.bracket[0].length; m++) {
+    state.bracket[0][m].p1 = state.players[i] ? { ...state.players[i] } : null;
+    i += 1;
+    state.bracket[0][m].p2 = state.players[i] ? { ...state.players[i] } : null;
+    i += 1;
+  }
+
+  renderBracket(state.bracket, null, bracketApi);
+  renderSchedule(state);
+  supaPushDebounced();
+  toast('✅ Đã tạo bracket từ danh sách cơ thủ', 'success');
+}
+
+function parseBulk(text) {
+  return text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, idx) => {
+      const [name = '', unit = '', rank = ''] = line.split(',').map((x) => x.trim());
+      return { id: `new_${Date.now()}_${idx}`, name, unit, rank, drawn: false, bracketSlot: null };
+    })
+    .filter((p) => p.name);
+}
+
+function bindPlayersActions() {
+  document.getElementById('paste-import').addEventListener('click', () => {
+    const parsed = parseBulk(document.getElementById('bulk-input').value);
+    if (!parsed.length) {
+      toast('⚠️ Không có dòng hợp lệ để import', 'error');
+      return;
+    }
+    pushHistory();
+    state.players.push(...parsed);
+    document.getElementById('bulk-input').value = '';
+    renderPlayersTable();
+    supaPushDebounced();
+    toast(`✅ Đã thêm ${parsed.length} cơ thủ`, 'success');
+  });
+
+  document.getElementById('xlsx-import-btn').addEventListener('click', () => {
+    document.getElementById('xlsx-input').click();
+  });
+
+  document.getElementById('xlsx-input').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const name = file.name.toLowerCase();
+    let incoming = [];
+
+    if (name.endsWith('.txt') || name.endsWith('.csv')) {
+      const txt = await file.text();
+      incoming = parseBulk(txt);
+    } else {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+      incoming = rows
+        .slice(1)
+        .map((r, idx) => ({
+          id: `new_${Date.now()}_${idx}`,
+          name: String(r[0] || '').trim(),
+          unit: String(r[1] || '').trim(),
+          rank: String(r[2] || '').trim(),
+          drawn: false,
+          bracketSlot: null,
+        }))
+        .filter((p) => p.name);
+    }
+
+    if (!incoming.length) {
+      toast('⚠️ File không có dữ liệu hợp lệ', 'error');
+      return;
+    }
+
+    pushHistory();
+    state.players.push(...incoming);
+    renderPlayersTable();
+    supaPushDebounced();
+    toast(`✅ Đã import ${incoming.length} cơ thủ`, 'success');
+    e.target.value = '';
+  });
+
+  document.getElementById('create-bracket').addEventListener('click', seedBracketFromPlayers);
+}
+
+function collectInfoPayload() {
+  return {
+    name: document.getElementById('name').value.trim(),
+    date_str: document.getElementById('date_str').value.trim(),
+    location: document.getElementById('location').value.trim(),
+    format: document.getElementById('format').value.trim(),
+    content: document.getElementById('format').value.trim(),
+    status: document.getElementById('status').value,
+    prize: document.getElementById('prize').value.trim(),
+    cover_url: document.getElementById('cover_url').value.trim(),
+    description: document.getElementById('description').value.trim(),
+    bracket_state: JSON.stringify(state.bracket),
+    bracket_size: Math.pow(2, Math.ceil(Math.log2(Math.max(4, state.players.length || 4)))),
+  };
+}
+
+async function saveInfoOnly() {
+  const payload = collectInfoPayload();
+  await supaFetch(`tournaments?id=eq.${encodeURIComponent(TOURNAMENT_ID)}`, 'PATCH', payload);
+  state.tournament = { ...state.tournament, ...payload };
+  fillInfoForm();
+}
+
+async function replacePlayersRows() {
+  const rows = state.players.map((p) => ({
+    name: p.name || '',
+    unit: p.unit || '',
+    rank: p.rank || '',
+    drawn: !!p.drawn,
+    bracket_slot: p.bracketSlot || null,
+    tournament_id: TOURNAMENT_ID,
+  }));
+
+  try {
+    await supaFetch('players', 'DELETE', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}`);
+  } catch {
+    // fallback: table không có tournament_id
+  }
+
+  if (rows.length) {
+    await supaFetch('players', 'POST', rows, null, { Prefer: 'return=representation,resolution=merge-duplicates' });
+  }
+}
+
+async function persistAll() {
+  await saveInfoOnly();
+  await replacePlayersRows();
+}
+
+function supaPushDebounced() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(async () => {
+    try {
+      await persistAll();
+      toast('✅ Đã đồng bộ', 'success', { containerId: 'toast-container', exitClass: 'out', duration: 1400 });
+    } catch (e) {
+      toast(`❌ Lỗi đồng bộ: ${e.message}`, 'error', { containerId: 'toast-container', exitClass: 'out' });
+    }
+  }, 1000);
+}
+
+async function deleteTournament() {
+  if (!confirm('Bạn chắc chắn muốn xóa giải đấu này? Hành động không thể hoàn tác.')) return;
+  try {
+    try {
+      await supaFetch('players', 'DELETE', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}`);
+    } catch {}
+    await supaFetch(`tournaments?id=eq.${encodeURIComponent(TOURNAMENT_ID)}`, 'DELETE');
+    toast('🗑️ Đã xóa giải đấu', 'success', { containerId: 'toast-container', exitClass: 'out' });
+    setTimeout(() => (window.location.href = 'dashboard.html'), 500);
+  } catch (e) {
+    toast(`❌ Xóa thất bại: ${e.message}`, 'error', { containerId: 'toast-container', exitClass: 'out' });
+  }
+}
+
+function bindInfoActions() {
+  document.getElementById('info-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await saveInfoOnly();
+      toast('✅ Đã lưu thay đổi', 'success', { containerId: 'toast-container', exitClass: 'out' });
+    } catch (err) {
+      toast(`❌ Lưu thất bại: ${err.message}`, 'error', { containerId: 'toast-container', exitClass: 'out' });
+    }
+  });
+
+  document.getElementById('delete-btn').addEventListener('click', deleteTournament);
+  document.getElementById('push-now').addEventListener('click', async () => {
+    try {
+      await persistAll();
+      toast('✅ Đã push dữ liệu lên cloud', 'success', { containerId: 'toast-container', exitClass: 'out' });
+    } catch (e) {
+      toast(`❌ Push lỗi: ${e.message}`, 'error', { containerId: 'toast-container', exitClass: 'out' });
+    }
+  });
+
+  document.getElementById('reload-now').addEventListener('click', async () => {
+    await loadAll();
+    toast('🔄 Đã tải lại từ cloud', 'success', { containerId: 'toast-container', exitClass: 'out' });
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => logout());
+}
+
+async function loadAll() {
+  state.tournament = await getTournamentById(TOURNAMENT_ID);
+  if (!state.tournament) {
+    toast('Không tìm thấy giải đấu', 'error', { containerId: 'toast-container', exitClass: 'out' });
+    setTimeout(() => (window.location.href = 'dashboard.html'), 700);
+    return;
+  }
+  await loadPlayers();
+  ensureBracket();
+  fillInfoForm();
+  renderPlayersTable();
+  renderBracket(state.bracket, null, bracketApi);
+  renderSchedule(state);
+}
+
+function setupRealtime() {
+  const { baseUrl, apiKey } = resolveSupabaseClient();
+  if (!baseUrl || !apiKey) return;
+  if (realtime) {
+    try { realtime.close(); } catch {}
+  }
+
+  const wsUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://');
+  const ws = new WebSocket(`${wsUrl}/realtime/v1/websocket?apikey=${apiKey}&vsn=1.0.0`);
+  realtime = ws;
+
+  let hb;
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      topic: 'realtime:public',
+      event: 'phx_join',
+      payload: { config: { postgres_changes: [
+        { event: '*', schema: 'public', table: 'tournaments' },
+        { event: '*', schema: 'public', table: 'players' },
+      ] } },
+      ref: '1',
+    }));
+    hb = setInterval(() => {
+      if (ws.readyState === 1) ws.send(JSON.stringify({ topic:'phoenix', event:'heartbeat', payload:{}, ref:'hb' }));
+    }, 25000);
+  };
+
+  ws.onmessage = async () => {
+    await loadAll();
+  };
+
+  ws.onclose = () => {
+    clearInterval(hb);
+    setTimeout(setupRealtime, 5000);
+  };
+}
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('tab-bracket').classList.contains('active')) {
+    setTimeout(() => drawBracketLines(state), 50);
+  }
+});
+
+async function init() {
+  bindTabs();
+  bindInfoActions();
+  bindPlayersActions();
+  await loadAll();
+  setupRealtime();
+}
+
+init();
+
+// giữ import theo spec
+void getRoundName;
+void advanceWinner;
+</script>
+</body>
+</html>

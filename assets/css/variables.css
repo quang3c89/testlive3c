@@ -1,0 +1,39 @@
+/* Live3C — variables.css */
+:root {
+  --bg:        #080b10;
+  --bg2:       #0d1117;
+  --card:      #111620;
+  --card2:     #161d2a;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --text:      #dce6f0;
+  --muted:     #6b7a8d;
+  --accent:    #f0a500;
+  --accent2:   #e05a2b;
+  --green:     #22c55e;
+  --red:       #ef4444;
+  --blue:      #3b82f6;
+  --radius:    12px;
+  --font:      'DM Sans', sans-serif;
+  --display:   'Barlow Condensed', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+
+  --shadow-light: rgba(255,255,255,0.04);
+  --shadow-dark: rgba(0,0,0,0.6);
+  --font-main: 'DM Sans', sans-serif;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --tb-bg: #0d1117;
+  --tb-font: 'DM Sans', sans-serif;
+  --title-font: 'Barlow Condensed', sans-serif;
+  --name-color: #e6edf3;
+  --unit-color: #8b949e;
+  --rank-color: #f0a500;
+  --row-even: rgba(255,255,255,0.02);
+  --row-odd: transparent;
+  --glow: rgba(240,165,0,0.25);
+
+  --nav-height: 56px;
+  --transition-fast: 0.15s;
+  --transition-med: 0.3s;
+}

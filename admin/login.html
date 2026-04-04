@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live3C Admin — Đăng nhập</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/variables.css">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/components.css">
+<link rel="stylesheet" href="../assets/css/animations.css">
+<style>
+  body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(ellipse at top, rgba(240,165,0,.08), transparent 55%), var(--bg);
+    padding: 20px;
+  }
+  .login-card {
+    width: min(460px, 100%);
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55);
+  }
+  .login-logo {
+    font-family: var(--display);
+    font-size: 56px;
+    line-height: .9;
+    letter-spacing: -1.5px;
+    font-weight: 900;
+    background: linear-gradient(135deg,#f0a500,#e05a2b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .login-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 22px;
+  }
+  .login-fields {
+    display: grid;
+    gap: 12px;
+  }
+  .login-error {
+    min-height: 18px;
+    font-size: 13px;
+    color: #ef4444;
+    margin-top: 4px;
+  }
+  .btn-pri {
+    width: 100%;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+  <div id="toast-box"></div>
+
+  <main class="login-card">
+    <a href="../index.html" class="login-logo" style="display:inline-block;text-decoration:none;">Live3C</a>
+    <p class="login-sub">Admin Dashboard</p>
+
+    <form class="login-fields" id="login-form">
+      <div class="field" style="margin-bottom:0;">
+        <label for="username">Email hoặc Username</label>
+        <input id="username" type="text" placeholder="admin@live3c.xyz" required autocomplete="username">
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label for="password">Mật khẩu</label>
+        <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-pri">Đăng nhập</button>
+      <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
+    </form>
+  </main>
+
+<script type="module">
+import { login, isAdmin } from '../assets/js/auth.js';
+import { toast } from '../assets/js/ui.js';
+
+if (isAdmin()) {
+  window.location.href = 'dashboard.html';
+}
+
+function handleLogin() {
+  const pwd = document.getElementById('password').value;
+  const err = document.getElementById('login-error');
+
+  if (login(pwd)) {
+    window.location.href = 'dashboard.html';
+  } else {
+    const msg = 'Mật khẩu không đúng';
+    err.textContent = msg;
+    toast(msg, 'error');
+  }
+}
+
+document.getElementById('login-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('login-error').textContent = '';
+  handleLogin();
+});
+</script>
+</body>
+</html>

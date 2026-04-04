@@ -1,0 +1,202 @@
+/* Live3C — players-leaderboard.css */
+
+.page-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 92px 24px 40px;
+}
+
+.page-head {
+  margin-bottom: 18px;
+}
+
+.page-head .section-sub {
+  margin-bottom: 0;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+
+.filter-input,
+.filter-select {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 40px;
+  outline: none;
+  font-family: var(--font);
+}
+
+.filter-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.filter-select {
+  min-width: 220px;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.player-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform .16s, border-color .16s, box-shadow .16s;
+}
+
+.player-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border2);
+  box-shadow: 0 12px 26px rgba(0,0,0,.28);
+}
+
+.player-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+
+.player-name {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.4px;
+  margin-bottom: 4px;
+}
+
+.player-unit {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.player-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.player-pill {
+  border: 1px solid var(--border2);
+  background: rgba(255,255,255,.03);
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.player-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,.72);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.player-modal.open { display: flex; }
+
+.player-modal-box {
+  width: min(520px, 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border2);
+  background: var(--card);
+  padding: 18px;
+}
+
+.leaderboard-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 11px 12px;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.leaderboard-table tr:hover {
+  background: var(--card2);
+}
+
+.rank-badge {
+  font-family: var(--display);
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.rank-medal { font-size: 18px; }
+
+.lb-player-link {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+.lb-sk {
+  height: 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile { display: none; }
+  .page-shell { padding: 84px 14px 28px; }
+  .lb-player-link { max-width: 140px; }
+}

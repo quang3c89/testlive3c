@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live3C — Nền tảng quản lý giải đấu Billiards Carom 3 Băng">
+<meta property="og:title" content="Live3C">
+<meta property="og:image" content="/assets/og-image.jpg">
+<title>Bảng xếp hạng — Live3C</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/animations.css">
+<link rel="stylesheet" href="assets/css/players-leaderboard.css">
+</head>
+<body>
+<div id="toast-box"></div>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+  <div class="breadcrumb nav-breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Trang chủ</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>Bảng xếp hạng</span>
+  </div>
+  <span class="nav-spacer"></span>
+  <a class="nav-link" href="tournaments.html">Giải đấu</a>
+  <a class="nav-link" href="players.html">Cơ thủ</a>
+  <a class="nav-link active" href="leaderboard.html" aria-current="page">Bảng xếp hạng</a>
+  <a class="nav-link" href="index.html#contact">Liên hệ</a>
+  <div class="nav-rt"><div class="rt-dot off" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
+  <a class="nav-btn pri" href="admin/login.html">Đăng nhập</a>
+</nav>
+
+<main class="page-shell">
+  <header class="page-head">
+    <div class="section-label">Xếp hạng</div>
+    <h1 class="section-h2">Bảng xếp hạng</h1>
+    <p class="section-sub">Tổng hợp điểm tự động từ kết quả các giải đấu Live3C</p>
+  </header>
+
+  <div class="filter-row" style="justify-content:flex-end;">
+    <select id="season-select" class="filter-select" style="min-width:260px;">
+      <option value="all">Tổng hợp</option>
+    </select>
+  </div>
+
+  <section class="leaderboard-wrap">
+    <table class="leaderboard-table" id="leaderboard-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cơ thủ</th>
+          <th class="hide-mobile">Đơn vị</th>
+          <th>Điểm</th>
+          <th>Số giải</th>
+          <th>Vô địch</th>
+          <th class="hide-mobile">Á quân</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr><td colspan="7"><span class="lb-sk skeleton" style="width:100%"></span></td></tr>
+        <tr><td colspan="7"><span class="lb-sk skeleton" style="width:100%"></span></td></tr>
+        <tr><td colspan="7"><span class="lb-sk skeleton" style="width:100%"></span></td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script src="assets/js/nav-active.js"></script>
+<script type="module">
+import { getTournaments } from './assets/js/supabase.js';
+import { toast } from './assets/js/ui.js';
+
+const SCORE = { champion: 100, runnerUp: 70, top4: 50, participant: 10 };
+let tournaments = [];
+
+function seasonOfTournament(t) {
+  const text = `${t.date_str || ''} ${t.name || ''}`;
+  const match = text.match(/(20\d{2})/);
+  return match ? match[1] : 'Khác';
+}
+
+function parseBracketPlayers(bracketState, t) {
+  if (!bracketState) return [];
+  let data;
+  try { data = typeof bracketState === 'string' ? JSON.parse(bracketState) : bracketState; } catch { return []; }
+  if (!Array.isArray(data)) return [];
+
+  const map = new Map();
+  data.forEach((round) => {
+    if (!Array.isArray(round)) return;
+    round.forEach((m) => {
+      ['p1', 'p2'].forEach((k) => {
+        const p = m?.[k];
+        if (!p?.name) return;
+        const key = `${p.name.trim().toLowerCase()}|${(p.unit || '').trim().toLowerCase()}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            key,
+            idHint: encodeURIComponent(p.name.trim().toLowerCase()),
+            name: p.name,
+            unit: p.unit || '',
+            points: SCORE.participant,
+            tournaments: new Set([t.id]),
+            champion: 0,
+            runnerUp: 0,
+            top4: 0,
+          });
+        }
+      });
+    });
+  });
+
+  const rounds = data.length;
+  if (rounds > 0) {
+    const final = data[rounds - 1]?.[0];
+    if (final?.winner?.name) {
+      const wk = `${final.winner.name.trim().toLowerCase()}|${(final.winner.unit || '').trim().toLowerCase()}`;
+      const w = map.get(wk);
+      if (w) { w.points += SCORE.champion; w.champion += 1; }
+      const loser = final.p1?.id === final.winner?.id ? final.p2 : final.p1;
+      if (loser?.name) {
+        const lk = `${loser.name.trim().toLowerCase()}|${(loser.unit || '').trim().toLowerCase()}`;
+        const l = map.get(lk);
+        if (l) { l.points += SCORE.runnerUp; l.runnerUp += 1; }
+      }
+    }
+  }
+
+  if (rounds > 1) {
+    const semi = data[rounds - 2] || [];
+    semi.forEach((m) => {
+      if (!m?.winner) return;
+      [m.p1, m.p2].filter(Boolean).filter((p) => p.id !== m.winner.id).forEach((loser) => {
+        const lk = `${loser.name.trim().toLowerCase()}|${(loser.unit || '').trim().toLowerCase()}`;
+        const l = map.get(lk);
+        if (l) { l.points += SCORE.top4; l.top4 += 1; }
+      });
+    });
+  }
+
+  return [...map.values()];
+}
+
+function aggregate(ts) {
+  const map = new Map();
+  ts.forEach((t) => {
+    parseBracketPlayers(t.bracket_state, t).forEach((p) => {
+      if (!map.has(p.key)) {
+        map.set(p.key, { ...p, tournaments: new Set(p.tournaments) });
+      } else {
+        const cur = map.get(p.key);
+        cur.points += p.points;
+        cur.champion += p.champion;
+        cur.runnerUp += p.runnerUp;
+        cur.top4 += p.top4;
+        p.tournaments.forEach((x) => cur.tournaments.add(x));
+      }
+    });
+  });
+
+  return [...map.values()].map((p) => ({ ...p, tournamentsCount: p.tournaments.size }));
+}
+
+function rankLabel(i) {
+  if (i === 0) return '<span class="rank-medal">🥇</span>';
+  if (i === 1) return '<span class="rank-medal">🥈</span>';
+  if (i === 2) return '<span class="rank-medal">🥉</span>';
+  return `<span class="rank-badge">${i + 1}</span>`;
+}
+
+function renderTable(list) {
+  const body = document.getElementById('leaderboard-body');
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="7" style="padding:16px;color:var(--muted)">Chưa có dữ liệu xếp hạng.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = list.map((p, i) => `
+    <tr>
+      <td>${rankLabel(i)}</td>
+      <td><a href="players.html?id=${p.idHint}" class="lb-player-link" style="color:var(--text);text-decoration:none;font-weight:700;">${p.name}</a></td>
+      <td class="hide-mobile">${p.unit || '—'}</td>
+      <td><b>${p.points}</b></td>
+      <td>${p.tournamentsCount}</td>
+      <td>${p.champion}</td>
+      <td class="hide-mobile">${p.runnerUp}</td>
+    </tr>
+  `).join('');
+}
+
+function buildSeasons(ts) {
+  const sel = document.getElementById('season-select');
+  const seasons = [...new Set(ts.map(seasonOfTournament))].sort((a, b) => b.localeCompare(a));
+  sel.innerHTML = '<option value="all">Tổng hợp</option>' + seasons.map((s) => `<option value="${s}">${s}</option>`).join('');
+}
+
+function refresh() {
+  const season = document.getElementById('season-select').value;
+  const filtered = season === 'all' ? tournaments : tournaments.filter((t) => seasonOfTournament(t) === season);
+  const rows = aggregate(filtered).sort((a, b) => b.points - a.points || b.champion - a.champion || a.name.localeCompare(b.name, 'vi'));
+  renderTable(rows);
+}
+
+async function init() {
+  try {
+    const data = await getTournaments();
+    tournaments = Array.isArray(data) ? data : [];
+    if (!tournaments.length) toast('Chưa có dữ liệu giải đấu.', 'info');
+  } catch {
+    tournaments = [];
+    toast('Không thể tải dữ liệu cloud.', 'error');
+  }
+
+  buildSeasons(tournaments);
+  refresh();
+  document.getElementById('season-select').addEventListener('change', refresh);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,3263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live3C — Nền tảng quản lý giải đấu Billiards Carom 3 Băng">
+<meta property="og:title" content="Live3C">
+<meta property="og:image" content="/assets/og-image.jpg">
+<title>Live3C Tournament Manager</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Anton&family=Rajdhani:wght@500;600;700&family=Teko:wght@400;500;600;700&family=Black+Han+Sans&family=Rowdies:wght@400;700&family=Baloo+2:wght@700;800&family=Nunito:wght@700;800;900&family=Be+Vietnam+Pro:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/animations.css">
+<link rel="stylesheet" href="assets/css/tournament-header.css">
+<style>
+/* CSS riêng trang giải đấu: theme-strip, tourney-bar, bracket, schedule, modal, v.v. (đã bỏ trùng variables/base/components/animations) */
+
+/* ============ THEME STRIP ============ */
+.theme-strip {
+  display: flex; gap: 5px; padding: 5px 14px;
+  background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; align-items: center; z-index: 100; height: 36px;
+  backdrop-filter: blur(8px);
+}
+.theme-strip .label {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  opacity: 0.3; margin-right: 2px; white-space: nowrap; letter-spacing: 1.5px;
+}
+#theme-dots { display: flex; gap: 5px; align-items: center; }
+.t-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; flex-shrink: 0;
+}
+.t-dot:hover { transform: scale(1.25); }
+.t-dot.active {
+  border-color: var(--accent); transform: scale(1.25);
+  box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--glow);
+}
+/* Show theme strip only in admin mode */
+body.viewer-mode .theme-strip { display: none; }
+.strip-spacer { flex: 1; }
+.gear-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--card); font-size: 11px; cursor: pointer; color: var(--text);
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+}
+.gear-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--accent); transform: scale(1.05); }
+
+/* ============ TOURNEY BAR ============ */
+.tourney-bar {
+  display: flex; flex-wrap: nowrap; gap: 0; padding: 0;
+  background: var(--tb-bg); font-family: var(--tb-font);
+  flex-shrink: 0; align-items: stretch; overflow: hidden;
+  border-bottom: 1px solid var(--border); height: 38px;
+  position: relative;
+}
+.tvi {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 14px; font-size: 12px; white-space: nowrap;
+  border-right: 1px solid var(--border); position: relative;
+  transition: background 0.15s; color: var(--text);
+}
+.tvi:hover { background: rgba(255,255,255,0.03); }
+.tvi .tvi-icon { font-size: 11px; opacity: 0.6; flex-shrink: 0; }
+.tvi [contenteditable] {
+  background: none; border: none; outline: none; color: var(--text);
+  font: inherit; cursor: default; min-width: 40px; white-space: nowrap;
+  caret-color: var(--accent);
+}
+body.admin-mode .tvi [contenteditable] { cursor: text; }
+.tvi:first-child [contenteditable] {
+  font-size: 14px; font-weight: 800; letter-spacing: -0.3px;
+  font-family: var(--title-font);
+}
+.tvi:nth-child(2) [contenteditable] { font-size: 11px; opacity: 0.75; }
+.tvi:nth-child(3) [contenteditable] { font-size: 11px; }
+.tvi:nth-child(4) [contenteditable] { font-weight: 700; text-transform: uppercase; color: var(--accent); font-size: 11px; }
+.tvi:nth-child(5) [contenteditable] { font-weight: 800; font-size: 13px; color: var(--accent); font-family: var(--font-display); }
+.tb-actions {
+  margin-left: auto; display: flex; gap: 6px; align-items: center; padding: 0 10px; flex-shrink: 0;
+}
+/* Only show admin toolbar actions in admin mode */
+body.viewer-mode .tb-actions { display: none; }
+.tb-actions input[type="color"] {
+  width: 20px; height: 20px; border: 1px solid var(--border);
+  border-radius: 4px; cursor: pointer; background: transparent;
+}
+.tb-actions select {
+  background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border);
+  padding: 2px 6px; border-radius: 5px; outline: none; font-size: 10px;
+}
+.tb-sync-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 9px; font-family: var(--font-mono); opacity: 0.5; padding: 0 8px;
+  border-right: 1px solid var(--border); color: var(--text);
+}
+
+/* ============ MAIN LAYOUT ============ */
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* ============ LEFT PANEL ============ */
+.left {
+  flex: 0 0 22%; min-width: 260px; max-width: 360px;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 8px 10px; overflow-y: auto; border-right: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+}
+/* Hide edit controls in viewer mode */
+body.viewer-mode .ctrl-row { display: none; }
+body.viewer-mode .pc .dx { display: none !important; }
+body.viewer-mode .hb-ctrl-btn { display: none !important; }
+body.viewer-mode .gear-btn { display: none !important; }
+
+/* ============ HEADER BANNER ============ */
+.header-banner {
+  display: flex; width: 100%; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5); flex-shrink: 0;
+  background: linear-gradient(135deg, #0d1117, #161b22);
+  border: 1px solid var(--border); position: relative;
+}
+.header-banner::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(240,165,0,0.05), rgba(224,90,43,0.05));
+  pointer-events: none;
+}
+.hb-video { flex: 0 0 65%; position: relative; overflow: hidden; min-height: 72px; max-height: 88px; }
+.hb-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hb-video::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to right, transparent 60%, var(--card));
+  pointer-events: none;
+}
+.header-controls-wrap {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0; transition: opacity 0.5s ease; z-index: 10;
+  display: flex; align-items: flex-end; padding: 6px;
+  pointer-events: none;
+}
+.header-banner:hover .header-controls-wrap { opacity: 1; pointer-events: all; }
+.hb-ctrl-btn {
+  font-size: 9px; padding: 3px 8px; border: none; border-radius: 5px;
+  background: rgba(0,0,0,0.6); color: #fff; cursor: pointer; font-weight: 700;
+  backdrop-filter: blur(8px); transition: background 0.15s; border: 1px solid rgba(255,255,255,0.15);
+}
+.hb-ctrl-btn:hover { background: rgba(240,165,0,0.4); }
+.hb-brand {
+  flex: 0 0 35%; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.brand-txt {
+  font-family: var(--font-display); font-size: 30px; font-weight: 900;
+  line-height: 1; position: relative; z-index: 1; letter-spacing: -1px;
+  animation: brandPulse 3s ease-in-out infinite;
+}
+.brand-txt .by { color: #f0a500; text-shadow: 0 0 20px rgba(240,165,0,0.4); }
+.brand-txt .br { color: #e05a2b; text-shadow: 0 0 20px rgba(224,90,43,0.4); }
+.brand-txt .bw { color: rgba(255,255,255,0.5); }
+@keyframes brandPulse {
+  0%,100% { filter: drop-shadow(0 0 6px rgba(240,165,0,0.2)); }
+  50% { filter: drop-shadow(0 0 14px rgba(240,165,0,0.5)); }
+}
+
+/* ============ WHEEL ============ */
+.wheel-wrap {
+  margin: 0 auto; width: 100%; aspect-ratio: 1; position: relative;
+  padding: 6px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+}
+.wheel-inner {
+  width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
+  box-shadow: 0 0 0 2px var(--border), 0 0 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+}
+#wheel-canvas { width: 100%; height: 100%; display: block; }
+.spin-btn {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 54px; height: 54px; border-radius: 50%;
+  background: linear-gradient(135deg, #f0a500, #e05a2b);
+  color: #fff; border: 3px solid rgba(255,255,255,0.2);
+  font-weight: 900; font-size: 11px; cursor: pointer; z-index: 10;
+  letter-spacing: 0.5px; font-family: var(--font-display);
+  box-shadow: 0 4px 16px rgba(240,165,0,0.4), 0 0 0 6px rgba(0,0,0,0.3);
+  transition: all 0.15s; text-transform: uppercase;
+}
+.spin-btn:hover { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 6px 24px rgba(240,165,0,0.6), 0 0 0 6px rgba(0,0,0,0.3); }
+.spin-btn:active { transform: translate(-50%, -50%) scale(0.94); }
+.spin-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: translate(-50%, -50%) scale(1); }
+/* Hide spin button in viewer mode */
+body.viewer-mode .spin-btn { display: none; }
+.wheel-ptr {
+  position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
+  font-size: 22px; color: var(--accent); z-index: 20;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); line-height: 1;
+}
+
+/* ============ CONTROLS ============ */
+.ctrl-row { display: flex; justify-content: space-around; padding: 2px 0; }
+.cb {
+  width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card); font-size: 14px; cursor: pointer; color: var(--text);
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+}
+.cb:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); background: rgba(240,165,0,0.1); }
+.cb:active { transform: translateY(0); }
+
+/* ============ PLAYER LIST ============ */
+.plist-left {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+  flex: 1; overflow-y: auto; padding: 1px; align-content: start; scroll-behavior: smooth;
+}
+.pc {
+  padding: 4px 6px; border-radius: 5px;
+  background: var(--card); position: relative; transition: all 0.15s;
+  border: 1px solid var(--border); border-left: 2px solid var(--accent);
+  animation: fadeScaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.pc .dx {
+  position: absolute; top: 1px; right: 3px; font-size: 8px;
+  cursor: pointer; opacity: 0; transition: opacity 0.15s; color: #ef4444;
+}
+.pc:hover .dx { opacity: 1; }
+.pc.drawn {
+  opacity: 0.3; filter: grayscale(60%);
+  border-left-color: rgba(255,255,255,0.15);
+}
+.pc.drawn .pn { text-decoration: line-through; }
+.pc .pr-row { display: flex; align-items: center; gap: 2px; padding-right: 8px; }
+.pn { font-weight: 700; font-size: 10px; color: var(--name-color); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+.pu { font-size: 8px; color: var(--unit-color); font-style: italic; line-height: 1.2; }
+.pk { font-size: 7px; background: var(--rank-color); color: #000; padding: 0 3px; border-radius: 2px; font-weight: 800; white-space: nowrap; line-height: 1.5; font-family: var(--font-mono); }
+
+@keyframes fadeScaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ============ CENTER PANEL (BRACKET) ============ */
+.center { flex: 1; position: relative; overflow: auto; padding: 12px; background: radial-gradient(ellipse at center, rgba(240,165,0,0.02) 0%, transparent 70%); }
+.bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; }
+#bracket-lines { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; overflow: visible; }
+.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; min-width: 100%; min-height: calc(100vh - 120px); }
+
+/* SYMMETRICAL BRACKET */
+.bracket-side { display: flex; gap: 0; align-items: stretch; }
+.bracket-side.left-side { flex-direction: row; }
+.bracket-side.right-side { flex-direction: row-reverse; }
+.bracket-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; gap: 10px; flex-shrink: 0; }
+
+.round-col {
+  display: flex; flex-direction: column;
+  width: 168px; padding: 0 6px;
+  position: relative;
+}
+.round-label {
+  text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase;
+  opacity: 0.35; margin-bottom: 8px; font-family: var(--font-mono); letter-spacing: 1.5px;
+  position: sticky; top: 0;
+}
+/* Match box */
+.mb {
+  background: var(--card); border-radius: 8px; border: 1px solid var(--border);
+  display: flex; flex-direction: column; transition: all 0.2s; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3); position: relative;
+}
+.mb:hover { border-color: rgba(240,165,0,0.4); transform: scale(1.02); z-index: 5; box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(240,165,0,0.2); }
+.mb.anim-enter { animation: matchEnter 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes matchEnter {
+  from { opacity:0; transform: scale(0.8) translateY(-10px); }
+  to { opacity:1; transform: none; }
+}
+
+/* Player slot inside match */
+.mp {
+  display: flex; align-items: center;
+  padding: 5px 8px 5px 10px; cursor: pointer; transition: background 0.15s;
+  position: relative; overflow: hidden; gap: 4px;
+}
+.mp::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.2s; }
+.mp.p1-slot::before { background: #3b82f6; }
+.mp.p2-slot::before { background: #ef4444; }
+.mp:first-child { border-bottom: 1px solid var(--border); }
+.mp:hover { background: rgba(255,255,255,0.04); }
+.mp.winner { font-weight: 800; background: rgba(240,165,0,0.08); }
+.mp.winner::before { background: var(--accent) !important; }
+.mp.winner .mn { color: var(--accent); }
+.mp.winner::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to right, rgba(240,165,0,0.07), transparent);
+}
+/* Disable click in viewer mode */
+body.viewer-mode .mp { cursor: default; }
+body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
+
+.mp-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mp-top { display: flex; align-items: center; gap: 4px; }
+.mn { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; font-weight: 700; flex: 1; }
+.mp-rank { font-size: 8px; background: var(--rank-color); color: #000; padding: 0 3px; border-radius: 2px; font-weight: 800; white-space: nowrap; font-family: var(--font-mono); flex-shrink: 0; }
+.mp-unit { font-size: 8.5px; color: var(--unit-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; line-height: 1.2; }
+.ms {
+  width: 28px; border: 1px solid var(--border); border-radius: 4px;
+  background: rgba(255,255,255,0.05); color: inherit; padding: 1px;
+  text-align: center; font-weight: 800; font-family: var(--font-mono);
+  font-size: 11px; outline: none; color: var(--accent); transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+.ms:focus { border-color: var(--accent); background: rgba(240,165,0,0.1); }
+
+/* Finals special styling */
+.finals-match { min-width: 190px; }
+.finals-match .mp { padding: 10px 12px 10px 14px; }
+.finals-match .mn { font-size: 14px; font-weight: 800; font-family: var(--font-display); letter-spacing: 0.5px; }
+.finals-match.has-winner { box-shadow: 0 0 30px rgba(240,165,0,0.3), 0 0 60px rgba(240,165,0,0.1); border-color: rgba(240,165,0,0.5); }
+.champion-label {
+  font-family: var(--font-display); font-size: 10px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; opacity: 0.5; text-align: center; padding: 4px;
+}
+
+/* Bracket lines */
+.aline {
+  stroke-dasharray: 6; animation: flowl 1.5s linear infinite; opacity: 0.4;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.aline-idle { opacity: 0.1; stroke-dasharray: 4 4; }
+@keyframes flowl { to { stroke-dashoffset: -12; } }
+
+/* ============ RIGHT PANEL ============ */
+.right {
+  flex: 0 0 18%; min-width: 210px; max-width: 300px;
+  display: flex; flex-direction: column; padding: 8px 10px;
+  border-left: 1px solid var(--border); background: rgba(0,0,0,0.15);
+}
+.right-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 0 6px; flex-shrink: 0; }
+.right-header h3 { font-size: 11px; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-display); }
+.export-btn {
+  padding: 3px 8px; border: 1px solid var(--border); border-radius: 5px;
+  background: transparent; color: var(--text); font-size: 9px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; font-family: var(--font-mono);
+}
+.export-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,0.1); }
+.overview-table { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+.ot-head {
+  display: grid; grid-template-columns: 20px 1fr 1fr 28px; gap: 3px;
+  padding: 3px 4px; font-size: 9px; font-weight: 800; opacity: 0.35;
+  text-transform: uppercase; position: sticky; top: 0; background: var(--bg);
+  z-index: 2; border-bottom: 1px solid var(--border); font-family: var(--font-mono); letter-spacing: 0.5px;
+}
+.ot-row {
+  display: grid; grid-template-columns: 20px 1fr 1fr 28px; gap: 3px;
+  padding: 4px; font-size: 10px; border-radius: 4px; transition: background 0.1s;
+  cursor: default; border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.ot-row:nth-child(even) { background: var(--row-even); }
+.ot-row:hover { background: rgba(255,255,255,0.05); }
+.ot-row.drawn { opacity: 0.3; }
+.ot-row.drawn .ot-name, .ot-row.drawn .ot-unit { text-decoration: line-through; }
+.ot-row .ot-num { font-weight: 700; opacity: 0.35; font-size: 9px; font-family: var(--font-mono); }
+.ot-row .ot-name { font-weight: 700; color: var(--name-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ot-row .ot-unit { color: var(--unit-color); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ot-row .ot-rank { font-size: 8px; text-align: center; color: var(--rank-color); font-weight: 800; font-family: var(--font-mono); }
+
+/* ============ SPIN RESULT POPUP (bốc thăm) ============ */
+#spin-popup {
+  display: none; position: fixed; z-index: 7000;
+  pointer-events: none;
+}
+#spin-popup.show { display: block; pointer-events: all; }
+.spin-popup-box {
+  background: rgba(13,17,23,0.96);
+  border: 1px solid rgba(240,165,0,0.45);
+  border-radius: 16px; padding: 16px 20px; text-align: center;
+  width: 240px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.8), 0 0 40px rgba(240,165,0,0.12);
+  animation: spinPopupIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative; overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+.spin-popup-box::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(240,165,0,0.12) 0%, transparent 65%);
+}
+@keyframes spinPopupIn {
+  from { opacity:0; transform: scale(0.72) translateY(12px); }
+  to { opacity:1; transform: scale(1) translateY(0); }
+}
+.spin-popup-confetti { font-size: 26px; animation: confettiBounce 0.7s ease-in-out infinite alternate; display: block; }
+@keyframes confettiBounce { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.18) rotate(6deg); } }
+.spin-popup-label {
+  font-family: var(--font-mono); font-size: 8px; font-weight: 700;
+  opacity: 0.4; text-transform: uppercase; letter-spacing: 2px; margin-top: 6px;
+}
+.spin-popup-name {
+  font-family: var(--font-display); font-size: 26px; font-weight: 900;
+  color: var(--accent); margin: 4px 0 2px;
+  letter-spacing: -0.5px; line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  animation: nameGlow 2s ease-in-out infinite;
+}
+@keyframes nameGlow {
+  0%,100% { text-shadow: 0 0 12px rgba(240,165,0,0.4); }
+  50%      { text-shadow: 0 0 28px rgba(240,165,0,0.8), 0 0 60px rgba(240,165,0,0.2); }
+}
+.spin-popup-unit { font-size: 11px; color: var(--unit-color); font-style: italic; }
+.spin-popup-rank {
+  display: inline-block; font-size: 10px; background: var(--rank-color);
+  color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 800;
+  font-family: var(--font-mono); margin-top: 4px;
+}
+.spin-popup-actions {
+  display: flex; gap: 8px; margin-top: 14px; justify-content: center;
+}
+.spin-popup-actions button {
+  padding: 7px 14px; border-radius: 8px; font-weight: 700; font-family: inherit;
+  font-size: 12px; cursor: pointer; transition: all 0.15s;
+  border: 1px solid var(--border);
+}
+.spin-popup-actions .btn-close {
+  background: rgba(255,255,255,0.06); color: var(--text);
+}
+.spin-popup-actions .btn-close:hover { background: rgba(255,255,255,0.12); }
+.spin-popup-actions .btn-continue {
+  background: linear-gradient(135deg, rgba(240,165,0,0.25), rgba(224,90,43,0.25));
+  border-color: var(--accent); color: var(--accent);
+}
+.spin-popup-actions .btn-continue:hover {
+  background: linear-gradient(135deg, rgba(240,165,0,0.45), rgba(224,90,43,0.45));
+  transform: translateY(-1px);
+}
+
+/* ============ WINNER POPUP (xác định người thắng) ============ */
+#winner-popup {
+  display: none; position: fixed; inset: 0; z-index: 8500;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0);
+  transition: background 0.35s ease;
+  pointer-events: none;
+}
+#winner-popup.show {
+  display: flex; pointer-events: all;
+  background: rgba(0,0,0,0.75);
+}
+#winner-popup .wp-backdrop {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.wp-box {
+  position: relative; z-index: 1;
+  background: linear-gradient(160deg, #111820, #0d1117);
+  border: 1px solid rgba(240,165,0,0.35);
+  border-radius: 22px;
+  padding: 0;
+  width: min(480px, 92vw);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 32px 80px rgba(0,0,0,0.8),
+    0 0 80px rgba(240,165,0,0.1);
+  animation: wpIn 0.5s cubic-bezier(0.22,1,0.36,1);
+  transform-origin: center bottom;
+}
+@keyframes wpIn {
+  from { opacity:0; transform: scale(0.82) translateY(28px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.wp-canvas {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; border-radius: 22px; overflow: hidden;
+}
+.wp-canvas canvas { display: block; width: 100%; height: 100%; }
+.wp-accent-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #f0a500, #e05a2b, #f0a500);
+  background-size: 200% 100%;
+  animation: barShift 2s linear infinite;
+}
+@keyframes barShift { to { background-position: -200% 0; } }
+.wp-content {
+  position: relative; z-index: 2;
+  padding: 28px 32px 32px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.wp-img-wrap {
+  width: 110px; height: 110px;
+  position: relative; margin-bottom: 4px;
+}
+.wp-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  animation: wpImgFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(240,165,0,0.5));
+}
+.wp-img-placeholder {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(240,165,0,0.15), rgba(224,90,43,0.1));
+  border: 2px solid rgba(240,165,0,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px;
+  animation: wpImgFloat 3s ease-in-out infinite;
+}
+@keyframes wpImgFloat {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-6px) scale(1.04); }
+}
+.wp-img-wrap::after {
+  content: '';
+  position: absolute; inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240,165,0,0.18) 0%, transparent 70%);
+  animation: ringPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ringPulse {
+  0%,100% { transform: scale(0.9); opacity: 0.6; }
+  50%      { transform: scale(1.1); opacity: 1; }
+}
+.wp-round-label {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--accent); opacity: 0.6;
+  background: rgba(240,165,0,0.08);
+  padding: 3px 12px; border-radius: 20px;
+  border: 1px solid rgba(240,165,0,0.15);
+}
+.wp-headline {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase; opacity: 0.45;
+}
+.wp-name {
+  font-family: var(--font-display); font-size: clamp(28px, 6vw, 46px);
+  font-weight: 900; letter-spacing: -0.5px; line-height: 1.05;
+  color: var(--text);
+  background: linear-gradient(135deg, #fff 40%, var(--accent));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: nameReveal 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  animation-delay: 0.2s;
+}
+@keyframes nameReveal {
+  from { opacity:0; transform: translateY(10px) scale(0.92); }
+  to   { opacity:1; transform: none; }
+}
+.wp-unit {
+  font-size: 13px; color: var(--unit-color); font-style: italic;
+  animation: nameReveal 0.5s ease both; animation-delay: 0.35s;
+}
+.wp-rank-badge {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+  background: var(--accent); color: #000;
+  padding: 3px 12px; border-radius: 6px;
+  animation: nameReveal 0.5s ease both; animation-delay: 0.45s;
+}
+.wp-score {
+  display: flex; align-items: center; gap: 16px;
+  padding: 10px 20px; border-radius: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  margin-top: 4px;
+  animation: nameReveal 0.5s ease both; animation-delay: 0.5s;
+}
+.wp-score-side { text-align: center; }
+.wp-score-name { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+.wp-score-val {
+  font-family: var(--font-display); font-size: 32px; font-weight: 900;
+  letter-spacing: -1px; line-height: 1;
+}
+.wp-score-val.win { color: var(--accent); }
+.wp-score-val.lose { color: var(--muted); opacity: 0.5; }
+.wp-score-sep {
+  font-family: var(--font-mono); font-size: 11px; opacity: 0.3;
+  font-weight: 700; letter-spacing: 1px; padding: 0 4px;
+}
+.wp-actions {
+  display: flex; gap: 10px; margin-top: 10px;
+  animation: nameReveal 0.5s ease both; animation-delay: 0.55s;
+}
+.wp-btn {
+  padding: 10px 22px; border-radius: 10px; font-weight: 700;
+  font-family: var(--font-main); font-size: 13px; cursor: pointer;
+  transition: all 0.15s; border: none;
+}
+.wp-btn.close {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.wp-btn.close:hover { background: rgba(255,255,255,0.13); }
+
+/* ============ MATCH CLICK FEEDBACK ============ */
+@keyframes slotWin {
+  0%   { box-shadow: 0 0 0 0 rgba(240,165,0,0); background: rgba(240,165,0,0.08); }
+  30%  { box-shadow: 0 0 0 6px rgba(240,165,0,0.35); background: rgba(240,165,0,0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(240,165,0,0); background: rgba(240,165,0,0.08); }
+}
+.mp.winner-flash { animation: slotWin 0.55s ease forwards; }
+@keyframes slotLose {
+  from { opacity:1; }
+  to   { opacity:0.35; filter: grayscale(60%); }
+}
+.mp.loser-dim { animation: slotLose 0.4s ease forwards; opacity:0.35; filter: grayscale(60%); }
+.mb.has-winner {
+  border-color: rgba(240,165,0,0.5) !important;
+  box-shadow: 0 0 20px rgba(240,165,0,0.15) !important;
+}
+.champ-reveal {
+  animation: champIn 0.8s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes champIn {
+  from { opacity:0; transform: scale(0.7); }
+  to   { opacity:1; transform: scale(1); }
+}
+
+/* ============ FLYING ANIMATION ============ */
+.flying-player {
+  position: fixed; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px; border-radius: 7px; z-index: 9999;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #000;
+  transition: left 1.1s cubic-bezier(0.4, 0, 0.2, 1),
+              top 1.1s cubic-bezier(0.4, 0, 0.2, 1),
+              width 1.1s cubic-bezier(0.4, 0, 0.2, 1),
+              height 1.1s cubic-bezier(0.4, 0, 0.2, 1),
+              font-size 1.1s ease,
+              opacity 0.4s ease 0.8s;
+  box-shadow: 0 8px 30px rgba(240,165,0,0.5), 0 0 60px rgba(240,165,0,0.2);
+  pointer-events: none; font-family: var(--font-display); letter-spacing: 0.5px;
+  text-shadow: none; padding: 0 8px; white-space: nowrap; overflow: hidden;
+}
+
+/* ============ MODALS ============ */
+.modal {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.modal-c {
+  background: var(--card); padding: 24px; border-radius: 14px;
+  min-width: 320px; max-width: 440px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  display: flex; flex-direction: column; gap: 12px; color: var(--text);
+  max-height: 90vh; overflow-y: auto;
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.modal-c h2 { font-weight: 900; font-size: 20px; font-family: var(--font-display); letter-spacing: -0.5px; }
+.modal-c label { font-size: 10px; font-weight: 700; opacity: 0.45; text-transform: uppercase; letter-spacing: 0.8px; font-family: var(--font-mono); }
+.minput {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px;
+  background: rgba(255,255,255,0.04); color: var(--text); outline: none; font-family: inherit;
+  font-size: 13px; transition: border-color 0.15s;
+}
+.minput:focus { border-color: var(--accent); background: rgba(240,165,0,0.05); }
+.mselect {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 7px;
+  background: rgba(255,255,255,0.04); color: var(--text); outline: none; font-family: inherit;
+}
+.mselect option { background: #1a1f29; }
+.mactions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+.mbtn {
+  padding: 8px 18px; border: 1px solid var(--border); border-radius: 7px;
+  cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text);
+  font-weight: 700; font-family: inherit; transition: all 0.15s; font-size: 13px;
+}
+.mbtn:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); }
+.mbtn.pri { background: linear-gradient(135deg, rgba(240,165,0,0.2), rgba(224,90,43,0.2)); border-color: var(--accent); color: var(--accent); }
+.mbtn.pri:hover { background: linear-gradient(135deg, rgba(240,165,0,0.35), rgba(224,90,43,0.35)); }
+.mbtn.danger { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
+.mbtn.danger:hover { background: rgba(239,68,68,0.2); }
+.sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+
+/* ============ CLOUD SYNC INFO ============ */
+.supa-guide {
+  font-size: 10px; opacity: 0.55; background: rgba(255,255,255,0.03);
+  padding: 10px; border-radius: 7px; line-height: 1.8; border: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
+.supa-status-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+
+/* ============ PROGRESS BAR ============ */
+.sync-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 9998;
+  background: transparent; pointer-events: none; transition: opacity 0.3s;
+}
+.sync-progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+  width: 0%; transition: width 0.3s ease; box-shadow: 0 0 8px var(--accent);
+}
+
+/* Font preview in dropdown */
+.font-preview { margin-top: 6px; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 18px; font-weight: 800; text-align: center; color: var(--accent); transition: font-family 0.2s; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+  .right { display: none; }
+  .left { min-width: 220px; }
+}
+
+/* ============ MOBILE TAB NAV ============ */
+.mobile-tabs {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  background: var(--card); border-top: 1px solid var(--border);
+  height: 54px; justify-content: stretch; align-items: stretch;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+.m-tab {
+  flex: 1; border: none; background: transparent; color: var(--text);
+  font-family: var(--font-main); font-size: 11px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; opacity: 0.5;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: 6px 4px;
+}
+.m-tab.active { opacity: 1; color: var(--accent); border-top: 2px solid var(--accent); }
+.m-tab:active { background: rgba(255,255,255,0.05); }
+
+@media (max-width: 768px) {
+  body { overflow: auto; height: auto; min-height: 100vh; }
+
+  .mobile-tabs { display: flex; }
+
+  .main {
+    flex-direction: column;
+    padding-bottom: 54px;
+  }
+
+  .left {
+    flex: none; width: 100%; min-width: unset; max-width: unset;
+    border-right: none; border-bottom: 1px solid var(--border);
+    max-height: unset; overflow-y: visible;
+  }
+
+  .center {
+    flex: none; width: 100%; min-height: 70vh;
+    overflow-x: auto; padding: 8px;
+  }
+
+  .right {
+    display: flex !important;
+    flex: none; width: 100%; border-left: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Ẩn left và right ban đầu, chỉ show center */
+  .left  { display: none; }
+  .right { display: none !important; }
+
+  /* Tourney bar compact */
+  .tourney-bar { flex-wrap: wrap; height: auto; min-height: 38px; overflow: visible; }
+
+  /* Theme strip: ẩn bớt dots trên mobile, giữ actions */
+  .theme-strip .label { display: none; }
+
+  /* Player cards: tăng font size tối thiểu */
+  .pn { font-size: 11px !important; }
+  .pu { font-size: 9px !important; }
+
+  /* Spin button lớn hơn để dễ tap */
+  .spin-btn { width: 64px !important; height: 64px !important; font-size: 13px !important; }
+
+  /* Modal full width trên mobile */
+  .modal-c { min-width: unset; width: calc(100vw - 32px); max-width: unset; }
+
+  /* Bracket: cho phép scroll ngang */
+  .bracket-cols { min-width: max-content; }
+
+  /* Tăng touch target các nút nhỏ */
+  .gear-btn { width: 34px; height: 34px; }
+  .t-dot { width: 22px; height: 22px; }
+}
+
+@media (max-width: 768px) {
+  /* Khi tab left active */
+  body.tab-left .left   { display: flex !important; }
+  body.tab-left .center { display: none !important; }
+  body.tab-left .right  { display: none !important; }
+
+  /* Khi tab center active */
+  body.tab-center .left   { display: none !important; }
+  body.tab-center .center { display: flex !important; }
+  body.tab-center .right  { display: none !important; }
+
+  /* Khi tab right active */
+  body.tab-right .left   { display: none !important; }
+  body.tab-right .center { display: none !important; }
+  body.tab-right .right  { display: flex !important; }
+}
+
+/* ============ BRACKET TABS (Bracket / Lịch Thi Đấu) ============ */
+.bracket-tab-bar {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  padding: 8px 12px 0;
+  gap: 4px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.bracket-tab-bar.visible {
+  display: flex;
+  pointer-events: all;
+}
+.btab {
+  padding: 5px 14px 6px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+.btab:hover { opacity: 0.8; background: rgba(255,255,255,0.06); }
+.btab.active {
+  opacity: 1;
+  background: var(--card);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 -2px 10px rgba(240,165,0,0.15);
+}
+
+/* ============ SCHEDULE PANEL ============ */
+#schedule-panel {
+  display: none;
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 52px 20px 20px;
+  background: var(--bg);
+}
+#schedule-panel.active { display: block; }
+
+/* When schedule is active, hide bracket */
+.center.schedule-active #bracket-container { display: none; }
+.center.schedule-active .bracket-tab-bar { background: transparent; }
+
+/* ============ SCHEDULE HEADER ============ */
+.schedule-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.schedule-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.schedule-subtitle {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  opacity: 0.35;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ============ SCHEDULE ROUND SECTION ============ */
+.sched-round-section {
+  margin-bottom: 24px;
+}
+.sched-round-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin-bottom: 10px;
+  padding-left: 6px;
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+  font-family: var(--font-mono);
+}
+
+/* ============ SCHEDULE COLUMNS ============ */
+.schedule-columns {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.schedule-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 10px;
+  position: relative;
+}
+
+/* Divider line between columns */
+.schedule-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--accent) 20%,
+    var(--accent) 80%,
+    transparent
+  );
+  opacity: 0.2;
+  position: relative;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* ============ MATCH CARD — NEW DESIGN ============ */
+.sched-match {
+  position: relative;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+  animation: schedMatchIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.sched-match:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240,165,0,0.4);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px rgba(240,165,0,0.15);
+}
+.sched-match.has-winner {
+  border-color: rgba(240,165,0,0.3);
+  box-shadow: 0 0 20px rgba(240,165,0,0.1);
+}
+@keyframes schedMatchIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Match number row (top strip) */
+.sched-match-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 12px 4px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+.sched-match-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(240,165,0,0.4);
+}
+.sched-match-status {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0.35;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.sched-match-status.done {
+  color: #22c55e;
+  opacity: 0.7;
+}
+
+/* Match body: [ Player1 ] [ ICON ] [ Player2 ] */
+.sched-match-body {
+  display: flex;
+  align-items: center;
+  padding: 10px 8px;
+  gap: 0;
+  min-height: 64px;
+}
+
+/* Player sides */
+.sched-player {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  padding: 0 10px;
+}
+.sched-player.left {
+  align-items: flex-start;
+  border-left: 3px solid #3b82f6;
+  padding-left: 10px;
+}
+.sched-player.right {
+  align-items: flex-end;
+  border-right: 3px solid #ef4444;
+  padding-right: 10px;
+}
+
+/* Player name row: name + rank inline */
+.sched-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+}
+.sched-player.right .sched-name-row {
+  flex-direction: row-reverse;
+}
+
+.sched-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--name-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+}
+.sched-name.left-name { color: #60a5fa; }
+.sched-name.right-name { color: #f87171; }
+.sched-name.empty-name {
+  font-size: 13px;
+  font-weight: 400;
+  font-style: italic;
+  opacity: 0.3;
+  color: var(--text);
+}
+
+.sched-rank {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 900;
+  background: var(--rank-color);
+  color: #000;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.sched-unit {
+  font-size: 12px;
+  color: var(--unit-color);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-top: 2px;
+  opacity: 0.8;
+  line-height: 1.3;
+}
+
+/* Winner badge on player side */
+.sched-winner-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 3px;
+  opacity: 0.8;
+}
+
+/* Center icon */
+.sched-vs-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 50px;
+  gap: 4px;
+}
+.sched-ball-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(240,165,0,0.4));
+  animation: ballSpin 8s linear infinite;
+}
+@keyframes ballSpin {
+  0% { filter: drop-shadow(0 2px 6px rgba(240,165,0,0.4)); }
+  50% { filter: drop-shadow(0 2px 12px rgba(224,90,43,0.6)); }
+  100% { filter: drop-shadow(0 2px 6px rgba(240,165,0,0.4)); }
+}
+
+@media (max-width: 768px) {
+  .schedule-columns { flex-direction: column; gap: 10px; }
+  .schedule-divider { display: none; }
+  .sched-name { font-size: 15px; }
+  .sched-unit { font-size: 11px; }
+  .tournament-bc-nav { display: none; }
+  .tournament-bc-mobile { display: inline-flex !important; }
+}
+.tournament-bc-mobile { display: none !important; }
+</style>
+</head>
+<body class="viewer-mode">
+
+<!-- SYNC PROGRESS -->
+<div class="sync-progress" id="sync-progress"><div class="sync-progress-bar" id="sync-bar"></div></div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-logo">live3c</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-txt" id="loading-txt">INITIALIZING...</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<header class="tournament-page-header">
+  <nav class="tournament-site-nav" aria-label="Trang chính">
+    <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+    <span class="nav-spacer"></span>
+    <a class="nav-link" href="tournaments.html">Giải đấu</a>
+    <a class="nav-link" href="players.html">Cơ thủ</a>
+    <a class="nav-link" href="leaderboard.html">Bảng xếp hạng</a>
+    <a class="nav-link" href="index.html#contact">Liên hệ</a>
+  </nav>
+  <div class="tournament-header-row">
+    <a href="tournaments.html" class="btn btn-ghost">← Tất cả giải đấu</a>
+    <a href="tournaments.html" class="btn btn-ghost tournament-bc-mobile">← Giải đấu</a>
+    <div class="breadcrumb tournament-bc-nav" role="navigation" aria-label="breadcrumb">
+      <a href="index.html">Trang chủ</a>
+      <span class="bc-sep">›</span>
+      <a href="tournaments.html">Giải đấu</a>
+      <span class="bc-sep">›</span>
+      <span id="bc-name">Đang tải...</span>
+    </div>
+  </div>
+</header>
+
+<!-- SPIN RESULT POPUP -->
+<div id="spin-popup">
+  <div class="spin-popup-box">
+    <span class="spin-popup-confetti" id="popup-emoji">🎉</span>
+    <div class="spin-popup-label">Đã bốc được</div>
+    <div class="spin-popup-name" id="popup-name">—</div>
+    <div class="spin-popup-unit" id="popup-unit"></div>
+    <div id="popup-rank-wrap"></div>
+    <div class="spin-popup-actions">
+      <button class="btn-close" onclick="closeSpinPopup()">Vào bracket</button>
+      <button class="btn-continue" onclick="closeSpinPopupAndSpin()">🎯 Quay tiếp</button>
+    </div>
+  </div>
+</div>
+
+<!-- WINNER POPUP -->
+<div id="winner-popup">
+  <div class="wp-backdrop" onclick="closeWinnerPopup()"></div>
+  <div class="wp-box">
+    <div class="wp-accent-bar"></div>
+    <div class="wp-canvas"><canvas id="wp-particle-canvas"></canvas></div>
+    <div class="wp-content">
+      <div class="wp-img-wrap" id="wp-img-wrap">
+        <div class="wp-img-placeholder" id="wp-img-placeholder">🏆</div>
+      </div>
+      <div class="wp-round-label" id="wp-round-label">Trận đấu</div>
+      <div class="wp-headline">Người chiến thắng</div>
+      <div class="wp-name" id="wp-name">—</div>
+      <div class="wp-unit" id="wp-unit"></div>
+      <div id="wp-rank-wrap"></div>
+      <div class="wp-score" id="wp-score" style="display:none">
+        <div class="wp-score-side">
+          <div class="wp-score-name" id="wp-s1-name">—</div>
+          <div class="wp-score-val win" id="wp-s1-val">—</div>
+        </div>
+        <div class="wp-score-sep">VS</div>
+        <div class="wp-score-side">
+          <div class="wp-score-name" id="wp-s2-name">—</div>
+          <div class="wp-score-val lose" id="wp-s2-val">—</div>
+        </div>
+      </div>
+      <div class="wp-actions">
+        <button class="wp-btn close" onclick="closeWinnerPopup()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THEME STRIP (admin only) -->
+<div class="theme-strip" id="theme-strip">
+  <span class="label">THEME</span>
+  <div id="theme-dots"></div>
+  <div class="strip-spacer"></div>
+  <div class="rt-indicator" id="rt-indicator"><div class="rt-dot offline" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
+  <button class="gear-btn" id="undo-btn" onclick="undo()" title="Hoàn tác (Ctrl+Z)" disabled>↩</button>
+  <button class="gear-btn" id="redo-btn" onclick="redo()" title="Làm lại (Ctrl+Y)" disabled>↪</button>
+  <button class="gear-btn" title="Settings" onclick="openModal('settings-modal')" style="margin-left:8px;">⚙️</button>
+  <button class="gear-btn" title="Supabase Cloud" onclick="openModal('supa-modal')" style="margin-left:4px;">☁️</button>
+  <button class="gear-btn" title="Đăng xuất" onclick="doLogout()" style="margin-left:4px;">🔒</button>
+</div>
+
+<!-- TOURNEY BAR -->
+<div class="tourney-bar" id="tourney-bar">
+  <div class="tvi"><span class="tvi-icon">🏆</span><div contenteditable="false" id="tb-v0" spellcheck="false"></div></div>
+  <div class="tvi"><span class="tvi-icon">🕒</span><div contenteditable="false" id="tb-v1" spellcheck="false"></div></div>
+  <div class="tvi"><span class="tvi-icon">📍</span><div contenteditable="false" id="tb-v2" spellcheck="false"></div></div>
+  <div class="tvi"><span class="tvi-icon">⚔️</span><div contenteditable="false" id="tb-v3" spellcheck="false"></div></div>
+  <div class="tvi"><span class="tvi-icon">💰</span><div contenteditable="false" id="tb-v4" spellcheck="false"></div></div>
+  <div class="tvi" id="tb-video-url-wrap" style="display:none"><span class="tvi-icon">🎥</span><div contenteditable="false" id="tb-v5" spellcheck="false"></div></div>
+  <div class="tb-sync-status" id="tb-sync-status"><span id="tb-sync-time">—</span></div>
+  <div class="tb-actions">
+    <button type="button" class="btn btn-ghost" id="tb-admin-edit" hidden>⚙ Quản lý Admin</button>
+    <input type="color" id="tb-bg-color" title="Màu header">
+    <select id="tb-font" title="Font tiêu đề"></select>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- LEFT PANEL -->
+  <aside class="left">
+    <div class="header-banner">
+      <div class="hb-video">
+        <video id="header-video" autoplay loop muted playsinline></video>
+        <div class="header-controls-wrap">
+          <div style="display:flex;gap:5px;">
+            <button class="hb-ctrl-btn" onclick="document.getElementById('vid-upload').click()">📹 Video</button>
+            <input type="file" id="vid-upload" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
+          </div>
+        </div>
+      </div>
+      <div class="hb-brand"><div class="brand-txt"><span class="by">live</span><span class="br">3c</span><span class="bw">.xyz</span></div></div>
+    </div>
+
+    <div class="wheel-wrap">
+      <div class="wheel-ptr">▼</div>
+      <div class="wheel-inner"><canvas id="wheel-canvas" width="500" height="500"></canvas></div>
+      <button id="spin-btn" class="spin-btn" onclick="spinWheel()">SPIN</button>
+    </div>
+
+    <div class="ctrl-row">
+      <button class="cb" title="Thêm cơ thủ" onclick="openModal('add-modal')">➕</button>
+      <button class="cb" title="Cài số bracket" onclick="openModal('count-modal')">🔢</button>
+      <button class="cb" title="Import Excel" onclick="document.getElementById('import-excel').click()">📥</button>
+      <button class="cb" title="Tải template" onclick="downloadTemplate()">📄</button>
+      <button class="cb" title="Đẩy lên cloud" onclick="supaPushDebounced()">⬆️</button>
+      <input type="file" id="import-excel" accept=".xlsx,.xls" style="display:none" onchange="handleExcel(event)">
+    </div>
+
+    <div class="plist-left" id="player-list"></div>
+  </aside>
+
+  <!-- CENTER: BRACKET -->
+  <section class="center" id="center-panel">
+    <!-- Tab bar (chỉ hiện sau bốc thăm) -->
+    <div class="bracket-tab-bar" id="bracket-tab-bar">
+      <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')">🎯 Bracket</button>
+      <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')">⚔️ Lịch Thi Đấu</button>
+    </div>
+
+    <div class="bracket-wrap" id="bracket-container">
+      <svg id="bracket-lines"></svg>
+      <div class="bracket-cols" id="bracket-columns"></div>
+    </div>
+
+    <!-- Schedule Panel -->
+    <div id="schedule-panel">
+      <div class="schedule-header">
+        <div class="schedule-title">⚔️ Lịch Thi Đấu</div>
+        <div class="schedule-subtitle" id="schedule-subtitle">Vòng 1 · Round of Draw</div>
+      </div>
+      <div class="schedule-columns" id="schedule-columns"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: OVERVIEW -->
+  <aside class="right" id="right-panel">
+    <div class="right-header">
+      <h3>Players</h3>
+      <div style="display:flex;gap:4px;">
+        <button class="export-btn" onclick="exportImage('right-panel','players')">📸</button>
+        <button class="export-btn" onclick="exportImage('center-panel','bracket')">🖼</button>
+      </div>
+    </div>
+    <div class="overview-table" id="overview-table">
+      <div class="ot-head"><span>#</span><span>Tên</span><span>Đơn vị</span><span>HH</span></div>
+    </div>
+  </aside>
+</main>
+
+<!-- MODALS -->
+<div id="add-modal" class="modal">
+  <div class="modal-c">
+    <h2>➕ Thêm cơ thủ</h2>
+    <div class="field-group"><label>Tên *</label><input class="minput" type="text" id="add-name" placeholder="Tên cơ thủ" autocomplete="off" onkeydown="if(event.key==='Enter')addPlayer()"></div>
+    <div class="field-group"><label>Đơn vị / CLB</label><input class="minput" type="text" id="add-unit" placeholder="Đơn vị / CLB" autocomplete="off"></div>
+    <div class="field-group"><label>Hạng hạt giống</label>
+      <select class="mselect" id="add-rank">
+        <option value="">Không có</option>
+        <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+      </select>
+    </div>
+    <div class="mactions">
+      <button class="mbtn pri" onclick="addPlayer()">Lưu</button>
+      <button class="mbtn" onclick="closeModal('add-modal')">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<div id="count-modal" class="modal">
+  <div class="modal-c">
+    <h2>🔢 Cỡ Bracket</h2>
+    <p style="font-size:11px;opacity:0.5;font-family:'JetBrains Mono',monospace;">Làm tròn lên số chẵn lũy thừa 2. Sẽ reset bracket!</p>
+    <div class="field-group"><label>Số lượng tay vợt</label><input class="minput" type="number" id="bracket-size-input" placeholder="e.g. 16" min="4" autocomplete="off"></div>
+    <div class="mactions">
+      <button class="mbtn pri" onclick="updateBracketSize()">Tạo bracket</button>
+      <button class="mbtn" onclick="closeModal('count-modal')">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<div id="settings-modal" class="modal">
+  <div class="modal-c">
+    <h2>⚙️ Cài đặt</h2>
+    <hr class="sep">
+    <h3 style="font-size:13px;font-weight:800;font-family:'Barlow Condensed',sans-serif;">🎨 Font tiêu đề giải đấu</h3>
+    <div class="field-group">
+      <label>Chọn font</label>
+      <select class="mselect" id="title-font-select" onchange="previewTitleFont(this.value)"></select>
+      <div class="font-preview" id="font-preview-box">3-Cushion Masters</div>
+    </div>
+    <div class="mactions">
+      <button class="mbtn pri" onclick="applyTitleFont()">Áp dụng font</button>
+    </div>
+    <hr class="sep">
+    <h3 style="font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;letter-spacing:-0.3px;">☁️ Supabase</h3>
+    <div class="field-group"><label>Supabase URL</label><input class="minput" type="text" id="supa-url" placeholder="https://xxx.supabase.co" autocomplete="off"></div>
+    <div class="field-group"><label>Supabase Anon Key</label><input class="minput" type="text" id="supa-key" placeholder="eyJ..." autocomplete="off"></div>
+    <div class="mactions">
+      <button class="mbtn pri" onclick="saveSettings()">Lưu</button>
+      <button class="mbtn" onclick="supaLoad()">🔄 Load</button>
+      <button class="mbtn" onclick="closeModal('settings-modal')">Đóng</button>
+    </div>
+    <hr class="sep">
+    <div class="mactions">
+      <button class="mbtn danger" onclick="if(confirm('Reset toàn bộ dữ liệu local?')){localStorage.clear();location.reload();}">🗑 Reset All</button>
+    </div>
+  </div>
+</div>
+
+<div id="supa-modal" class="modal">
+  <div class="modal-c">
+    <h2>☁️ Cloud Sync</h2>
+    <div class="supa-guide">
+      <b>Hướng dẫn:</b><br>
+      1. Vào supabase.com → Tạo project<br>
+      2. Settings → API → Sao chép URL + anon key<br>
+      3. Chạy SQL bên dưới để tạo bảng<br>
+      4. Bật Realtime cho cả 2 bảng
+    </div>
+    <div class="supa-status-row">
+      <div class="rt-dot" id="supa-rt-dot" style="background:#ef4444"></div>
+      <span id="supa-status-txt" style="font-size:11px;font-family:'JetBrains Mono',monospace;opacity:0.6;">Chưa kết nối</span>
+    </div>
+    <div class="field-group"><label>Supabase URL</label><input class="minput" type="text" id="supa-url2" placeholder="https://xxx.supabase.co" autocomplete="off"></div>
+    <div class="field-group"><label>Supabase Anon Key</label><input class="minput" type="text" id="supa-key2" placeholder="eyJ..." autocomplete="off"></div>
+    <div class="mactions" style="flex-wrap:wrap;">
+      <button class="mbtn pri" onclick="saveSupaConfig()">💾 Lưu & Kết nối</button>
+      <button class="mbtn" onclick="supaLoad()">⬇️ Load</button>
+      <button class="mbtn" onclick="supaPush()">⬆️ Push</button>
+      <button class="mbtn" onclick="closeModal('supa-modal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { isAdmin as authIsAdmin, logout as authLogout } from './assets/js/auth.js';
+import { toast as uiToast, setupRealtime as uiTableRealtime } from './assets/js/ui.js';
+/* uiTableRealtime: từ ui.js (landing); trang giải đấu giữ function setupRealtime() WebSocket cục bộ */
+import {
+  generateBracket,
+  getRoundName,
+  advanceWinner,
+  THEMES,
+  applyTheme as applyThemeFromModule,
+} from './assets/js/tournament.js';
+/* advanceWinner: import theo spec; trang vẫn dùng setWinner() nội bộ */
+
+const TOURNAMENT_ID = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('id') || '';
+
+function tournamentsFetchPath() {
+  if (TOURNAMENT_ID) return `tournaments?id=eq.${encodeURIComponent(TOURNAMENT_ID)}&select=*`;
+  return 'tournaments?order=created_at.desc&limit=1';
+}
+
+function applyTournamentRow(t) {
+  if (!t) return;
+  S.tbVals = [
+    t.name || '',
+    t.date_str || t.time || '',
+    t.location || '',
+    t.content || t.format || '',
+    t.prize || '',
+    t.video_url || ''
+  ];
+  if (t.bracket_state) { try { S.bracket = JSON.parse(t.bracket_state); } catch (e) {} }
+  if (t.theme) S.theme = t.theme;
+  if (t.title_font) S.titleFont = t.title_font;
+  if (t.bracket_size) S.bracketSize = t.bracket_size;
+}
+
+function updateBcName() {
+  const el = document.getElementById('bc-name');
+  if (el) el.textContent = (S.tbVals && S.tbVals[0]) ? S.tbVals[0] : 'Giải đấu';
+}
+
+function syncAdminEditButton() {
+  const btn = document.getElementById('tb-admin-edit');
+  if (!btn) return;
+  btn.hidden = !authIsAdmin();
+  btn.onclick = () => {
+    window.location.href = 'admin/edit-tournament.html?id=' + encodeURIComponent(TOURNAMENT_ID || '');
+  };
+}
+
+/* ================================================================
+   DEFAULT SUPABASE CREDENTIALS
+   ================================================================ */
+const DEFAULT_SUPA_URL = '';   // để trống, tôi sẽ điền sau
+const DEFAULT_SUPA_KEY = '';   // để trống, tôi sẽ điền sau
+
+/* ================================================================
+   FONT LIST (10 fonts hỗ trợ tiếng Việt)
+   ================================================================ */
+const TITLE_FONTS = [
+  { key: "'Barlow Condensed', sans-serif",  name: 'Barlow Condensed' },
+  { key: "'Bebas Neue', sans-serif",         name: 'Bebas Neue' },
+  { key: "'Oswald', sans-serif",             name: 'Oswald' },
+  { key: "'Anton', sans-serif",              name: 'Anton' },
+  { key: "'Rajdhani', sans-serif",           name: 'Rajdhani' },
+  { key: "'Teko', sans-serif",               name: 'Teko' },
+  { key: "'Black Han Sans', sans-serif",     name: 'Black Han Sans' },
+  { key: "'Rowdies', sans-serif",            name: 'Rowdies' },
+  { key: "'Baloo 2', sans-serif",            name: 'Baloo 2' },
+  { key: "'Nunito', sans-serif",             name: 'Nunito' },
+  { key: "'Be Vietnam Pro', sans-serif",     name: 'Be Vietnam Pro' },
+];
+
+/* ================================================================
+   STATE
+   ================================================================ */
+const DEFAULTS = {
+  size: 16,
+  tbVals: ['3-Cushion Masters', 'Sat, 14:00', 'CLB Arena', 'Single Elim.', '5,000,000đ', ''],
+  tbBg: '#0d1117', tbFont: "'DM Sans',sans-serif",
+  titleFont: "'Barlow Condensed', sans-serif",
+  theme: 'carbon-gold'
+};
+
+const genBracket = generateBracket;
+
+let S = {
+  players: [], bracketSize: DEFAULTS.size, bracket: [],
+  theme: DEFAULTS.theme, wheelRotation: 0, isSpinning: false,
+  tbVals: [...DEFAULTS.tbVals], tbBg: DEFAULTS.tbBg, tbFont: DEFAULTS.tbFont,
+  titleFont: DEFAULTS.titleFont,
+  supaUrl: '', supaKey: '',
+  isAdmin: false
+};
+
+let realtimeChannel = null;
+let pushDebounceTimer = null;
+let lastSyncTime = null;
+let pendingSpinPlayer = null;
+let pendingSpinSlot = null;
+
+/* ================================================================
+   UNDO / REDO
+   ================================================================ */
+const undoStack = [];
+const redoStack = [];
+const MAX_HISTORY = 30;
+
+function pushHistory() {
+  undoStack.push(JSON.stringify(S));
+  if (undoStack.length > MAX_HISTORY) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoRedoUI();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify(S));
+  S = JSON.parse(undoStack.pop());
+  renderAll(); setupTopBar(); saveState(); supaPushDebounced();
+  updateUndoRedoUI();
+  showToast('↩ Đã hoàn tác', 'info');
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify(S));
+  S = JSON.parse(redoStack.pop());
+  renderAll(); setupTopBar(); saveState(); supaPushDebounced();
+  updateUndoRedoUI();
+  showToast('↪ Đã làm lại', 'info');
+}
+
+function updateUndoRedoUI() {
+  const u = document.getElementById('undo-btn');
+  const r = document.getElementById('redo-btn');
+  if (u) u.disabled = undoStack.length === 0;
+  if (r) r.disabled = redoStack.length === 0;
+}
+
+/* ================================================================
+   UTILS
+   ================================================================ */
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function showToast(msg, type = 'info') {
+  uiToast(msg, type, { containerId: 'toast-container', exitClass: 'out' });
+}
+
+function setSyncProgress(pct) {
+  const bar = document.getElementById('sync-bar');
+  const wrap = document.getElementById('sync-progress');
+  bar.style.width = pct + '%';
+  wrap.style.opacity = pct > 0 && pct < 100 ? '1' : '0';
+}
+
+function updateRTIndicator(online) {
+  const dot = document.getElementById('rt-dot');
+  const label = document.getElementById('rt-label');
+  const sdot = document.getElementById('supa-rt-dot');
+  const stxt = document.getElementById('supa-status-txt');
+  if (online) {
+    dot.classList.remove('offline'); label.textContent = 'LIVE';
+    sdot.style.background = '#22c55e'; stxt.textContent = 'Kết nối — Realtime active';
+  } else {
+    dot.classList.add('offline'); label.textContent = 'OFFLINE';
+    sdot.style.background = '#ef4444'; stxt.textContent = 'Chưa kết nối';
+  }
+}
+
+function updateSyncTime() {
+  lastSyncTime = new Date();
+  const el = document.getElementById('tb-sync-time');
+  el.textContent = 'Synced ' + lastSyncTime.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+/* ================================================================
+   ADMIN MODE
+   ================================================================ */
+function setAdminMode(isAdminVal) {
+  S.isAdmin = isAdminVal;
+  document.body.classList.toggle('admin-mode', isAdminVal);
+  document.body.classList.toggle('viewer-mode', !isAdminVal);
+  ['tb-v0','tb-v1','tb-v2','tb-v3','tb-v4','tb-v5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.contentEditable = isAdminVal ? 'true' : 'false';
+  });
+  syncAdminEditButton();
+}
+
+function doLogout() {
+  setAdminMode(false);
+  saveState();
+  authLogout();
+}
+
+/* ================================================================
+   STORAGE
+   ================================================================ */
+function loadState() {
+  // Supabase credentials: ưu tiên localStorage, fallback DEFAULT hardcode
+  let supaUrl = localStorage.getItem('live3c_supaUrl') || '';
+  let supaKey = localStorage.getItem('live3c_supaKey') || '';
+
+  // Thiết bị mới chưa có localStorage → dùng DEFAULT
+  if (!supaUrl && DEFAULT_SUPA_URL) supaUrl = DEFAULT_SUPA_URL;
+  if (!supaKey && DEFAULT_SUPA_KEY) supaKey = DEFAULT_SUPA_KEY;
+
+  // Lưu ngay để lần sau không cần fallback nữa
+  if (supaUrl) localStorage.setItem('live3c_supaUrl', supaUrl);
+  if (supaKey) localStorage.setItem('live3c_supaKey', supaKey);
+
+  const saved = localStorage.getItem('live3c_v4');
+  if (saved) {
+    try {
+      const p = JSON.parse(saved);
+      S = { ...S, ...p };
+    } catch(e) {}
+  }
+
+  // Credentials luôn là source of truth (override bất kỳ giá trị stale trong S)
+  if (supaUrl) S.supaUrl = supaUrl;
+  if (supaKey) S.supaKey = supaKey;
+
+  if (!S.bracket || S.bracket.length === 0) S.bracket = genBracket(S.bracketSize);
+  if (!S.tbVals || S.tbVals.length < 6) S.tbVals = [...DEFAULTS.tbVals];
+  if (!S.titleFont) S.titleFont = DEFAULTS.titleFont;
+  loadVideoFromDB();
+}
+
+function saveState() {
+  // Always persist supa credentials separately (survives any state wipe)
+  if (S.supaUrl) localStorage.setItem('live3c_supaUrl', S.supaUrl);
+  if (S.supaKey) localStorage.setItem('live3c_supaKey', S.supaKey);
+
+  const s = { ...S, wheelRotation: 0, isSpinning: false, isAdmin: false };
+  try { localStorage.setItem('live3c_v4', JSON.stringify(s)); } catch(e) {
+    try { localStorage.setItem('live3c_v4', JSON.stringify({...s, bracket:[]})); } catch(e2){}
+  }
+}
+
+function openVideoDB(cb) {
+  const req = indexedDB.open('live3c_media', 2);
+  req.onupgradeneeded = e => {
+    if (!e.target.result.objectStoreNames.contains('videos'))
+      e.target.result.createObjectStore('videos');
+  };
+  req.onsuccess = e => cb(e.target.result);
+  req.onerror = () => cb(null);
+}
+function saveVideoToDB(dataUrl) {
+  openVideoDB(db => {
+    if (!db) return;
+    db.transaction('videos','readwrite').objectStore('videos').put(dataUrl,'brandVideo');
+  });
+}
+function loadVideoFromDB() {
+  openVideoDB(db => {
+    if (!db) return;
+    const req = db.transaction('videos','readonly').objectStore('videos').get('brandVideo');
+    req.onsuccess = () => { if (req.result) document.getElementById('header-video').src = req.result; };
+  });
+}
+
+/* ================================================================
+   SUPABASE (REST + Realtime via WebSocket)
+   ================================================================ */
+async function supaFetch(path, method, body, extra) {
+  if (!S.supaUrl || !S.supaKey) return null;
+  const url = `${S.supaUrl}/rest/v1/${path}`;
+  const headers = {
+    'apikey': S.supaKey, 'Authorization': `Bearer ${S.supaKey}`,
+    'Content-Type': 'application/json',
+    'Prefer': method === 'GET' ? 'count=exact' : 'return=representation,resolution=merge-duplicates'
+  };
+  if (extra) Object.assign(headers, extra);
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`); }
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('json')) return res.json();
+  return null;
+}
+
+async function supaLoad() {
+  if (!S.supaUrl || !S.supaKey) { showToast('⚠️ Chưa cài Supabase', 'error'); return; }
+  setSyncProgress(10);
+  try {
+    setSyncProgress(30);
+    const tournaments = await supaFetch(tournamentsFetchPath(), 'GET');
+    if (tournaments && tournaments.length) {
+      applyTournamentRow(tournaments[0]);
+    }
+    setSyncProgress(60);
+    const players = await supaFetch('players?order=id', 'GET');
+    if (players && Array.isArray(players)) {
+      S.players = players.map(p => normalizePlayer(p));
+    }
+    setSyncProgress(90);
+    saveState();
+    updateSyncTime();
+    setSyncProgress(100);
+    showToast('✅ Đã tải từ Supabase', 'success');
+    closeModal('supa-modal'); closeModal('settings-modal');
+    setTimeout(() => setSyncProgress(0), 500);
+    setupRealtime();
+    renderAll();
+    applyTheme(S.theme);
+    setupTopBar();
+    updateBcName();
+  } catch(err) {
+    setSyncProgress(0);
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+function normalizePlayer(p) {
+  return {
+    id: p.id ? 'supa_' + p.id : 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+    supaId: p.id,
+    name: p.name || '',
+    unit: p.unit || '',
+    rank: p.rank || '',
+    drawn: p.drawn || false,
+    bracketSlot: p.bracket_slot || null
+  };
+}
+
+async function supaPush() {
+  if (!S.supaUrl || !S.supaKey) { showToast('⚠️ Chưa cài Supabase', 'error'); return; }
+  setSyncProgress(20);
+  try {
+    const tourney = {
+      name:        S.tbVals[0] || '',
+      time:        S.tbVals[1] || '',
+      location:    S.tbVals[2] || '',
+      content:     S.tbVals[3] || '',
+      prize:       S.tbVals[4] || '',
+      video_url:   S.tbVals[5] || '',
+      bracket_state: JSON.stringify(S.bracket),
+      bracket_size:  S.bracketSize,
+      theme:         S.theme,
+      title_font:    S.titleFont
+    };
+    await supaFetch('tournaments', 'POST', [tourney]);
+    setSyncProgress(50);
+    if (S.players.length > 0) {
+      const pData = S.players.map(p => {
+        const obj = { name: p.name, unit: p.unit||'', rank: p.rank||'', drawn: p.drawn, bracket_slot: p.bracketSlot || null };
+        if (p.supaId) obj.id = p.supaId;
+        return obj;
+      });
+      for (let i = 0; i < pData.length; i += 50) {
+        await supaFetch('players', 'POST', pData.slice(i, i+50), {'Prefer':'return=representation,resolution=merge-duplicates'});
+      }
+    }
+    setSyncProgress(100);
+    updateSyncTime();
+    showToast('✅ Đã đẩy lên Supabase', 'success');
+    setTimeout(() => setSyncProgress(0), 500);
+  } catch(err) {
+    setSyncProgress(0);
+    showToast('❌ Push thất bại: ' + err.message, 'error');
+  }
+}
+
+function supaPushDebounced() {
+  clearTimeout(pushDebounceTimer);
+  pushDebounceTimer = setTimeout(() => supaPush(), 1200);
+}
+
+// supaLoadFull: dùng khi init, load sạch từ Supabase không render giữa chừng
+async function supaLoadFull() {
+  if (!S.supaUrl || !S.supaKey) return;
+  setSyncProgress(30);
+  const [tournaments, players] = await Promise.all([
+    supaFetch(tournamentsFetchPath(), 'GET'),
+    supaFetch('players?order=id', 'GET')
+  ]);
+  setSyncProgress(70);
+  if (tournaments && tournaments.length) {
+    applyTournamentRow(tournaments[0]);
+  }
+  if (players && Array.isArray(players)) {
+    S.players = players.map(p => normalizePlayer(p));
+  }
+  setSyncProgress(100);
+  saveState();
+  updateSyncTime();
+  applyTheme(S.theme);
+  setTimeout(() => setSyncProgress(0), 500);
+  // setupRealtime() được gọi bởi init() sau khi supaLoadFull hoàn thành — không gọi ở đây
+}
+
+/* ================================================================
+   SUPABASE REALTIME
+   ================================================================ */
+function setupRealtime() {
+  if (!S.supaUrl || !S.supaKey) return;
+  if (realtimeChannel) { try { realtimeChannel.close(); } catch(e){} }
+  const wsUrl = S.supaUrl.replace('https://','wss://').replace('http://','ws://');
+  const endpoint = `${wsUrl}/realtime/v1/websocket?apikey=${S.supaKey}&vsn=1.0.0`;
+  try {
+    const ws = new WebSocket(endpoint);
+    realtimeChannel = ws;
+    let heartbeat;
+    ws.onopen = () => {
+      updateRTIndicator(true);
+      ws.send(JSON.stringify({
+        topic: 'realtime:public', event: 'phx_join',
+        payload: { config: { postgres_changes: [
+          { event: '*', schema: 'public', table: 'players' },
+          { event: '*', schema: 'public', table: 'tournaments' }
+        ]}}, ref: '1'
+      }));
+      heartbeat = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN)
+          ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'}));
+      }, 25000);
+    };
+    ws.onmessage = async (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.event === 'postgres_changes' || (msg.payload && msg.payload.data && msg.payload.data.type)) {
+          const change = msg.payload.data || msg.payload;
+          if (change.table === 'tournaments' || change.table === 'players') {
+            await supaLoadSilent();
+          }
+        }
+      } catch(e){}
+    };
+    ws.onclose = () => {
+      clearInterval(heartbeat); updateRTIndicator(false);
+      setTimeout(() => { if (S.supaUrl && S.supaKey) setupRealtime(); }, 5000);
+    };
+    ws.onerror = () => { updateRTIndicator(false); };
+  } catch(e) { updateRTIndicator(false); }
+}
+
+async function supaLoadSilent() {
+  if (!S.supaUrl || !S.supaKey) return;
+  try {
+    const [tournaments, players] = await Promise.all([
+      supaFetch(tournamentsFetchPath(), 'GET'),
+      supaFetch('players?order=id', 'GET')
+    ]);
+    if (tournaments && tournaments.length) {
+      const t = tournaments[0];
+      const newVals = [
+        t.name || '',
+        t.date_str || t.time || '',
+        t.location || '',
+        t.content || t.format || '',
+        t.prize || '',
+        t.video_url || ''
+      ];
+      if (JSON.stringify(newVals) !== JSON.stringify(S.tbVals)) {
+        S.tbVals = newVals;
+        setupTopBar();
+        updateBcName();
+      }
+      if (t.bracket_state) {
+        try {
+          const nb = JSON.parse(t.bracket_state);
+          if (JSON.stringify(nb) !== JSON.stringify(S.bracket)) {
+            S.bracket = nb; renderBracket();
+          }
+        } catch(e) {}
+      }
+    }
+    if (players && Array.isArray(players)) {
+      const newPlayers = players.map(p => normalizePlayer(p));
+      if (JSON.stringify(newPlayers) !== JSON.stringify(S.players)) {
+        S.players = newPlayers; renderPlayers(); drawWheel();
+      }
+    }
+    saveState(); updateSyncTime();
+  } catch(e){}
+}
+
+function saveSupaConfig() {
+  const url = document.getElementById('supa-url2').value.trim();
+  const key = document.getElementById('supa-key2').value.trim();
+  S.supaUrl = url;
+  S.supaKey = key;
+  // Persist credentials immediately and separately
+  localStorage.setItem('live3c_supaUrl', url);
+  localStorage.setItem('live3c_supaKey', key);
+  // Sync to settings panel
+  const u1 = document.getElementById('supa-url'); if(u1) u1.value = url;
+  const k1 = document.getElementById('supa-key'); if(k1) k1.value = key;
+  saveState();
+  showToast('☁️ Đã lưu — đang kết nối Supabase...', 'info');
+  supaLoad();
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+async function init() {
+  const loadTxt = document.getElementById('loading-txt');
+
+  // Parse Supabase credentials từ URL hash
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const hashUrl = hash.get('supaUrl');
+  const hashKey = hash.get('supaKey');
+  if (hashUrl) localStorage.setItem('live3c_supaUrl', hashUrl);
+  if (hashKey) localStorage.setItem('live3c_supaKey', hashKey);
+
+  loadTxt.textContent = 'ĐỌC DỮ LIỆU...';
+  loadState();
+
+  loadTxt.textContent = 'ÁP DỤNG THEME...';
+  applyTheme(S.theme);
+  buildThemeDots();
+  buildFontSelects();
+  loadSettingsUI();
+
+  // LUÔN load từ Supabase trước khi render (ưu tiên cloud data)
+  if (S.supaUrl && S.supaKey) {
+    loadTxt.textContent = 'ĐỒNG BỘ CLOUD...';
+    setSyncProgress(20);
+    try {
+      await supaLoadFull(); // load đầy đủ, không render intermediate
+    } catch(e) {
+      showToast('⚠️ Cloud sync thất bại — dùng dữ liệu local', 'error');
+    }
+  }
+
+  setupTopBar();
+  updateBcName();
+  renderAll();
+
+  setSyncProgress(100);
+  loadTxt.textContent = 'SẴN SÀNG';
+
+  setAdminMode(authIsAdmin());
+
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hidden');
+    setSyncProgress(0);
+  }, 400);
+
+  window.addEventListener('resize', () => { drawBracketLines(); });
+  setTimeout(drawBracketLines, 300);
+
+  if (S.supaUrl && S.supaKey) setupRealtime();
+
+  if (window.innerWidth <= 768) switchTab('left');
+}
+
+function renderAll() {
+  renderPlayers();
+  renderBracket();
+  drawWheel();
+}
+
+/* ================================================================
+   THEMES
+   ================================================================ */
+function buildThemeDots() {
+  const c = document.getElementById('theme-dots');
+  c.innerHTML = '';
+  for (const [k, t] of Object.entries(THEMES)) {
+    const d = document.createElement('div');
+    d.className = 't-dot' + (S.theme === k ? ' active' : '');
+    d.style.background = `linear-gradient(135deg,${t.dot1},${t.dot2})`;
+    d.title = t.name;
+    d.onclick = () => { applyTheme(k); buildThemeDots(); };
+    c.appendChild(d);
+  }
+}
+
+// Keep alias for backward compat
+function renderThemeDots() { buildThemeDots(); }
+
+function applyTheme(key) {
+  applyThemeFromModule(key, S, {
+    saveState,
+    drawWheel,
+    drawBracketLines: () => drawBracketLines(),
+  });
+}
+
+/* ================================================================
+   FONT
+   ================================================================ */
+function buildFontSelects() {
+  // Font selector in settings
+  const sel = document.getElementById('title-font-select');
+  sel.innerHTML = '';
+  TITLE_FONTS.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.key;
+    opt.textContent = f.name;
+    opt.style.fontFamily = f.key;
+    if (f.key === S.titleFont) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Header bar font select (keep for tb-font)
+  const tfSel = document.getElementById('tb-font');
+  if (tfSel) {
+    tfSel.innerHTML = '';
+    TITLE_FONTS.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.key;
+      opt.textContent = f.name;
+      if (f.key === (S.tbFont || DEFAULTS.tbFont)) opt.selected = true;
+      tfSel.appendChild(opt);
+    });
+  }
+  // Apply current title font
+  document.documentElement.style.setProperty('--title-font', S.titleFont);
+  updateFontPreview(S.titleFont);
+}
+
+function previewTitleFont(val) {
+  updateFontPreview(val);
+}
+
+function updateFontPreview(font) {
+  const box = document.getElementById('font-preview-box');
+  if (box) {
+    box.style.fontFamily = font;
+    box.textContent = document.getElementById('tb-v0') ?
+      (document.getElementById('tb-v0').textContent || '3-Cushion Masters') : '3-Cushion Masters';
+  }
+}
+
+function applyTitleFont() {
+  const val = document.getElementById('title-font-select').value;
+  S.titleFont = val;
+  document.documentElement.style.setProperty('--title-font', val);
+  // Apply only to the title element in tourney bar
+  const titleEl = document.getElementById('tb-v0');
+  if (titleEl) titleEl.style.fontFamily = val;
+  saveState();
+  supaPushDebounced();
+  showToast('✅ Đã đổi font tiêu đề', 'success');
+}
+
+/* ================================================================
+   TOP BAR
+   ================================================================ */
+function setupTopBar() {
+  const labels = ['tb-v0','tb-v1','tb-v2','tb-v3','tb-v4','tb-v5'];
+  labels.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = S.tbVals[i] || DEFAULTS.tbVals[i] || '';
+    if (i === 0) el.style.fontFamily = S.titleFont || DEFAULTS.titleFont;
+    el.oninput = () => {
+      clearTimeout(el._histTimer);
+      el._histTimer = setTimeout(() => pushHistory(), 500);
+      S.tbVals[i] = el.textContent.trim();
+      if (i === 0) updateBcName();
+      saveState();
+      supaPushDebounced();
+    };
+    el.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } };
+  });
+  document.getElementById('tb-video-url-wrap').style.display = S.tbVals[5] ? 'flex' : 'none';
+
+  const bgEl = document.getElementById('tb-bg-color');
+  bgEl.value = S.tbBg || '#0d1117';
+  document.documentElement.style.setProperty('--tb-bg', S.tbBg);
+  bgEl.oninput = e => {
+    S.tbBg = e.target.value;
+    // Chỉ đổi --tb-bg, KHÔNG đổi --bg (tránh ảnh hưởng phần khác)
+    document.documentElement.style.setProperty('--tb-bg', S.tbBg);
+    document.getElementById('tourney-bar').style.background = S.tbBg;
+    saveState();
+  };
+
+  const fontEl = document.getElementById('tb-font');
+  if (fontEl) {
+    fontEl.value = S.tbFont || "'DM Sans',sans-serif";
+    fontEl.onchange = e => {
+      S.tbFont = e.target.value;
+      document.documentElement.style.setProperty('--tb-font', S.tbFont);
+      saveState();
+    };
+  }
+}
+
+function handleVideoUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('header-video').src = ev.target.result;
+    saveVideoToDB(ev.target.result);
+    showToast('🎥 Video đã tải lên', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ================================================================
+   SETTINGS
+   ================================================================ */
+function loadSettingsUI() {
+  document.getElementById('supa-url').value = S.supaUrl || '';
+  document.getElementById('supa-key').value = S.supaKey || '';
+  document.getElementById('supa-url2').value = S.supaUrl || '';
+  document.getElementById('supa-key2').value = S.supaKey || '';
+}
+
+function saveSettings() {
+  S.supaUrl = document.getElementById('supa-url').value.trim();
+  S.supaKey = document.getElementById('supa-key').value.trim();
+  saveState();
+  loadSettingsUI();
+  closeModal('settings-modal');
+  showToast('✅ Đã lưu cài đặt', 'success');
+}
+
+/* ================================================================
+   PLAYERS
+   ================================================================ */
+function addPlayer() {
+  const n = document.getElementById('add-name').value.trim();
+  if (!n) return;
+  pushHistory();
+  S.players.push({
+    id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+    name: n,
+    unit: document.getElementById('add-unit').value.trim(),
+    rank: document.getElementById('add-rank').value,
+    drawn: false
+  });
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-unit').value = '';
+  document.getElementById('add-rank').value = '';
+  closeModal('add-modal');
+  saveAndRender();
+  supaPushDebounced();
+}
+
+function removePlayer(id) {
+  if (!confirm('Xóa cơ thủ này?')) return;
+  pushHistory();
+  S.players = S.players.filter(p => p.id !== id);
+  S.bracket.forEach(round => round.forEach(m => {
+    if (m.p1 && m.p1.id === id) { m.p1 = null; if (m.winner && m.winner.id === id) m.winner = null; }
+    if (m.p2 && m.p2.id === id) { m.p2 = null; if (m.winner && m.winner.id === id) m.winner = null; }
+  }));
+  saveAndRender();
+  supaPushDebounced();
+}
+
+function saveAndRender() {
+  saveState();
+  renderPlayers();
+  renderBracket();
+  drawWheel();
+}
+
+function getUndrawn() { return S.players.filter(p => !p.drawn); }
+
+function renderPlayers() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  S.players.forEach(p => {
+    const c = document.createElement('div');
+    c.className = 'pc' + (p.drawn ? ' drawn' : '');
+    c.innerHTML = `
+      <span class="dx" onclick="removePlayer('${p.id}')">✖</span>
+      <div class="pr-row">
+        <span class="pn" title="${p.name}">${p.name}</span>
+        ${p.rank ? `<span class="pk">${p.rank}</span>` : ''}
+      </div>
+      ${p.unit ? `<div class="pu">${p.unit}</div>` : ''}
+    `;
+    list.appendChild(c);
+  });
+  const table = document.getElementById('overview-table');
+  table.innerHTML = '<div class="ot-head"><span>#</span><span>Tên</span><span>Đơn vị</span><span>HH</span></div>';
+  S.players.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'ot-row' + (p.drawn ? ' drawn' : '');
+    row.innerHTML = `
+      <span class="ot-num">${i+1}</span>
+      <span class="ot-name" title="${p.name}">${p.name}</span>
+      <span class="ot-unit">${p.unit||'-'}</span>
+      <span class="ot-rank">${p.rank||'-'}</span>
+    `;
+    table.appendChild(row);
+  });
+}
+
+/* ================================================================
+   WHEEL — Canvas with smooth easing
+   ================================================================ */
+let wheelAnim = null;
+let flyLock = false; // Ngăn 2 flyPlayer chạy đồng thời
+
+function drawWheel(rotation = 0) {
+  const canvas = document.getElementById('wheel-canvas');
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const cx = size/2, cy = size/2, radius = cx - 2;
+  ctx.clearRect(0, 0, size, size);
+  const undrawn = getUndrawn();
+
+  if (undrawn.length === 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--card').trim() || '#161b22';
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 18px "Barlow Condensed", sans-serif';
+    ctx.fillText('ALL DRAWN', cx, cy);
+    return;
+  }
+
+  const sportColors = [
+    ['#f0a500','#000'], ['#e05a2b','#fff'], ['#3b82f6','#fff'],
+    ['#22c55e','#000'], ['#bf00ff','#fff'], ['#38bdf8','#000'],
+    ['#ef4444','#fff'], ['#fbbf24','#000'], ['#818cf8','#fff'],
+    ['#4ade80','#000'], ['#f97316','#fff'], ['#06b6d4','#000'],
+  ];
+
+  const slice = (2 * Math.PI) / undrawn.length;
+  const rot = (rotation * Math.PI) / 180;
+
+  const glow = ctx.createRadialGradient(cx,cy,radius*0.85,cx,cy,radius);
+  glow.addColorStop(0,'transparent');
+  glow.addColorStop(1,'rgba(240,165,0,0.08)');
+  ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2);
+  ctx.fillStyle = glow; ctx.fill();
+
+  for (let i = 0; i < undrawn.length; i++) {
+    const sa = rot + i * slice;
+    const ea = rot + (i+1) * slice;
+    const [fill, textFill] = sportColors[i % sportColors.length];
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, sa, ea);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.stroke();
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(sa + slice / 2);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const maxLen = undrawn.length > 20 ? 8 : undrawn.length > 12 ? 12 : 16;
+    const name = undrawn[i].name.length > maxLen ? undrawn[i].name.substring(0,maxLen-1)+'…' : undrawn[i].name;
+    const fs = undrawn.length > 20 ? 9 : undrawn.length > 12 ? 12 : 15;
+    ctx.font = `800 ${fs}px "Barlow Condensed", sans-serif`;
+    ctx.fillStyle = textFill;
+    ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 3;
+    ctx.fillText(name, radius - 10, 0);
+    ctx.restore();
+  }
+
+  ctx.beginPath(); ctx.arc(cx, cy, 28, 0, Math.PI*2);
+  const capGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,28);
+  capGrad.addColorStop(0,'#2a2a2a'); capGrad.addColorStop(1,'#111');
+  ctx.fillStyle = capGrad; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function spinWheel() {
+  if (S.isSpinning) return;
+  if (!S.isAdmin) return;
+  const undrawn = getUndrawn();
+  if (undrawn.length === 0) { showToast('🏁 Đã bốc hết!'); return; }
+  const slot = findNextSlot();
+  if (!slot) { showToast('🏆 Bracket đã đầy!'); return; }
+
+  S.isSpinning = true;
+  document.getElementById('spin-btn').disabled = true;
+
+  const ti = Math.floor(Math.random() * undrawn.length);
+  const tp = undrawn[ti];
+  const sliceDeg = 360 / undrawn.length;
+  const targetAngle = 270 - (ti * sliceDeg) - sliceDeg/2 + (Math.random()-0.5) * sliceDeg * 0.6;
+  const totalSpins = 5 + Math.random() * 3;
+  const totalDeg = totalSpins * 360 + ((targetAngle - S.wheelRotation) % 360 + 360) % 360;
+  const startRot = S.wheelRotation;
+  const endRot = startRot + totalDeg;
+  const duration = 4000 + Math.random() * 800;
+  const startTime = performance.now();
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const current = startRot + (endRot - startRot) * easeOut(t);
+    S.wheelRotation = current % 360;
+    drawWheel(current);
+    if (t < 1) {
+      wheelAnim = requestAnimationFrame(tick);
+    } else {
+      S.wheelRotation = endRot % 360;
+      drawWheel(S.wheelRotation);
+      // Kiểm tra lại slot tại thời điểm kết thúc spin (tránh stale slot)
+      const freshSlot = findNextSlot();
+      if (!freshSlot) {
+        showToast('🏆 Bracket đã đầy!');
+        resetWheel();
+        return;
+      }
+      // Kiểm tra player vẫn chưa được drawn
+      const freshPlayer = S.players.find(p => p.id === tp.id && !p.drawn);
+      if (!freshPlayer) {
+        // Player đã được drawn rồi (do realtime sync) → chọn lại
+        const undrawnNow = getUndrawn();
+        if (undrawnNow.length === 0) { showToast('🏁 Đã bốc hết!'); resetWheel(); return; }
+        pendingSpinPlayer = undrawnNow[Math.floor(Math.random() * undrawnNow.length)];
+      } else {
+        pendingSpinPlayer = freshPlayer;
+      }
+      pendingSpinSlot = freshSlot;
+      showSpinPopup(pendingSpinPlayer);
+    }
+  }
+  wheelAnim = requestAnimationFrame(tick);
+}
+
+/* ================================================================
+   SPIN RESULT POPUP
+   ================================================================ */
+function showSpinPopup(player) {
+  document.getElementById('popup-name').textContent = player.name;
+  document.getElementById('popup-unit').textContent = player.unit || '';
+  const rankWrap = document.getElementById('popup-rank-wrap');
+  rankWrap.innerHTML = player.rank
+    ? `<span class="spin-popup-rank">${player.rank}</span>` : '';
+
+  const emojis = ['🎉','🎊','🎯','⭐','🔥','💥','🎱','✨'];
+  document.getElementById('popup-emoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+  const canvas = document.getElementById('wheel-canvas');
+  const rect   = canvas.getBoundingClientRect();
+  const popup  = document.getElementById('spin-popup');
+  const boxW   = 240;
+  popup.style.left = (rect.left + rect.width / 2 - boxW / 2) + 'px';
+  popup.style.top  = (rect.top  + rect.height / 2 - 100) + 'px';
+  popup.classList.add('show');
+}
+
+function closeSpinPopup() {
+  document.getElementById('spin-popup').classList.remove('show');
+  if (pendingSpinPlayer && pendingSpinSlot) {
+    const p = pendingSpinPlayer, sl = pendingSpinSlot;
+    pendingSpinPlayer = null;
+    pendingSpinSlot = null;
+    flyPlayer(p, sl, false);
+  } else {
+    resetWheel();
+  }
+}
+
+function closeSpinPopupAndSpin() {
+  document.getElementById('spin-popup').classList.remove('show');
+  if (pendingSpinPlayer && pendingSpinSlot) {
+    const p = pendingSpinPlayer, sl = pendingSpinSlot;
+    pendingSpinPlayer = null;
+    pendingSpinSlot = null;
+    flyPlayer(p, sl, true); // spinAgain=true → sau khi bay xong sẽ tự spin
+  } else {
+    resetWheel();
+  }
+}
+
+function findNextSlot() {
+  const r0 = S.bracket[0];
+  for (let m = 0; m < r0.length; m++) {
+    if (!r0[m].p1) return { r:0, m, pKey:'p1' };
+    if (!r0[m].p2) return { r:0, m, pKey:'p2' };
+  }
+  return null;
+}
+
+function flyPlayer(player, slot, spinAgain = false) {
+  // Ngăn race condition
+  if (flyLock) return;
+  flyLock = true;
+
+  const canvas = document.getElementById('wheel-canvas');
+  const te = document.getElementById(`match-${slot.r}-${slot.m}-${slot.pKey}`);
+
+  // Lấy tọa độ đích TRƯỚC KHI commit (commit sẽ gọi renderBracket xóa DOM)
+  const wR = canvas.getBoundingClientRect();
+  let tR = te ? te.getBoundingClientRect() : null;
+
+  // Nếu element bị ẩn (mobile tab) hoặc không tìm thấy → tọa độ (0,0) → bỏ animation
+  const isVisible = tR && tR.width > 0 && tR.height > 0;
+
+  if (!isVisible) {
+    // Không có target hợp lệ → commit ngay không bay
+    commitPlayer(player, slot);
+    flyLock = false;
+    if (spinAgain) {
+      S.isSpinning = false;
+      document.getElementById('spin-btn').disabled = false;
+      setTimeout(spinWheel, 400);
+    } else {
+      resetWheel();
+    }
+    return;
+  }
+
+  const fly = document.createElement('div');
+  fly.className = 'flying-player';
+  fly.textContent = player.name;
+  document.body.appendChild(fly);
+
+  const startW = Math.min(wR.width * 0.5, 180);
+  const startH = 38;
+  fly.style.cssText = `
+    left:${wR.left + wR.width/2 - startW/2}px;
+    top:${wR.top + wR.height/2 - startH/2}px;
+    width:${startW}px; height:${startH}px;
+    opacity:1; font-size:15px;
+    transition: none;
+  `;
+
+  fly.getBoundingClientRect(); // force reflow
+
+  requestAnimationFrame(() => {
+    fly.style.transition = '';
+    requestAnimationFrame(() => {
+      fly.style.left   = tR.left + 'px';
+      fly.style.top    = tR.top  + 'px';
+      fly.style.width  = tR.width  + 'px';
+      fly.style.height = tR.height + 'px';
+      fly.style.fontSize = '11px';
+    });
+  });
+
+  setTimeout(() => { fly.style.opacity = '0'; }, 950);
+
+  setTimeout(() => {
+    fly.remove();
+    // Commit sau khi animation xong — lúc này renderBracket mới chạy
+    commitPlayer(player, slot);
+    // Tìm lại element MỚI sau khi renderBracket đã tạo lại DOM
+    setTimeout(() => {
+      const mb = document.getElementById(`mb-${slot.r}-${slot.m}`);
+      if (mb) { mb.classList.remove('anim-enter'); void mb.offsetWidth; mb.classList.add('anim-enter'); }
+    }, 30);
+
+    flyLock = false;
+
+    if (spinAgain) {
+      S.isSpinning = false;
+      document.getElementById('spin-btn').disabled = false;
+      setTimeout(spinWheel, 400);
+    } else {
+      resetWheel();
+    }
+  }, 1300);
+}
+
+function commitPlayer(player, slot) {
+  // Mark drawn trong S.players
+  S.players.forEach(p => { if (p.id === player.id) p.drawn = true; });
+  // Ghi vào bracket
+  S.bracket[slot.r][slot.m][slot.pKey] = { ...player, drawn: true };
+  // Render lại toàn bộ
+  renderBracket();
+  renderPlayers();
+  drawWheel();
+  saveState();
+  supaPushDebounced();
+}
+
+function resetWheel() {
+  setTimeout(() => {
+    S.isSpinning = false;
+    document.getElementById('spin-btn').disabled = false;
+    drawWheel(S.wheelRotation);
+  }, 200);
+}
+
+/* ================================================================
+   BRACKET RENDER — True symmetrical: left half | finals | right half
+   Reference: 16p → left 8 slots (4 matches R1 + 2 QF + 1 SF), right mirror
+   ================================================================ */
+const ROUND_NAMES = ['Vòng 1','Vòng 2','Tứ kết','Bán kết','Chung kết'];
+
+function renderBracket() {
+  const container = document.getElementById('bracket-columns');
+  container.innerHTML = '';
+  const rounds = S.bracket.length; // e.g. 4 for 16-player
+  if (rounds === 0) return;
+
+  if (rounds === 1) {
+    // Only final — show linearly
+    container.appendChild(makeFinalCol(0));
+    setTimeout(drawBracketLines, 80);
+    checkBracketTabVisibility();
+    return;
+  }
+
+  /*
+   * Layout (e.g. 16 players, 4 rounds):
+   *   LEFT side (outward→inward): R0(8 matches), R1(4 matches) — col index 0,1
+   *   CENTER: Final (R3)
+   *   RIGHT side (inward→outward, mirrored): R2(2 matches), R1-mirror? NO —
+   *
+   * Actually for a true bilateral bracket with N rounds:
+   *   Left half handles matches[0..N/2-1] of each round
+   *   Right half handles matches[N/2..N-1] of each round
+   *   BUT the rounds themselves are ALL the same — just different match indices
+   *
+   * CORRECT bilateral bracket structure:
+   *   rounds-1 side columns per side, going from outermost (R0) inward (R_{n-2})
+   *   Left columns: same round index r, but only LEFT half of matches (mi < matchCount/2)
+   *   Right columns: same round index r, but only RIGHT half of matches (mi >= matchCount/2)
+   *   Center: Final match
+   *
+   * For 16p (4 rounds):
+   *   R0: 8 matches → left 0-3, right 4-7
+   *   R1: 4 matches → left 0-1, right 2-3
+   *   R2: 2 matches → left 0, right 1  (semifinals)
+   *   R3: 1 match  → CENTER (final)
+   *
+   * Column order left→right:
+   *   [R0-left] [R1-left] [R2-left] | FINAL | [R2-right] [R1-right] [R0-right]
+   */
+
+  const finalRound = rounds - 1;
+
+  // Build left side: rounds 0 .. finalRound-1, left half of matches
+  const leftSide = document.createElement('div');
+  leftSide.className = 'bracket-side left-side';
+
+  // Build right side: rounds finalRound-1 .. 0, right half of matches (reversed col order)
+  const rightSide = document.createElement('div');
+  rightSide.className = 'bracket-side right-side';
+
+  const centerDiv = document.createElement('div');
+  centerDiv.className = 'bracket-center';
+
+  // Left: columns go R0→R(n-2), each col shows LEFT half of that round
+  for (let r = 0; r < finalRound; r++) {
+    leftSide.appendChild(makeHalfRoundCol(r, 'left', rounds));
+  }
+
+  // Right: columns go R(n-2)→R0 visually (row-reverse handles it), each col RIGHT half
+  for (let r = 0; r < finalRound; r++) {
+    rightSide.appendChild(makeHalfRoundCol(r, 'right', rounds));
+  }
+
+  // Center: Final
+  centerDiv.appendChild(makeFinalCol(finalRound));
+
+  container.appendChild(leftSide);
+  container.appendChild(centerDiv);
+  container.appendChild(rightSide);
+
+  setTimeout(drawBracketLines, 80);
+  checkBracketTabVisibility();
+}
+
+// Make a column for half of a round (left or right half of matches)
+function makeHalfRoundCol(r, side, totalRounds) {
+  const col = document.createElement('div');
+  col.className = 'round-col';
+  col.id = `round-col-${r}-${side}`;
+
+  const lbl = document.createElement('div');
+  lbl.className = 'round-label';
+  lbl.textContent = getRoundName(r, totalRounds);
+  col.appendChild(lbl);
+
+  const matchesWrap = document.createElement('div');
+  matchesWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:space-around;flex:1;';
+
+  const allMatches = S.bracket[r];
+  const half = allMatches.length / 2;
+  const startMi = side === 'left' ? 0 : half;
+  const endMi   = side === 'left' ? half : allMatches.length;
+
+  for (let mi = startMi; mi < endMi; mi++) {
+    const m = allMatches[mi];
+    const bx = document.createElement('div');
+    bx.className = 'mb'; bx.id = `mb-${r}-${mi}`;
+    const w1 = m.winner && m.p1 && m.winner.id === m.p1.id;
+    const w2 = m.winner && m.p2 && m.winner.id === m.p2.id;
+    bx.appendChild(makeMatchPlayer(m.p1, m.s1, 'p1', w1, r, mi));
+    bx.appendChild(makeMatchPlayer(m.p2, m.s2, 'p2', w2, r, mi));
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:4px 0;';
+    wrap.appendChild(bx);
+    matchesWrap.appendChild(wrap);
+  }
+
+  col.appendChild(matchesWrap);
+  return col;
+}
+
+// Make the final center column
+function makeFinalCol(r) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'champion-label';
+  lbl.textContent = '🏆 CHUNG KẾT';
+  wrap.appendChild(lbl);
+
+  const m = S.bracket[r][0];
+  const fBox = document.createElement('div');
+  fBox.className = 'mb finals-match' + (m.winner ? ' has-winner' : '');
+  fBox.id = `mb-${r}-0`;
+
+  const w1 = m.winner && m.p1 && m.winner.id === m.p1.id;
+  const w2 = m.winner && m.p2 && m.winner.id === m.p2.id;
+  fBox.appendChild(makeMatchPlayer(m.p1, m.s1, 'p1', w1, r, 0));
+  fBox.appendChild(makeMatchPlayer(m.p2, m.s2, 'p2', w2, r, 0));
+
+  if (m.winner) {
+    const champDiv = document.createElement('div');
+    champDiv.style.cssText = 'padding:8px;text-align:center;border-top:1px solid rgba(255,255,255,0.1);';
+    champDiv.className = 'champ-reveal';
+    champDiv.innerHTML = `
+      <div style="font-family:var(--font-display);font-size:10px;letter-spacing:1.5px;opacity:0.4;margin-bottom:2px;text-transform:uppercase;">Vô Địch</div>
+      <div style="font-family:var(--font-display);font-size:20px;font-weight:900;color:var(--accent);text-shadow:0 0 20px var(--accent);">🏆 ${m.winner.name}</div>
+    `;
+    fBox.appendChild(champDiv);
+  }
+
+  wrap.appendChild(fBox);
+  return wrap;
+}
+
+function renderLinearBracket(container) {
+  S.bracket.forEach((matches, r) => {
+    const col = document.createElement('div');
+    col.className = 'round-col';
+    col.id = `round-col-${r}-left`;
+    const lbl = document.createElement('div');
+    lbl.className = 'round-label';
+    lbl.textContent = getRoundName(r, S.bracket.length);
+    col.appendChild(lbl);
+    const mw = document.createElement('div');
+    mw.style.cssText = 'display:flex;flex-direction:column;justify-content:space-around;flex:1;';
+    matches.forEach((m, mi) => {
+      const bx = document.createElement('div');
+      bx.className = 'mb'; bx.id = `mb-${r}-${mi}`;
+      const w1 = m.winner && m.p1 && m.winner.id === m.p1.id;
+      const w2 = m.winner && m.p2 && m.winner.id === m.p2.id;
+      bx.appendChild(makeMatchPlayer(m.p1, m.s1, 'p1', w1, r, mi));
+      bx.appendChild(makeMatchPlayer(m.p2, m.s2, 'p2', w2, r, mi));
+      const wp = document.createElement('div');
+      wp.style.cssText = 'padding:4px 0;';
+      wp.appendChild(bx);
+      mw.appendChild(wp);
+    });
+    col.appendChild(mw);
+    container.appendChild(col);
+  });
+  setTimeout(drawBracketLines, 80);
+}
+
+function makeMatchPlayer(player, score, pKey, isWinner, r, mi) {
+  const el = document.createElement('div');
+  el.className = 'mp' + (isWinner ? ' winner' : '') + ' ' + pKey + '-slot';
+  el.id = `match-${r}-${mi}-${pKey}`;
+
+  // Inner info div
+  const info = document.createElement('div');
+  info.className = 'mp-info';
+
+  const topRow = document.createElement('div');
+  topRow.className = 'mp-top';
+
+  const nameEl = document.createElement('span');
+  nameEl.className = 'mn';
+  nameEl.textContent = player ? player.name : '—';
+  topRow.appendChild(nameEl);
+
+  if (player && player.rank) {
+    const rankEl = document.createElement('span');
+    rankEl.className = 'mp-rank';
+    rankEl.textContent = player.rank;
+    topRow.appendChild(rankEl);
+  }
+
+  info.appendChild(topRow);
+
+  if (player && player.unit) {
+    const unitEl = document.createElement('div');
+    unitEl.className = 'mp-unit';
+    unitEl.textContent = player.unit;
+    info.appendChild(unitEl);
+  }
+
+  const scoreEl = document.createElement('input');
+  scoreEl.type = 'text'; scoreEl.className = 'ms';
+  scoreEl.value = score || '';
+  scoreEl.onclick = e => e.stopPropagation();
+  scoreEl.onchange = e => updateScore(r, mi, pKey, e);
+
+  el.appendChild(info);
+  el.appendChild(scoreEl);
+
+  if (S.isAdmin) {
+    el.onclick = () => setWinner(r, mi, pKey);
+  }
+
+  return el;
+}
+
+function updateScore(r, mi, pk, e) {
+  if (!S.isAdmin) return;
+  if (pk === 'p1') S.bracket[r][mi].s1 = e.target.value;
+  else S.bracket[r][mi].s2 = e.target.value;
+  saveState(); supaPushDebounced();
+}
+
+function setWinner(r, mi, pk) {
+  if (!S.isAdmin) return;
+  pushHistory();
+  const m  = S.bracket[r][mi];
+  const w  = pk === 'p1' ? m.p1 : m.p2;
+  if (!w) return;
+
+  // Visual flash feedback TRƯỚC KHI re-render
+  const winEl  = document.getElementById(`match-${r}-${mi}-${pk}`);
+  const loseEl = document.getElementById(`match-${r}-${mi}-${pk === 'p1' ? 'p2' : 'p1'}`);
+  if (winEl)  { winEl.classList.remove('winner-flash'); void winEl.offsetWidth; winEl.classList.add('winner-flash'); }
+  if (loseEl) { loseEl.classList.add('loser-dim'); }
+
+  setTimeout(() => {
+    m.winner = w;
+    const nr = r + 1, nm = Math.floor(mi / 2);
+    if (nr < S.bracket.length) {
+      const np = mi % 2 === 0 ? 'p1' : 'p2';
+      S.bracket[nr][nm][np] = w;
+      S.bracket[nr][nm].winner = null;
+    }
+    renderBracket();
+    const schedPanel = document.getElementById('schedule-panel');
+    if (schedPanel && schedPanel.classList.contains('active')) renderSchedule();
+    saveState(); supaPushDebounced();
+
+    // Hiện winner popup
+    const isFinal = (r === S.bracket.length - 1);
+    showWinnerPopup(w, m, r, mi, isFinal);
+  }, 220);
+}
+
+/* ================================================================
+   BRACKET LINES — Animated orthogonal connectors for bilateral bracket
+   ================================================================ */
+function drawBracketLines() {
+  const svg = document.getElementById('bracket-lines');
+  const cont = document.getElementById('bracket-container');
+  svg.innerHTML = '';
+
+  const cw = cont.scrollWidth, ch = cont.scrollHeight;
+  svg.setAttribute('width', cw);
+  svg.setAttribute('height', ch);
+  svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
+
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f0a500';
+  const rounds = S.bracket.length;
+  const contRect = cont.getBoundingClientRect();
+
+  function px(el) {
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      left:   r.left   - contRect.left + cont.scrollLeft,
+      right:  r.right  - contRect.left + cont.scrollLeft,
+      top:    r.top    - contRect.top  + cont.scrollTop,
+      bottom: r.bottom - contRect.top  + cont.scrollTop,
+      midY:   r.top + r.height / 2 - contRect.top + cont.scrollTop,
+      midX:   r.left + r.width / 2  - contRect.left + cont.scrollLeft,
+      width:  r.width, height: r.height
+    };
+  }
+
+  function makePath(d, winner) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', accent);
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    if (winner) {
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('opacity', '0.75');
+      path.setAttribute('stroke-dasharray', '8 4');
+      path.style.animation = 'flowl 1.2s linear infinite';
+      path.style.filter = `drop-shadow(0 0 4px ${accent})`;
+    } else {
+      path.setAttribute('stroke-width', '1.2');
+      path.setAttribute('opacity', '0.2');
+      path.setAttribute('stroke-dasharray', '4 6');
+    }
+    return path;
+  }
+
+  // For each round r (0..rounds-2), connect each match to its parent in round r+1
+  for (let r = 0; r < rounds - 1; r++) {
+    const mc = S.bracket[r].length;
+    for (let mi = 0; mi < mc; mi++) {
+      const srcEl = document.getElementById(`mb-${r}-${mi}`);
+      const parentMi = Math.floor(mi / 2);
+      const dstEl = document.getElementById(`mb-${r + 1}-${parentMi}`);
+      if (!srcEl || !dstEl) continue;
+
+      const src = px(srcEl);
+      const dst = px(dstEl);
+      if (!src || !dst) continue;
+
+      const hasWinner = !!S.bracket[r][mi].winner;
+
+      // Determine if source is LEFT or RIGHT of its parent
+      const isLeftSide = src.midX < dst.midX;
+
+      let sx, ex, sy, dy, mx;
+      if (isLeftSide) {
+        // Source is left: exit right edge of src, enter left edge of dst
+        sx = src.right;
+        ex = dst.left;
+        sy = src.midY;
+        dy = dst.midY;
+        mx = sx + (ex - sx) * 0.5;
+      } else {
+        // Source is right: exit left edge of src, enter right edge of dst
+        sx = src.left;
+        ex = dst.right;
+        sy = src.midY;
+        dy = dst.midY;
+        mx = sx + (ex - sx) * 0.5;
+      }
+
+      // Orthogonal elbow: horizontal → vertical → horizontal
+      const d = `M ${sx} ${sy} L ${mx} ${sy} L ${mx} ${dy} L ${ex} ${dy}`;
+      svg.appendChild(makePath(d, hasWinner));
+    }
+  }
+}
+
+/* ================================================================
+   BRACKET SIZE
+   ================================================================ */
+function updateBracketSize() {
+  let raw = parseInt(document.getElementById('bracket-size-input').value);
+  if (isNaN(raw) || raw < 2) raw = 4;
+  pushHistory();
+  const sz = Math.pow(2, Math.ceil(Math.log2(raw)));
+  document.getElementById('bracket-columns').innerHTML = '';
+  document.getElementById('bracket-lines').innerHTML = '';
+  S.bracketSize = sz;
+  S.bracket = genBracket(sz);
+  S.players.forEach(p => p.drawn = false);
+  saveState();
+  renderAll();
+  checkBracketTabVisibility();
+  closeModal('count-modal');
+  showToast(`🔢 Bracket: ${sz} người`, 'info');
+}
+
+/* ================================================================
+   EXCEL
+   ================================================================ */
+function handleExcel(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const wb = XLSX.read(new Uint8Array(evt.target.result), {type:'array'});
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+    let added = 0;
+    pushHistory();
+    rows.slice(1).forEach(row => {
+      if (row[0]) {
+        S.players.push({
+          id: 'p_'+Date.now()+'_'+Math.random().toString(36).substr(2,6),
+          name: String(row[0]),
+          unit: row[1] ? String(row[1]) : '',
+          rank: row[2] ? String(row[2]) : '',
+          drawn: false
+        });
+        added++;
+      }
+    });
+    document.getElementById('import-excel').value = '';
+    saveAndRender();
+    supaPushDebounced();
+    showToast(`✅ Đã import ${added} cơ thủ`, 'success');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function downloadTemplate() {
+  const ws = XLSX.utils.aoa_to_sheet([['Tên','Đơn vị','Hạng'],['Nguyễn Văn A','CLB Arena','A']]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Players');
+  XLSX.writeFile(wb, 'live3c_template.xlsx');
+}
+
+/* ================================================================
+   EXPORT
+   ================================================================ */
+function exportImage(elementId, filename) {
+  const el = document.getElementById(elementId); if (!el) return;
+  html2canvas(el, {
+    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+    scale: 2, useCORS: true
+  }).then(canvas => {
+    const a = document.createElement('a');
+    a.download = `live3c_${filename}_${Date.now()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }).catch(err => showToast('❌ Export thất bại: ' + err.message, 'error'));
+}
+
+/* ================================================================
+   BOOT — Load thẳng, không chặn bởi login
+   ================================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  // Luôn khởi động ngay, viewer mode là mặc định
+  init();
+
+  // Keyboard shortcuts for undo/redo
+  document.addEventListener('keydown', e => {
+    if (!S.isAdmin) return;
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
+  });
+});
+
+/* ================================================================
+   BRACKET TAB — Bracket / Lịch Thi Đấu
+   ================================================================ */
+function switchBracketTab(tab) {
+  const bracketContainer = document.getElementById('bracket-container');
+  const schedulePanel = document.getElementById('schedule-panel');
+  const centerPanel = document.getElementById('center-panel');
+  const btabBracket = document.getElementById('btab-bracket');
+  const btabSchedule = document.getElementById('btab-schedule');
+
+  if (tab === 'bracket') {
+    bracketContainer.style.display = '';
+    schedulePanel.classList.remove('active');
+    centerPanel.classList.remove('schedule-active');
+    btabBracket.classList.add('active');
+    btabSchedule.classList.remove('active');
+    setTimeout(drawBracketLines, 80);
+  } else {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.add('active');
+    centerPanel.classList.add('schedule-active');
+    btabBracket.classList.remove('active');
+    btabSchedule.classList.add('active');
+    renderSchedule();
+  }
+}
+
+function checkBracketTabVisibility() {
+  // Hiện tab bar khi đã có ít nhất 1 player được bốc vào bracket
+  const tabBar = document.getElementById('bracket-tab-bar');
+  if (!tabBar) return;
+  const r0 = S.bracket && S.bracket[0];
+  const hasDrawn = r0 && r0.some(m => m.p1 || m.p2);
+  if (hasDrawn) {
+    tabBar.classList.add('visible');
+  } else {
+    tabBar.classList.remove('visible');
+    // Nếu tab schedule đang active → quay về bracket
+    const schedulePanel = document.getElementById('schedule-panel');
+    if (schedulePanel && schedulePanel.classList.contains('active')) {
+      switchBracketTab('bracket');
+    }
+  }
+}
+
+/* ---- Billiards ball SVG (inline data, used as center icon) ---- */
+const BALL_SVG = `<svg class="sched-ball-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="ballGrad" cx="38%" cy="32%" r="60%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#f0a500"/>
+      <stop offset="100%" stop-color="#8a5a00"/>
+    </radialGradient>
+    <radialGradient id="shineGrad" cx="38%" cy="28%" r="35%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="30" cy="30" r="28" fill="url(#ballGrad)"/>
+  <ellipse cx="24" cy="22" rx="10" ry="7" fill="url(#shineGrad)"/>
+  <circle cx="30" cy="30" r="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <text x="30" y="35" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-size="10" font-weight="900" fill="rgba(255,255,255,0.9)">3C</text>
+</svg>`;
+
+function renderSchedule() {
+  const container = document.getElementById('schedule-columns');
+  const subtitle = document.getElementById('schedule-subtitle');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Collect ALL rounds with matches
+  const bracket = S.bracket;
+  if (!bracket || bracket.length === 0) {
+    container.innerHTML = '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
+    return;
+  }
+
+  // Count total matches filled across all rounds
+  let totalMatchCount = 0;
+  let filledRounds = 0;
+  bracket.forEach(round => {
+    const hasAny = round.some(m => m.p1 || m.p2);
+    if (hasAny) { filledRounds++; totalMatchCount += round.length; }
+  });
+
+  if (totalMatchCount === 0) {
+    container.innerHTML = '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
+    return;
+  }
+
+  const rounds = bracket.length;
+  let globalMatchNum = 1;
+
+  // Update subtitle
+  if (subtitle) subtitle.textContent = `${filledRounds} vòng · ${totalMatchCount} trận đấu`;
+
+  // Build match card HTML
+  function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay) {
+    const p1 = m.p1, p2 = m.p2;
+    const hasP1 = !!p1, hasP2 = !!p2;
+    const hasWinner = !!m.winner;
+    const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
+    const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
+
+    const p1NameCls = !hasP1 ? 'empty-name' : (p1IsWinner ? 'left-name' : '');
+    const p2NameCls = !hasP2 ? 'empty-name' : (p2IsWinner ? 'right-name' : '');
+
+    return `
+      <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
+        <div class="sched-match-header">
+          <span class="sched-match-num">MATCH ${matchNum}</span>
+          <span class="sched-match-status${hasWinner ? ' done' : ''}">${hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU'}</span>
+        </div>
+        <div class="sched-match-body">
+          <!-- Player 1 (left) -->
+          <div class="sched-player left">
+            <div class="sched-name-row">
+              <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
+              ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
+            </div>
+            ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
+            ${p1IsWinner ? `<span class="sched-winner-badge">🏆 THẮNG</span>` : ''}
+          </div>
+          <!-- Center ball icon -->
+          <div class="sched-vs-col">
+            ${BALL_SVG}
+          </div>
+          <!-- Player 2 (right) -->
+          <div class="sched-player right">
+            <div class="sched-name-row">
+              ${hasP2 && p2.rank ? `<span class="sched-rank">${p2.rank}</span>` : ''}
+              <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
+            </div>
+            ${hasP2 && p2.unit ? `<div class="sched-unit">${p2.unit}</div>` : ''}
+            ${p2IsWinner ? `<span class="sched-winner-badge">🏆 THẮNG</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Render each round as a section
+  bracket.forEach((round, rIdx) => {
+    const hasAny = round.some(m => m.p1 || m.p2);
+    if (!hasAny) return;
+
+    const section = document.createElement('div');
+    section.className = 'sched-round-section';
+
+    const rnLabel = document.createElement('div');
+    rnLabel.className = 'sched-round-label';
+    rnLabel.textContent = getRoundName(rIdx, rounds).toUpperCase();
+    section.appendChild(rnLabel);
+
+    const colsWrap = document.createElement('div');
+    colsWrap.className = 'schedule-columns';
+
+    const half = Math.ceil(round.length / 2);
+    const leftMatches = round.slice(0, half);
+    const rightMatches = round.slice(half);
+
+    const leftCol = document.createElement('div');
+    leftCol.className = 'schedule-col';
+    leftMatches.forEach((m, i) => {
+      const num = globalMatchNum++;
+      leftCol.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, i, i * 50));
+    });
+    colsWrap.appendChild(leftCol);
+
+    if (rightMatches.length > 0) {
+      const divider = document.createElement('div');
+      divider.className = 'schedule-divider';
+      colsWrap.appendChild(divider);
+
+      const rightCol = document.createElement('div');
+      rightCol.className = 'schedule-col';
+      rightMatches.forEach((m, i) => {
+        const num = globalMatchNum++;
+        rightCol.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, half + i, (i + half) * 50));
+      });
+      colsWrap.appendChild(rightCol);
+    }
+
+    section.appendChild(colsWrap);
+    container.appendChild(section);
+  });
+}
+
+/* ================================================================
+   SWITCH TAB — Mobile navigation
+   ================================================================ */
+/* ================================================================
+   WINNER POPUP
+   ================================================================ */
+const WIN_IMAGE_URL = ''; // Đặt URL ảnh PNG vào đây, hoặc để '' dùng emoji
+
+function showWinnerPopup(winner, match, roundIdx, matchIdx, isFinal) {
+  const totalRounds = S.bracket.length;
+  const roundLabel  = isFinal
+    ? '🏆 CHUNG KẾT — VÔ ĐỊCH!'
+    : getRoundName(roundIdx, totalRounds).toUpperCase();
+
+  const imgWrap = document.getElementById('wp-img-wrap');
+  if (WIN_IMAGE_URL) {
+    imgWrap.innerHTML = `<img class="wp-img" id="wp-img" src="${WIN_IMAGE_URL}" alt="winner">`;
+  } else {
+    imgWrap.innerHTML = `<div class="wp-img-placeholder" id="wp-img-placeholder">${isFinal ? '👑' : '🏆'}</div>`;
+  }
+
+  document.getElementById('wp-round-label').textContent = roundLabel;
+  document.getElementById('wp-name').textContent        = winner.name;
+  document.getElementById('wp-unit').textContent        = winner.unit || '';
+  const rankWrap = document.getElementById('wp-rank-wrap');
+  rankWrap.innerHTML = winner.rank
+    ? `<span class="wp-rank-badge">${winner.rank}</span>` : '';
+
+  const scoreBox = document.getElementById('wp-score');
+  const s1 = match.s1, s2 = match.s2;
+  if (s1 || s2) {
+    const p1IsWinner = match.p1 && winner.id === match.p1.id;
+    document.getElementById('wp-s1-name').textContent = match.p1 ? match.p1.name : '—';
+    document.getElementById('wp-s2-name').textContent = match.p2 ? match.p2.name : '—';
+    document.getElementById('wp-s1-val').textContent  = s1 || '—';
+    document.getElementById('wp-s2-val').textContent  = s2 || '—';
+    document.getElementById('wp-s1-val').className = 'wp-score-val ' + (p1IsWinner ? 'win' : 'lose');
+    document.getElementById('wp-s2-val').className = 'wp-score-val ' + (!p1IsWinner ? 'win' : 'lose');
+    scoreBox.style.display = '';
+  } else {
+    scoreBox.style.display = 'none';
+  }
+
+  const popup = document.getElementById('winner-popup');
+  popup.classList.add('show');
+  requestAnimationFrame(() => launchParticles(isFinal));
+}
+
+function closeWinnerPopup() {
+  document.getElementById('winner-popup').classList.remove('show');
+  stopParticles();
+}
+
+/* ── Particle system ── */
+let particleRAF = null;
+let particleCtx = null;
+let particles   = [];
+
+function launchParticles(intense) {
+  const canvas = document.getElementById('wp-particle-canvas');
+  if (!canvas) return;
+  const box = canvas.parentElement.parentElement;
+  canvas.width  = box.offsetWidth;
+  canvas.height = box.offsetHeight;
+  particleCtx   = canvas.getContext('2d');
+
+  const count  = intense ? 120 : 60;
+  const colors = ['#f0a500','#e05a2b','#ffffff','#ffd700','#ff6b35','#fff176'];
+  particles = Array.from({ length: count }, () => ({
+    x:    canvas.width * Math.random(),
+    y:    canvas.height * 0.3 + Math.random() * 40,
+    vx:   (Math.random() - 0.5) * 6,
+    vy:   -4 - Math.random() * 6,
+    size: 3 + Math.random() * 5,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot:  Math.random() * Math.PI * 2,
+    rotV: (Math.random() - 0.5) * 0.3,
+    alpha: 1,
+    shape: Math.random() > 0.5 ? 'rect' : 'circle',
+    gravity: 0.18 + Math.random() * 0.12,
+    decay:   0.012 + Math.random() * 0.012,
+  }));
+
+  function tick() {
+    if (!particleCtx) return;
+    particleCtx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.alpha <= 0) return;
+      alive = true;
+      p.x += p.vx; p.y += p.vy;
+      p.vy += p.gravity;
+      p.rot += p.rotV;
+      p.alpha -= p.decay;
+      particleCtx.save();
+      particleCtx.globalAlpha = Math.max(0, p.alpha);
+      particleCtx.translate(p.x, p.y);
+      particleCtx.rotate(p.rot);
+      particleCtx.fillStyle = p.color;
+      if (p.shape === 'rect') {
+        particleCtx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      } else {
+        particleCtx.beginPath();
+        particleCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        particleCtx.fill();
+      }
+      particleCtx.restore();
+    });
+    if (alive) particleRAF = requestAnimationFrame(tick);
+    else stopParticles();
+  }
+  stopParticles();
+  particleRAF = requestAnimationFrame(tick);
+}
+
+function stopParticles() {
+  if (particleRAF) { cancelAnimationFrame(particleRAF); particleRAF = null; }
+  particleCtx = null;
+  particles   = [];
+  const canvas = document.getElementById('wp-particle-canvas');
+  if (canvas && canvas.getContext) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeWinnerPopup();
+    const sp = document.getElementById('spin-popup');
+    if (sp && sp.classList.contains('show')) sp.classList.remove('show');
+  }
+});
+
+function switchTab(tab) {
+  document.body.classList.remove('tab-left','tab-center','tab-right');
+  document.body.classList.add('tab-' + tab);
+  document.querySelectorAll('.m-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  if (tab === 'center') setTimeout(drawBracketLines, 100);
+}
+
+Object.assign(globalThis, {
+  openModal, closeModal, undo, redo, spinWheel, switchBracketTab, exportImage,
+  addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
+  saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
+  closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, handleExcel, handleVideoUpload,
+  previewTitleFont,
+});
+</script>
+
+  <div class="mobile-tabs" id="mobile-tabs">
+    <button class="m-tab active" data-tab="left" onclick="switchTab('left')">👥 Cơ thủ</button>
+    <button class="m-tab" data-tab="center" onclick="switchTab('center')">🎯 Bracket</button>
+    <button class="m-tab" data-tab="right" onclick="switchTab('right')">📋 Thông tin</button>
+  </div>
+</body>
+</html>
