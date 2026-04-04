@@ -130,7 +130,19 @@ document.getElementById('create-form').addEventListener('submit', async (e) => {
     };
 
     const rows = await supaFetch('tournaments', 'POST', [payload]);
-    const id = rows?.[0]?.id;
+    let id = rows?.[0]?.id || rows?.id || null;
+
+    // Fallback: một số cấu hình Supabase không trả về row khi insert
+    if (!id) {
+      const fallbackRows = await supaFetch(
+        'tournaments',
+        'GET',
+        null,
+        `name=eq.${encodeURIComponent(payload.name)}&order=created_at.desc&limit=1`
+      );
+      id = fallbackRows?.[0]?.id || null;
+    }
+
     if (!id) throw new Error('Không nhận được ID giải đấu mới');
     toast('✅ Tạo giải thành công', 'success', { containerId: 'toast-container', exitClass: 'out' });
     setTimeout(() => { window.location.href = `edit-tournament.html?id=${encodeURIComponent(id)}`; }, 250);
