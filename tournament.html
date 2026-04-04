@@ -175,6 +175,23 @@ body.viewer-mode .gear-btn { display: none !important; }
   box-shadow: 0 0 0 2px var(--border), 0 0 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
 }
 #wheel-canvas { width: 100%; height: 100%; display: block; }
+.shuffle-wrap {
+  width: 100%; height: 100%; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 0 0 2px var(--border), 0 0 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  position: relative;
+  background: linear-gradient(145deg, #14532d, #0f3f23);
+}
+#shuffle-canvas { width: 100%; height: 100%; display: block; }
+.mode-switch {
+  margin-top: 8px; display: flex; justify-content: center; gap: 6px;
+}
+.mode-btn {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04); color: var(--text); cursor: pointer;
+  font-size: 14px; transition: all 0.15s;
+}
+.mode-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+.mode-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(240,165,0,0.1); }
 .spin-btn {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: 54px; height: 54px; border-radius: 50%;
@@ -1265,10 +1282,15 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     </div>
 
     <div class="wheel-wrap">
-      <div class="wheel-ptr">▼</div>
-      <div class="wheel-inner"><canvas id="wheel-canvas" width="500" height="500"></canvas></div>
-      <button id="spin-btn" class="spin-btn" onclick="startAutoSpin()">SPIN</button>
-      <button id="stop-auto-spin" class="stop-spin-btn" onclick="stopAutoSpin()" title="Dừng auto spin">⏹</button>
+      <div class="wheel-ptr" id="wheel-pointer">▼</div>
+      <div class="wheel-inner" id="wheel-mode-wrap"><canvas id="wheel-canvas" width="500" height="500"></canvas></div>
+      <div class="shuffle-wrap" id="shuffle-mode-wrap" style="display:none"><canvas id="shuffle-canvas" width="500" height="500"></canvas></div>
+      <button id="spin-btn" class="spin-btn" onclick="startDraw()">QUAY</button>
+      <button id="stop-auto-spin" class="stop-spin-btn" onclick="stopAllDraw()" title="Dừng auto quay">⏹</button>
+    </div>
+    <div class="mode-switch">
+      <button class="mode-btn active" id="mode-spin" title="Spin" onclick="setDrawMode('spin')">🎡</button>
+      <button class="mode-btn" id="mode-shuffle" title="Shuffle billiards" onclick="setDrawMode('shuffle')">🎱</button>
     </div>
 
     <div class="ctrl-row">
@@ -1495,6 +1517,7 @@ const genBracket = generateBracket;
 let S = {
   players: [], bracketSize: DEFAULTS.size, bracket: [],
   theme: DEFAULTS.theme, wheelRotation: 0, isSpinning: false,
+  drawMode: 'spin',
   tbVals: [...DEFAULTS.tbVals], tbBg: DEFAULTS.tbBg, tbFont: DEFAULTS.tbFont,
   titleFont: DEFAULTS.titleFont,
   supaUrl: '', supaKey: '',
@@ -1510,6 +1533,17 @@ let autoSpinEnabled = false;
 let autoSpinStopRequested = false;
 let spinAudioCtx = null;
 let spinAudioOsc = null;
+let shuffleAnim = null;
+let shuffleRunning = false;
+let shuffleResolveTimer = null;
+let shuffleNameTimer = null;
+let shuffleResultIndex = -1;
+const shuffleCueImg = new Image();
+shuffleCueImg.src = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/quay.png';
+const shuffleState = {
+  cue: { x: 58, y: 250, angle: 0, progress: 0 },
+  balls: []
+};
 
 /* ================================================================
    UNDO / REDO
@@ -1964,6 +1998,9 @@ function renderAll() {
   renderPlayers();
   renderBracket();
   drawWheel();
+  initShuffleBalls();
+  drawShuffleTable();
+  applyDrawModeUI();
 }
 
 /* ================================================================
@@ -2287,16 +2324,54 @@ function stopSpinSound() {
   } catch {}
 }
 
+function setDrawMode(mode) {
+  if (S.isSpinning || shuffleRunning) return;
+  S.drawMode = mode === 'shuffle' ? 'shuffle' : 'spin';
+  saveState();
+  applyDrawModeUI();
+}
+
+function applyDrawModeUI() {
+  const wheelWrap = document.getElementById('wheel-mode-wrap');
+  const shuffleWrap = document.getElementById('shuffle-mode-wrap');
+  const ptr = document.getElementById('wheel-pointer');
+  const bSpin = document.getElementById('mode-spin');
+  const bShuffle = document.getElementById('mode-shuffle');
+  const spinBtn = document.getElementById('spin-btn');
+  if (!wheelWrap || !shuffleWrap) return;
+  const isShuffle = S.drawMode === 'shuffle';
+  wheelWrap.style.display = isShuffle ? 'none' : 'block';
+  shuffleWrap.style.display = isShuffle ? 'block' : 'none';
+  if (ptr) ptr.style.display = isShuffle ? 'none' : 'block';
+  if (bSpin) bSpin.classList.toggle('active', !isShuffle);
+  if (bShuffle) bShuffle.classList.toggle('active', isShuffle);
+  if (spinBtn) spinBtn.textContent = isShuffle ? 'QUAY' : 'SPIN';
+}
+
+function startDraw() {
+  if (S.drawMode === 'shuffle') startShuffleDraw();
+  else startAutoSpin();
+}
+
+function stopAllDraw() {
+  autoSpinStopRequested = true;
+  autoSpinEnabled = false;
+  stopSpinSound();
+  if (shuffleRunning) {
+    shuffleRunning = false;
+    if (shuffleAnim) cancelAnimationFrame(shuffleAnim);
+    if (shuffleNameTimer) clearInterval(shuffleNameTimer);
+    if (shuffleResolveTimer) clearTimeout(shuffleResolveTimer);
+  }
+  S.isSpinning = false;
+  const btn = document.getElementById('spin-btn');
+  if (btn) btn.disabled = false;
+}
+
 function startAutoSpin() {
   autoSpinEnabled = true;
   autoSpinStopRequested = false;
   spinWheel();
-}
-
-function stopAutoSpin() {
-  autoSpinStopRequested = true;
-  autoSpinEnabled = false;
-  stopSpinSound();
 }
 
 function spinWheel() {
@@ -2335,17 +2410,14 @@ function spinWheel() {
     } else {
       S.wheelRotation = endRot % 360;
       drawWheel(S.wheelRotation);
-      // Kiểm tra lại slot tại thời điểm kết thúc spin (tránh stale slot)
       const freshSlot = findNextSlot();
       if (!freshSlot) {
         showToast('🏆 Bracket đã đầy!');
         resetWheel();
         return;
       }
-      // Kiểm tra player vẫn chưa được drawn
       const freshPlayer = S.players.find(p => p.id === tp.id && !p.drawn);
       if (!freshPlayer) {
-        // Player đã được drawn rồi (do realtime sync) → chọn lại
         const undrawnNow = getUndrawn();
         if (undrawnNow.length === 0) { showToast('🏁 Đã bốc hết!'); resetWheel(); return; }
         pendingSpinPlayer = undrawnNow[Math.floor(Math.random() * undrawnNow.length)];
@@ -2358,6 +2430,255 @@ function spinWheel() {
     }
   }
   wheelAnim = requestAnimationFrame(tick);
+}
+
+function playHitSound() {
+  try {
+    if (!spinAudioCtx) spinAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = spinAudioCtx.createOscillator();
+    const gain = spinAudioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(140, spinAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, spinAudioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.08, spinAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, spinAudioCtx.currentTime + 0.18);
+    osc.connect(gain); gain.connect(spinAudioCtx.destination);
+    osc.start(); osc.stop(spinAudioCtx.currentTime + 0.2);
+  } catch {}
+}
+
+function playCollisionSound() {
+  try {
+    if (!spinAudioCtx) spinAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = spinAudioCtx.createOscillator();
+    const gain = spinAudioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(380 + Math.random() * 120, spinAudioCtx.currentTime);
+    gain.gain.setValueAtTime(0.02, spinAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, spinAudioCtx.currentTime + 0.08);
+    osc.connect(gain); gain.connect(spinAudioCtx.destination);
+    osc.start(); osc.stop(spinAudioCtx.currentTime + 0.09);
+  } catch {}
+}
+
+function playResultSound() {
+  try {
+    if (!spinAudioCtx) spinAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = spinAudioCtx.currentTime;
+    [520, 660, 840].forEach((f, idx) => {
+      const osc = spinAudioCtx.createOscillator();
+      const gain = spinAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.0001, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.04, now + idx * 0.08 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.12);
+      osc.connect(gain); gain.connect(spinAudioCtx.destination);
+      osc.start(now + idx * 0.08); osc.stop(now + idx * 0.08 + 0.13);
+    });
+  } catch {}
+}
+
+function initShuffleBalls() {
+  if (shuffleState.balls.length) return;
+  shuffleState.balls = [
+    { x: 280, y: 190, vx: 0, vy: 0, r: 18, color: '#f8fafc' },
+    { x: 340, y: 250, vx: 0, vy: 0, r: 18, color: '#ef4444' },
+    { x: 280, y: 310, vx: 0, vy: 0, r: 18, color: '#facc15' },
+  ];
+}
+
+function drawShuffleTable(runnerName = '') {
+  const c = document.getElementById('shuffle-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, '#1b6b3d');
+  grad.addColorStop(1, '#0f3f23');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = '#3a2312';
+  ctx.lineWidth = 18;
+  ctx.strokeRect(10, 10, w - 20, h - 20);
+
+  const cueX = shuffleState.cue.x + shuffleState.cue.progress * 44;
+  ctx.save();
+  ctx.translate(cueX, shuffleState.cue.y);
+  ctx.rotate(shuffleState.cue.angle);
+  if (shuffleCueImg.complete && shuffleCueImg.naturalWidth > 0) {
+    ctx.drawImage(shuffleCueImg, -14, -120, 28, 230);
+  } else {
+    ctx.fillStyle = '#d6a46a';
+    ctx.fillRect(-4, -110, 8, 220);
+  }
+  ctx.restore();
+
+  shuffleState.balls.forEach((b, idx) => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fillStyle = b.color;
+    ctx.fill();
+    ctx.lineWidth = shuffleResultIndex === idx ? 5 : 2;
+    ctx.strokeStyle = shuffleResultIndex === idx ? '#22c55e' : 'rgba(0,0,0,0.35)';
+    ctx.stroke();
+  });
+
+  if (runnerName) {
+    ctx.fillStyle = 'rgba(0,0,0,0.48)';
+    ctx.fillRect(120, 420, 260, 40);
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 20px "Barlow Condensed", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(runnerName, 250, 447);
+  }
+}
+
+function getDrawCandidate() {
+  const undrawn = getUndrawn();
+  if (!undrawn.length) return null;
+  const slot = findNextSlot();
+  if (!slot) return null;
+  const idx = Math.floor(Math.random() * undrawn.length);
+  return { player: undrawn[idx], slot };
+}
+
+function startShuffleDraw() {
+  if (S.isSpinning || shuffleRunning) return;
+  if (!S.isAdmin) return;
+  const candidate = getDrawCandidate();
+  if (!candidate) { showToast('🏁 Đã bốc hết hoặc bracket đầy!'); return; }
+
+  S.isSpinning = true;
+  shuffleRunning = true;
+  shuffleResultIndex = -1;
+  document.getElementById('spin-btn').disabled = true;
+  initShuffleBalls();
+
+  pendingSpinPlayer = candidate.player;
+  pendingSpinSlot = candidate.slot;
+
+  shuffleState.cue.progress = 0;
+  shuffleState.cue.angle = 0;
+  shuffleState.balls[0].vx = 8.4;
+  shuffleState.balls[0].vy = -1.2;
+  shuffleState.balls[1].vx = 0;
+  shuffleState.balls[1].vy = 0;
+  shuffleState.balls[2].vx = 0;
+  shuffleState.balls[2].vy = 0;
+  playHitSound();
+
+  let randomName = pendingSpinPlayer.name;
+  shuffleNameTimer = setInterval(() => {
+    const undrawnNow = getUndrawn();
+    if (!undrawnNow.length) return;
+    randomName = undrawnNow[Math.floor(Math.random() * undrawnNow.length)].name;
+  }, 85);
+
+  const friction = 0.988;
+  const minV = 0.08;
+  const wallMin = 26;
+  const wallMaxX = 474;
+  const wallMaxY = 474;
+
+  function collide(a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const dist = Math.hypot(dx, dy);
+    const minDist = a.r + b.r;
+    if (dist <= 0 || dist >= minDist) return;
+    const nx = dx / dist, ny = dy / dist;
+    const overlap = minDist - dist;
+    a.x -= nx * overlap * 0.5; a.y -= ny * overlap * 0.5;
+    b.x += nx * overlap * 0.5; b.y += ny * overlap * 0.5;
+
+    const va = a.vx * nx + a.vy * ny;
+    const vb = b.vx * nx + b.vy * ny;
+    const impulse = vb - va;
+    a.vx += impulse * nx; a.vy += impulse * ny;
+    b.vx -= impulse * nx; b.vy -= impulse * ny;
+    playCollisionSound();
+  }
+
+  function updateCue() {
+    if (shuffleState.cue.progress < 1) {
+      shuffleState.cue.progress += 0.08;
+    }
+  }
+
+  function step() {
+    if (!shuffleRunning) return;
+    updateCue();
+    const balls = shuffleState.balls;
+
+    balls.forEach(b => {
+      b.x += b.vx;
+      b.y += b.vy;
+      b.vx *= friction;
+      b.vy *= friction;
+
+      if (b.x < wallMin || b.x > wallMaxX) {
+        b.x = Math.max(wallMin, Math.min(wallMaxX, b.x));
+        b.vx *= -0.92;
+        playCollisionSound();
+      }
+      if (b.y < wallMin || b.y > wallMaxY) {
+        b.y = Math.max(wallMin, Math.min(wallMaxY, b.y));
+        b.vy *= -0.92;
+        playCollisionSound();
+      }
+    });
+
+    collide(balls[0], balls[1]);
+    collide(balls[0], balls[2]);
+    collide(balls[1], balls[2]);
+
+    drawShuffleTable(randomName);
+
+    const allSlow = balls.every(b => Math.hypot(b.vx, b.vy) < minV);
+    if (allSlow) {
+      resolveShuffleResult();
+      return;
+    }
+    shuffleAnim = requestAnimationFrame(step);
+  }
+
+  function resolveShuffleResult() {
+    shuffleRunning = false;
+    if (shuffleAnim) cancelAnimationFrame(shuffleAnim);
+    if (shuffleNameTimer) clearInterval(shuffleNameTimer);
+
+    const balls = shuffleState.balls;
+    let lastIdx = 0;
+    let maxSpeed = -1;
+    balls.forEach((b, idx) => {
+      const sp = Math.hypot(b.vx, b.vy);
+      if (sp > maxSpeed) {
+        maxSpeed = sp;
+        lastIdx = idx;
+      }
+    });
+    shuffleResultIndex = lastIdx;
+    drawShuffleTable(pendingSpinPlayer ? pendingSpinPlayer.name : '');
+    playResultSound();
+
+    shuffleResolveTimer = setTimeout(() => {
+      if (pendingSpinPlayer && pendingSpinSlot) {
+        const p = pendingSpinPlayer;
+        const sl = pendingSpinSlot;
+        pendingSpinPlayer = null;
+        pendingSpinSlot = null;
+        showSpinPopup(p);
+        commitPlayer(p, sl);
+      }
+      S.isSpinning = false;
+      document.getElementById('spin-btn').disabled = false;
+    }, 850);
+  }
+
+  shuffleAnim = requestAnimationFrame(step);
 }
 
 /* ================================================================
@@ -3259,7 +3580,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, handleExcel, handleVideoUpload,
-  previewTitleFont, startAutoSpin, stopAutoSpin,
+  previewTitleFont, startAutoSpin, startDraw, stopAllDraw, setDrawMode,
 });
 </script>
 
