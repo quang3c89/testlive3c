@@ -951,12 +951,15 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   align-items: start;
 }
+@media (max-width: 1200px) {
+  .schedule-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 768px) {
-  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .schedule-grid { grid-template-columns: 1fr; }
   .schedule-columns { max-height: calc(100vh - 250px); }
 }
 .schedule-col { display: none; }
@@ -1032,22 +1035,28 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 .sched-player-inline.right {
   justify-content: flex-end;
 }
 .sched-player-inline .sched-name {
-  max-width: 56%;
+  flex: 1;
+  min-width: 0;
 }
 .sched-player-inline .sched-meta-inline {
   font-family: var(--font-mono);
   font-size: 8px;
-  opacity: 0.75;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 42%;
+  opacity: 0.8;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: 46%;
+  line-height: 1.15;
+  text-align: left;
+}
+.sched-player-inline.right .sched-meta-inline {
+  text-align: right;
 }
 
 .sched-outcome-inline {
@@ -1063,7 +1072,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 .sched-name {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--name-color);
   white-space: nowrap;
@@ -1073,9 +1082,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   letter-spacing: 0.1px;
   max-width: 100%;
 }
-.sched-name.name-md { font-size: 14px; }
-.sched-name.name-sm { font-size: 12.5px; }
-.sched-name.name-xs { font-size: 11px; letter-spacing: 0; }
+.sched-name.name-md { font-size: 15px; }
+.sched-name.name-sm { font-size: 13.5px; }
+.sched-name.name-xs { font-size: 12px; letter-spacing: 0; }
 .sched-name.left-name { color: #ffffff; }
 .sched-name.right-name { color: #ffd447; }
 .sched-name.empty-name {
@@ -3184,6 +3193,8 @@ function renderSchedule() {
     const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
     const p1Meta = [p1?.unit, p1?.rank ? `H${p1.rank}` : ''].filter(Boolean).join(' · ');
     const p2Meta = [p2?.rank ? `H${p2.rank}` : '', p2?.unit].filter(Boolean).join(' · ');
+    const p1MetaShort = p1Meta.length > 28 ? `${p1Meta.slice(0, 28)}…` : p1Meta;
+    const p2MetaShort = p2Meta.length > 28 ? `${p2Meta.slice(0, 28)}…` : p2Meta;
     const isMobile = (typeof window !== 'undefined' ? window.innerWidth : 1024) <= 768;
     const winTxt = isMobile ? 'W' : 'WIN';
     const loseTxt = isMobile ? 'L' : 'LOST';
@@ -3197,7 +3208,7 @@ function renderSchedule() {
         <div class="sched-match-body">
           <div class="sched-player-inline left">
             <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
-            ${p1Meta ? `<span class="sched-meta-inline" title="${p1Meta}">${p1Meta}</span>` : ''}
+            ${p1Meta ? `<span class="sched-meta-inline" title="${p1Meta}">${p1MetaShort}</span>` : ''}
           </div>
 
           <div class="sched-outcome-inline">
@@ -3217,7 +3228,7 @@ function renderSchedule() {
           </div>
 
           <div class="sched-player-inline right">
-            ${p2Meta ? `<span class="sched-meta-inline" title="${p2Meta}">${p2Meta}</span>` : ''}
+            ${p2Meta ? `<span class="sched-meta-inline" title="${p2Meta}">${p2MetaShort}</span>` : ''}
             <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
           </div>
         </div>
