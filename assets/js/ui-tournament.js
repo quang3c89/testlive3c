@@ -336,8 +336,15 @@ export function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay, ballSv
   const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
   const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
 
-  const p1NameCls = !hasP1 ? 'empty-name' : 'left-name';
-  const p2NameCls = !hasP2 ? 'empty-name' : 'right-name';
+  const getNameSizeClass = (name = '') => {
+    const n = String(name || '').trim().length;
+    if (n >= 26) return 'name-xs';
+    if (n >= 20) return 'name-sm';
+    return 'name-md';
+  };
+
+  const p1NameCls = !hasP1 ? 'empty-name' : `left-name ${getNameSizeClass(p1?.name)}`;
+  const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
 
   return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
