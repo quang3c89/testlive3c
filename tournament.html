@@ -2905,7 +2905,6 @@ function makeByeMergedRow(match, r, mi) {
       </div>
       ${passPlayer?.unit ? `<div class="mp-unit">${passPlayer.unit}</div>` : ''}
     </div>
-    <span class="bye-pass-badge">BYE PASS</span>
   `;
   return row;
 }
@@ -3349,12 +3348,11 @@ function renderSchedule() {
         </div>
         <div class="sched-match-body">
           ${byeCase ? `
-            <div class="sched-player-inline left" style="flex:1 1 100%;justify-content:space-between;">
+            <div class="sched-player-inline left" style="flex:1 1 100%;justify-content:flex-start;">
               <div style="display:flex;align-items:center;gap:6px;min-width:0;">
                 <span class="sched-name ${p1?.isBye ? p2NameCls : p1NameCls}" title="${!p1?.isBye && hasP1 ? p1.name : hasP2 ? p2.name : 'TBD'}">${!p1?.isBye && hasP1 ? p1.name : hasP2 ? p2.name : 'TBD'}</span>
                 <span class="sched-meta-inline">${!p1?.isBye ? p1MetaShort : p2MetaShort}</span>
               </div>
-              <span class="bye-pass-badge">BYE PASS</span>
             </div>
           ` : `
             <div class="sched-player-inline left">
