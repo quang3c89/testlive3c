@@ -595,6 +595,30 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 .wp-btn.close:hover { background: rgba(255,255,255,0.13); }
 
+/* ============ BATTLE POPUP ============ */
+#battle-popup {
+  display: none; position: fixed; inset: 0; z-index: 8450;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.72);
+  pointer-events: none;
+}
+#battle-popup.show { display:flex; pointer-events:all; }
+.battle-box { border-color: rgba(56,189,248,0.5); }
+.battle-bg {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(59,130,246,0.28), transparent 45%),
+    radial-gradient(circle at 85% 78%, rgba(239,68,68,0.24), transparent 42%),
+    linear-gradient(145deg, rgba(17,24,39,0.95), rgba(2,6,23,0.98));
+  pointer-events:none;
+}
+.battle-row { display:flex; align-items:center; gap:16px; width:100%; margin-top:8px; }
+.battle-side { flex:1; min-width:0; text-align:center; }
+.battle-name { font-family: var(--font-display); font-size: 24px; font-weight: 900; line-height: 1.1; }
+.battle-unit { font-size: 12px; color: var(--unit-color); margin-top: 4px; word-break: break-word; }
+.battle-rank { font-size: 10px; color: var(--accent); margin-top: 4px; font-family: var(--font-mono); }
+.battle-vs { font-family: var(--font-display); font-size: 28px; font-weight: 900; color: #38bdf8; text-shadow: 0 0 18px rgba(56,189,248,0.7); }
+
 /* ============ MATCH CLICK FEEDBACK ============ */
 @keyframes slotWin {
   0%   { box-shadow: 0 0 0 0 rgba(240,165,0,0); background: rgba(240,165,0,0.08); }
@@ -1068,6 +1092,25 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   line-height: 1.6;
 }
 
+.sched-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: #d1d5db;
+}
+.sched-score.win { color: #22c55e; border-color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.12); }
+.sched-score.lose { color: #f87171; border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.10); }
+
 .sched-unit {
   font-size: 12px;
   color: var(--unit-color);
@@ -1210,6 +1253,35 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       </div>
       <div class="wp-actions">
         <button class="wp-btn close" onclick="closeWinnerPopup()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BATTLE POPUP -->
+<div id="battle-popup">
+  <div class="wp-backdrop" onclick="closeBattlePopup()"></div>
+  <div class="wp-box battle-box">
+    <div class="wp-accent-bar"></div>
+    <div class="battle-bg"></div>
+    <div class="wp-content">
+      <div class="wp-round-label" id="battle-round-label">⚔️ BATTLE MODE</div>
+      <div class="wp-headline">STAR BATTLE</div>
+      <div class="battle-row">
+        <div class="battle-side">
+          <div class="battle-name" id="battle-p1-name">TBD</div>
+          <div class="battle-unit" id="battle-p1-unit"></div>
+          <div class="battle-rank" id="battle-p1-rank"></div>
+        </div>
+        <div class="battle-vs">VS</div>
+        <div class="battle-side">
+          <div class="battle-name" id="battle-p2-name">TBD</div>
+          <div class="battle-unit" id="battle-p2-unit"></div>
+          <div class="battle-rank" id="battle-p2-rank"></div>
+        </div>
+      </div>
+      <div class="wp-actions">
+        <button class="wp-btn close" onclick="closeBattlePopup()">Đóng</button>
       </div>
     </div>
   </div>
@@ -2759,12 +2831,21 @@ function setWinner(r, mi, pk) {
   if (!S.isAdmin) return;
   pushHistory();
   const m  = S.bracket[r][mi];
-  const w  = pk === 'p1' ? m.p1 : m.p2;
+  const s1 = Number(m.s1);
+  const s2 = Number(m.s2);
+  const hasValidScores = Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2;
+
+  if (!hasValidScores) {
+    showBattlePopup(m, r, mi);
+    return;
+  }
+
+  const winnerKey = s1 > s2 ? 'p1' : 'p2';
+  const w  = winnerKey === 'p1' ? m.p1 : m.p2;
   if (!w) return;
 
-  // Visual flash feedback TRƯỚC KHI re-render
-  const winEl  = document.getElementById(`match-${r}-${mi}-${pk}`);
-  const loseEl = document.getElementById(`match-${r}-${mi}-${pk === 'p1' ? 'p2' : 'p1'}`);
+  const winEl  = document.getElementById(`match-${r}-${mi}-${winnerKey}`);
+  const loseEl = document.getElementById(`match-${r}-${mi}-${winnerKey === 'p1' ? 'p2' : 'p1'}`);
   if (winEl)  { winEl.classList.remove('winner-flash'); void winEl.offsetWidth; winEl.classList.add('winner-flash'); }
   if (loseEl) { loseEl.classList.add('loser-dim'); }
 
@@ -2781,7 +2862,6 @@ function setWinner(r, mi, pk) {
     if (schedPanel && schedPanel.classList.contains('active')) renderSchedule();
     saveState(); supaPushDebounced();
 
-    // Hiện winner popup
     const isFinal = (r === S.bracket.length - 1);
     showWinnerPopup(w, m, r, mi, isFinal);
   }, 220);
@@ -3054,8 +3134,12 @@ function renderSchedule() {
     const hasWinner = !!m.winner;
     const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
     const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
-    const s1 = (m.s1 ?? '') === '' ? '—' : m.s1;
-    const s2 = (m.s2 ?? '') === '' ? '—' : m.s2;
+    const hasScore1 = (m.s1 ?? '') !== '';
+    const hasScore2 = (m.s2 ?? '') !== '';
+    const scoreReady = hasScore1 && hasScore2;
+    const n1 = Number(m.s1), n2 = Number(m.s2);
+    const p1ScoreClass = scoreReady ? (n1 > n2 ? 'win' : n1 < n2 ? 'lose' : '') : '';
+    const p2ScoreClass = scoreReady ? (n2 > n1 ? 'win' : n2 < n1 ? 'lose' : '') : '';
 
     const getNameSizeClass = (name = '') => {
       const n = String(name || '').trim().length;
@@ -3078,7 +3162,7 @@ function renderSchedule() {
             <div class="sched-name-row">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
               ${p1IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
-              <span class="sched-rank">${s1}</span>
+              ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
             </div>
             <div class="sched-meta-row">
               ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
@@ -3092,7 +3176,7 @@ function renderSchedule() {
           <!-- Player 2 (right) -->
           <div class="sched-player right">
             <div class="sched-name-row">
-              <span class="sched-rank">${s2}</span>
+              ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
               ${p2IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
@@ -3118,6 +3202,26 @@ function renderSchedule() {
   });
 
   container.appendChild(grid);
+
+  container.querySelectorAll('.sched-match').forEach(card => {
+    card.onclick = () => {
+      const r = Number(card.dataset.round);
+      const m = Number(card.dataset.match);
+      const match = S.bracket?.[r]?.[m];
+      if (!match) return;
+
+      const s1 = Number(match.s1);
+      const s2 = Number(match.s2);
+      const hasValidScores = Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2;
+
+      if (hasValidScores) {
+        const w = s1 > s2 ? match.p1 : match.p2;
+        if (w) showWinnerPopup(w, match, r, m, r === S.bracket.length - 1);
+      } else {
+        showBattlePopup(match, r, m);
+      }
+    };
+  });
 }
 
 /* ================================================================
@@ -3171,6 +3275,26 @@ function showWinnerPopup(winner, match, roundIdx, matchIdx, isFinal) {
 function closeWinnerPopup() {
   document.getElementById('winner-popup').classList.remove('show');
   stopParticles();
+}
+
+function showBattlePopup(match, roundIdx) {
+  const p1 = match?.p1 || null;
+  const p2 = match?.p2 || null;
+  const roundLabel = `${getRoundName(roundIdx, S.bracket.length).toUpperCase()} · STAR BATTLE`;
+
+  document.getElementById('battle-round-label').textContent = roundLabel;
+  document.getElementById('battle-p1-name').textContent = p1?.name || 'TBD';
+  document.getElementById('battle-p2-name').textContent = p2?.name || 'TBD';
+  document.getElementById('battle-p1-unit').textContent = p1?.unit || '';
+  document.getElementById('battle-p2-unit').textContent = p2?.unit || '';
+  document.getElementById('battle-p1-rank').textContent = p1?.rank ? `HẠNG ${p1.rank}` : '';
+  document.getElementById('battle-p2-rank').textContent = p2?.rank ? `HẠNG ${p2.rank}` : '';
+
+  document.getElementById('battle-popup').classList.add('show');
+}
+
+function closeBattlePopup() {
+  document.getElementById('battle-popup').classList.remove('show');
 }
 
 /* ── Particle system ── */
@@ -3246,6 +3370,7 @@ function stopParticles() {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeWinnerPopup();
+    closeBattlePopup();
     const sp = document.getElementById('spin-popup');
     if (sp && sp.classList.contains('show')) sp.classList.remove('show');
   }
@@ -3264,7 +3389,7 @@ Object.assign(globalThis, {
   openModal, closeModal, undo, redo, spinWheel, switchBracketTab, exportImage,
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
-  closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, handleExcel, handleVideoUpload,
+  closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
   previewTitleFont, startAutoSpin, stopAutoSpin,
 });
 </script>
