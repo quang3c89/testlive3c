@@ -2890,9 +2890,13 @@ function updateScore(r, mi, pk, e) {
   else S.bracket[r][mi].s2 = e.target.value;
 
   const m = S.bracket[r][mi];
-  const s1 = Number(m.s1);
-  const s2 = Number(m.s2);
-  if (Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2 && m.p1 && m.p2) {
+  const rawS1 = String(m.s1 ?? '').trim();
+  const rawS2 = String(m.s2 ?? '').trim();
+  const hasBothScores = rawS1 !== '' && rawS2 !== '';
+  const s1 = Number(rawS1);
+  const s2 = Number(rawS2);
+
+  if (hasBothScores && Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2 && m.p1 && m.p2) {
     const winnerKey = s1 > s2 ? 'p1' : 'p2';
     const w = winnerKey === 'p1' ? m.p1 : m.p2;
     m.winner = w;
