@@ -1032,13 +1032,22 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 .sched-player-inline.right {
   justify-content: flex-end;
 }
 .sched-player-inline .sched-name {
-  max-width: 100%;
+  max-width: 56%;
+}
+.sched-player-inline .sched-meta-inline {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 42%;
 }
 
 .sched-outcome-inline {
@@ -1054,19 +1063,19 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 .sched-name {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--name-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.15;
-  letter-spacing: 0.2px;
+  line-height: 1.1;
+  letter-spacing: 0.1px;
   max-width: 100%;
 }
-.sched-name.name-md { font-size: 18px; }
-.sched-name.name-sm { font-size: 15px; }
-.sched-name.name-xs { font-size: 13px; letter-spacing: 0; }
+.sched-name.name-md { font-size: 14px; }
+.sched-name.name-sm { font-size: 12.5px; }
+.sched-name.name-xs { font-size: 11px; letter-spacing: 0; }
 .sched-name.left-name { color: #ffffff; }
 .sched-name.right-name { color: #ffd447; }
 .sched-name.empty-name {
@@ -1169,10 +1178,10 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 @media (max-width: 768px) {
   .schedule-columns { flex-direction: column; gap: 10px; }
   .schedule-divider { display: none; }
-  .sched-name { font-size: 15px; }
-  .sched-name.name-sm { font-size: 13px; }
-  .sched-name.name-xs { font-size: 12px; }
-  .sched-unit { font-size: 11px; }
+  .sched-name { font-size: 12px; }
+  .sched-name.name-sm { font-size: 11px; }
+  .sched-name.name-xs { font-size: 10px; }
+  .sched-player-inline .sched-meta-inline { font-size: 7px; max-width: 46%; }
   .tournament-bc-nav { display: none; }
   .tournament-bc-mobile { display: inline-flex !important; }
 }
@@ -3173,8 +3182,11 @@ function renderSchedule() {
     };
     const p1NameCls = !hasP1 ? 'empty-name' : `left-name ${getNameSizeClass(p1?.name)}`;
     const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
-    const winTxt = window.innerWidth <= 768 ? 'W' : 'WIN';
-    const loseTxt = window.innerWidth <= 768 ? 'L' : 'LOST';
+    const p1Meta = [p1?.unit, p1?.rank ? `H${p1.rank}` : ''].filter(Boolean).join(' · ');
+    const p2Meta = [p2?.rank ? `H${p2.rank}` : '', p2?.unit].filter(Boolean).join(' · ');
+    const isMobile = (typeof window !== 'undefined' ? window.innerWidth : 1024) <= 768;
+    const winTxt = isMobile ? 'W' : 'WIN';
+    const loseTxt = isMobile ? 'L' : 'LOST';
 
     return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
@@ -3185,6 +3197,7 @@ function renderSchedule() {
         <div class="sched-match-body">
           <div class="sched-player-inline left">
             <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
+            ${p1Meta ? `<span class="sched-meta-inline" title="${p1Meta}">${p1Meta}</span>` : ''}
           </div>
 
           <div class="sched-outcome-inline">
@@ -3204,6 +3217,7 @@ function renderSchedule() {
           </div>
 
           <div class="sched-player-inline right">
+            ${p2Meta ? `<span class="sched-meta-inline" title="${p2Meta}">${p2Meta}</span>` : ''}
             <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
           </div>
         </div>
