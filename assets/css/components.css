@@ -1074,6 +1074,15 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   justify-content: flex-end;
 }
 
+@keyframes winnerGlow {
+  0%,100% { box-shadow: 0 0 0 1px rgba(255,212,71,.35) inset, 0 0 20px rgba(255,212,71,.20); }
+  50% { box-shadow: 0 0 0 1px rgba(255,212,71,.55) inset, 0 0 34px rgba(255,212,71,.42); }
+}
+@keyframes winnerPulse {
+  0%,100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,212,71,.2)); }
+  50% { transform: scale(1.06); filter: drop-shadow(0 0 8px rgba(255,212,71,.6)); }
+}
+
 /* When schedule is active, hide bracket */
 .center.schedule-active #bracket-container { display: none; }
 .center.schedule-active .bracket-tab-bar { background: transparent; }
@@ -1303,14 +1312,31 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* Winner badge on player side */
 .sched-winner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--font-mono);
-  font-size: 7px;
-  font-weight: 800;
+  font-size: 9px;
+  font-weight: 900;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--accent);
-  margin-top: 3px;
-  opacity: 0.8;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,212,71,.65);
+  background: linear-gradient(135deg, rgba(255,212,71,.30), rgba(215,38,56,.26));
+  box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset, 0 0 18px rgba(255,212,71,.35);
+  animation: winnerPulse 1.2s ease-in-out infinite;
+}
+.sched-winner-badge img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.sched-player.winner-side {
+  border-color: rgba(255,212,71,.75) !important;
+  box-shadow: 0 0 0 1px rgba(255,212,71,.35) inset, 0 0 26px rgba(255,212,71,.28);
+  animation: winnerGlow 1.4s ease-in-out infinite;
 }
 
 /* Center icon */

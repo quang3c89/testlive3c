@@ -346,24 +346,24 @@ export function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay, ballSv
           <span class="sched-match-status${hasWinner ? ' done' : ''}">${hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU'}</span>
         </div>
         <div class="sched-match-body">
-          <div class="sched-player left">
+          <div class="sched-player left ${p1IsWinner ? 'winner-side' : ''}">
             <div class="sched-name-row">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
               ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
+              ${p1IsWinner ? `<span class="sched-winner-badge"><img src="${BATTE_ICON_URL}" alt="win">WIN</span>` : ''}
             </div>
             ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
-            ${p1IsWinner ? `<span class="sched-winner-badge">🏆 THẮNG</span>` : ''}
           </div>
           <div class="sched-vs-col">
             ${ballSvg}
           </div>
-          <div class="sched-player right">
+          <div class="sched-player right ${p2IsWinner ? 'winner-side' : ''}">
             <div class="sched-name-row">
+              ${p2IsWinner ? `<span class="sched-winner-badge"><img src="${BATTE_ICON_URL}" alt="win">WIN</span>` : ''}
               ${hasP2 && p2.rank ? `<span class="sched-rank">${p2.rank}</span>` : ''}
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
             ${hasP2 && p2.unit ? `<div class="sched-unit">${p2.unit}</div>` : ''}
-            ${p2IsWinner ? `<span class="sched-winner-badge">🏆 THẮNG</span>` : ''}
           </div>
         </div>
       </div>`;
@@ -422,6 +422,18 @@ export function renderSchedule(S) {
       openScheduleScorePopup(S, rIdx, mIdx);
     });
   });
+
+  const schedulePanel = document.getElementById('schedule-panel');
+  if (schedulePanel) {
+    schedulePanel.querySelectorAll('.sched-match').forEach((card) => {
+      card.addEventListener('click', () => {
+        if (!S.isAdmin) return;
+        const rIdx = Number(card.dataset.round);
+        const mIdx = Number(card.dataset.match);
+        openScheduleScorePopup(S, rIdx, mIdx);
+      });
+    });
+  }
 }
 
 export function showWinnerPopup(winner, match, roundIdx, matchIdx, isFinal, S) {
