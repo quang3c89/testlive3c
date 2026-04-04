@@ -3,23 +3,10 @@ import { getRoundName, advanceWinner } from './tournament.js';
 
 export const WIN_IMAGE_URL = '';
 
-export const BALL_SVG = `<svg class="sched-ball-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="ballGrad" cx="38%" cy="32%" r="60%">
-      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
-      <stop offset="40%" stop-color="#f0a500"/>
-      <stop offset="100%" stop-color="#8a5a00"/>
-    </radialGradient>
-    <radialGradient id="shineGrad" cx="38%" cy="28%" r="35%">
-      <stop offset="0%" stop-color="#fff" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="30" cy="30" r="28" fill="url(#ballGrad)"/>
-  <ellipse cx="24" cy="22" rx="10" ry="7" fill="url(#shineGrad)"/>
-  <circle cx="30" cy="30" r="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-  <text x="30" y="35" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-size="10" font-weight="900" fill="rgba(255,255,255,0.9)">3C</text>
-</svg>`;
+export const BATTE_ICON_URL = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte.png';
+export const BATTE_POPUP_BG_URL = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/popup%20batte.png';
+
+export const BALL_SVG = `<img class="sched-batte-icon" src="${BATTE_ICON_URL}" alt="vs">`;
 
 /**
  * @typedef {object} BracketUIApi
@@ -395,73 +382,45 @@ export function renderSchedule(S) {
     return;
   }
 
+  const rounds = bracket.length;
+  const flatMatches = [];
   let totalMatchCount = 0;
   let filledRounds = 0;
-  bracket.forEach((round) => {
+
+  bracket.forEach((round, rIdx) => {
     const hasAny = round.some((m) => m.p1 || m.p2);
-    if (hasAny) {
-      filledRounds++;
-      totalMatchCount += round.length;
-    }
+    if (!hasAny) return;
+    filledRounds++;
+    round.forEach((m, mi) => {
+      totalMatchCount++;
+      flatMatches.push({ m, rIdx, mi });
+    });
   });
 
-  if (totalMatchCount === 0) {
+  if (!flatMatches.length) {
     container.innerHTML =
       '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
     return;
   }
 
-  const rounds = bracket.length;
-  let globalMatchNum = 1;
-
   if (subtitle) subtitle.textContent = `${filledRounds} vòng · ${totalMatchCount} trận đấu`;
 
-  bracket.forEach((round, rIdx) => {
-    const hasAny = round.some((m) => m.p1 || m.p2);
-    if (!hasAny) return;
+  const grid = document.createElement('div');
+  grid.className = 'schedule-grid';
 
-    const section = document.createElement('div');
-    section.className = 'sched-round-section';
+  flatMatches.forEach((item, idx) => {
+    grid.insertAdjacentHTML('beforeend', makeMatchCard(item.m, idx + 1, item.rIdx, item.mi, idx * 20));
+  });
 
-    const rnLabel = document.createElement('div');
-    rnLabel.className = 'sched-round-label';
-    rnLabel.textContent = getRoundName(rIdx, rounds).toUpperCase();
-    section.appendChild(rnLabel);
+  container.appendChild(grid);
 
-    const colsWrap = document.createElement('div');
-    colsWrap.className = 'schedule-columns';
-
-    const half = Math.ceil(round.length / 2);
-    const leftMatches = round.slice(0, half);
-    const rightMatches = round.slice(half);
-
-    const leftCol = document.createElement('div');
-    leftCol.className = 'schedule-col';
-    leftMatches.forEach((m, i) => {
-      const num = globalMatchNum++;
-      leftCol.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, i, i * 50));
+  container.querySelectorAll('.sched-match').forEach((card) => {
+    card.addEventListener('click', () => {
+      if (!S.isAdmin) return;
+      const rIdx = Number(card.dataset.round);
+      const mIdx = Number(card.dataset.match);
+      openScheduleScorePopup(S, rIdx, mIdx);
     });
-    colsWrap.appendChild(leftCol);
-
-    if (rightMatches.length > 0) {
-      const divider = document.createElement('div');
-      divider.className = 'schedule-divider';
-      colsWrap.appendChild(divider);
-
-      const rightCol = document.createElement('div');
-      rightCol.className = 'schedule-col';
-      rightMatches.forEach((m, i) => {
-        const num = globalMatchNum++;
-        rightCol.insertAdjacentHTML(
-          'beforeend',
-          makeMatchCard(m, num, rIdx, half + i, (i + half) * 50)
-        );
-      });
-      colsWrap.appendChild(rightCol);
-    }
-
-    section.appendChild(colsWrap);
-    container.appendChild(section);
   });
 }
 
@@ -607,6 +566,88 @@ export function checkBracketTabVisibility(S, bracketApiOrOpts = {}) {
 /**
  * Tạo bracketApi cho renderBracket / setWinner (gọi sau khi có S và các hàm persist).
  */
+function openScheduleScorePopup(S, rIdx, mIdx) {
+  const match = S.bracket?.[rIdx]?.[mIdx];
+  if (!match) return;
+
+  const p1 = match.p1?.name || 'TBD';
+  const p2 = match.p2?.name || 'TBD';
+  const p1Unit = match.p1?.unit || '';
+  const p2Unit = match.p2?.unit || '';
+
+  const existing = document.getElementById('sched-score-popup');
+  if (existing) existing.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'sched-score-popup';
+  wrap.className = 'sched-score-popup';
+  wrap.innerHTML = `
+    <div class="sched-score-backdrop"></div>
+    <div class="sched-score-box" style="background-image:url('${BATTE_POPUP_BG_URL}')">
+      <div class="sched-score-head">Cập nhật tỉ số trận ${mIdx + 1} • ${getRoundName(rIdx, S.bracket.length)}</div>
+      <div class="sched-score-row">
+        <div class="sched-score-player left">
+          <div class="name">${p1}</div>
+          <div class="unit">${p1Unit}</div>
+        </div>
+        <div class="sched-score-mid"><img src="${BATTE_ICON_URL}" alt="vs"></div>
+        <div class="sched-score-player right">
+          <div class="name">${p2}</div>
+          <div class="unit">${p2Unit}</div>
+        </div>
+      </div>
+      <div class="sched-score-inputs">
+        <input id="sched-s1" type="text" value="${match.s1 || ''}" placeholder="0">
+        <span>-</span>
+        <input id="sched-s2" type="text" value="${match.s2 || ''}" placeholder="0">
+      </div>
+      <div class="sched-score-actions">
+        <button type="button" class="btn btn-ghost" id="sched-close">Đóng</button>
+        <button type="button" class="btn btn-sec" id="sched-p1-win">P1 thắng</button>
+        <button type="button" class="btn btn-sec" id="sched-p2-win">P2 thắng</button>
+        <button type="button" class="btn btn-pri" id="sched-save">Lưu</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(wrap);
+
+  const close = () => wrap.remove();
+  wrap.querySelector('.sched-score-backdrop').addEventListener('click', close);
+  document.getElementById('sched-close').addEventListener('click', close);
+
+  document.getElementById('sched-save').addEventListener('click', () => {
+    match.s1 = document.getElementById('sched-s1').value;
+    match.s2 = document.getElementById('sched-s2').value;
+    renderSchedule(S);
+    S.__scheduleHooks?.saveState?.();
+    S.__scheduleHooks?.supaPushDebounced?.();
+    close();
+  });
+
+  document.getElementById('sched-p1-win').addEventListener('click', () => {
+    if (!match.p1) return;
+    S.__scheduleHooks?.pushHistory?.();
+    advanceWinner(S.bracket, rIdx, mIdx, match.p1.id);
+    renderSchedule(S);
+    S.__scheduleHooks?.renderBracket?.();
+    S.__scheduleHooks?.saveState?.();
+    S.__scheduleHooks?.supaPushDebounced?.();
+    close();
+  });
+
+  document.getElementById('sched-p2-win').addEventListener('click', () => {
+    if (!match.p2) return;
+    S.__scheduleHooks?.pushHistory?.();
+    advanceWinner(S.bracket, rIdx, mIdx, match.p2.id);
+    renderSchedule(S);
+    S.__scheduleHooks?.renderBracket?.();
+    S.__scheduleHooks?.saveState?.();
+    S.__scheduleHooks?.supaPushDebounced?.();
+    close();
+  });
+}
+
 export function createBracketApi(S, handlers) {
   const api = {
     S,
@@ -615,6 +656,12 @@ export function createBracketApi(S, handlers) {
     supaPushDebounced: handlers.supaPushDebounced,
     renderBracket: () => renderBracketInternal(S, api),
     renderSchedule: () => renderSchedule(S),
+  };
+  S.__scheduleHooks = {
+    pushHistory: handlers.pushHistory,
+    saveState: handlers.saveState,
+    supaPushDebounced: handlers.supaPushDebounced,
+    renderBracket: () => renderBracketInternal(S, api),
   };
   return api;
 }

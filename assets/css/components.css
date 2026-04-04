@@ -952,6 +952,128 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 #schedule-panel.active { display: block; }
 
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sched-match {
+  cursor: pointer;
+}
+
+.sched-match-body {
+  min-height: 56px;
+  padding: 8px 6px;
+}
+
+.sched-batte-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(255,212,71,.35));
+}
+
+@media (max-width: 768px) {
+  .schedule-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+
+.sched-score-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 9200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.sched-score-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(5px);
+}
+
+.sched-score-box {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 96vw);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: linear-gradient(160deg,#0c1f3a,#102847);
+  background-size: cover;
+  background-position: center;
+  padding: 14px;
+  box-shadow: 0 20px 70px rgba(0,0,0,.65);
+}
+
+.sched-score-head {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.sched-score-row {
+  display: grid;
+  grid-template-columns: 1fr 44px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.sched-score-player {
+  background: rgba(8,26,51,.76);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.sched-score-player.left { text-align: left; }
+.sched-score-player.right { text-align: right; }
+.sched-score-player .name { font-weight: 800; color: #fff; }
+.sched-score-player .unit { font-size: 12px; color: #d7e3f3; opacity: .9; }
+
+.sched-score-mid img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.sched-score-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sched-score-inputs input {
+  width: 72px;
+  text-align: center;
+  font-size: 22px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: #fff;
+  background: rgba(8,26,51,.86);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
+.sched-score-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
 /* When schedule is active, hide bracket */
 .center.schedule-active #bracket-container { display: none; }
 .center.schedule-active .bracket-tab-bar { background: transparent; }
