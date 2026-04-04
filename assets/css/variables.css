@@ -1,15 +1,15 @@
 /* Live3C — variables.css */
 :root {
-  --bg:        #080b10;
-  --bg2:       #0d1117;
-  --card:      #111620;
-  --card2:     #161d2a;
-  --border:    rgba(255,255,255,0.07);
-  --border2:   rgba(255,255,255,0.12);
-  --text:      #dce6f0;
-  --muted:     #6b7a8d;
-  --accent:    #f0a500;
-  --accent2:   #e05a2b;
+  --bg:        #071629;
+  --bg2:       #0b2038;
+  --card:      #10263f;
+  --card2:     #16314f;
+  --border:    rgba(255,255,255,0.10);
+  --border2:   rgba(255,255,255,0.18);
+  --text:      #f7f9fc;
+  --muted:     #b8c5d6;
+  --accent:    #ffd447;
+  --accent2:   #d72638;
   --green:     #22c55e;
   --red:       #ef4444;
   --blue:      #3b82f6;
