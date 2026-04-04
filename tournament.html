@@ -3175,6 +3175,8 @@ function renderSchedule() {
     };
     const p1NameCls = !hasP1 ? 'empty-name' : `left-name ${getNameSizeClass(p1?.name)}`;
     const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
+    const winTxt = window.innerWidth <= 768 ? 'W' : 'WIN';
+    const loseTxt = window.innerWidth <= 768 ? 'L' : 'LOST';
 
     return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
@@ -3189,8 +3191,8 @@ function renderSchedule() {
 
           <div class="sched-outcome-inline">
             ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
-            ${p1IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
-            ${p1IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
+            ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
+            ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
           </div>
 
           <div class="sched-vs-col">
@@ -3198,8 +3200,8 @@ function renderSchedule() {
           </div>
 
           <div class="sched-outcome-inline">
-            ${p2IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
-            ${p2IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
+            ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
+            ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
             ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
           </div>
 
