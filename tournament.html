@@ -468,6 +468,22 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   animation: wpIn 0.5s cubic-bezier(0.22,1,0.36,1);
   transform-origin: center bottom;
 }
+.winner-battle-box {
+  border-color: rgba(244,63,94,0.45);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 32px 80px rgba(0,0,0,0.86),
+    0 0 80px rgba(244,63,94,0.12);
+}
+.winner-battle-box::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    radial-gradient(circle at 16% 24%, rgba(56,189,248,0.22), transparent 46%),
+    radial-gradient(circle at 84% 78%, rgba(244,63,94,0.20), transparent 42%);
+  pointer-events:none;
+}
+
 @keyframes wpIn {
   from { opacity:0; transform: scale(0.82) translateY(28px); }
   to   { opacity:1; transform: scale(1) translateY(0); }
@@ -1005,51 +1021,35 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .sched-match-body {
   display: flex;
   align-items: center;
-  padding: 10px 8px;
-  gap: 4px;
-  min-height: 64px;
+  padding: 10px 10px;
+  gap: 8px;
+  min-height: 62px;
 }
 
-/* Player sides */
-.sched-player {
+/* One-line battle row */
+.sched-player-inline {
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-width: 0;
-  position: relative;
-  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.sched-player.left {
-  align-items: flex-start;
-  border-left: 3px solid #3b82f6;
-  padding-left: 10px;
+.sched-player-inline.right {
+  justify-content: flex-end;
 }
-.sched-player.right {
-  align-items: flex-end;
-  border-right: 3px solid #ef4444;
-  padding-right: 10px;
+.sched-player-inline .sched-name {
+  max-width: 100%;
 }
 
-/* Player name row: name + rank inline */
-.sched-name-row {
-  display: flex;
+.sched-outcome-inline {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  max-width: 100%;
-  min-width: 0;
-}
-.sched-player.right .sched-name-row {
-  flex-direction: row-reverse;
-}
-.sched-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 2px;
-  max-width: 100%;
-}
-.sched-player.right .sched-meta-row {
-  flex-direction: row-reverse;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  flex-shrink: 0;
 }
 
 .sched-name {
@@ -1096,12 +1096,12 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 18px;
-  padding: 0 6px;
+  min-width: 20px;
+  height: 16px;
+  padding: 0 5px;
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
   border: 1px solid var(--border);
@@ -1129,9 +1129,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .sched-loser-badge {
   display:inline-flex;align-items:center;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 900;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   padding:0;
   border:none;
@@ -1230,7 +1230,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 <!-- WINNER POPUP -->
 <div id="winner-popup">
   <div class="wp-backdrop" onclick="closeWinnerPopup()"></div>
-  <div class="wp-box">
+  <div class="wp-box winner-battle-box">
     <div class="wp-accent-bar"></div>
     <div class="wp-canvas"><canvas id="wp-particle-canvas"></canvas></div>
     <div class="wp-content">
@@ -3156,6 +3156,8 @@ function renderSchedule() {
     const hasWinner = !!m.winner;
     const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
     const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
+    const p1IsLoser = hasWinner && hasP1 && !p1IsWinner;
+    const p2IsLoser = hasWinner && hasP2 && !p2IsWinner;
     const hasScore1 = (m.s1 ?? '') !== '';
     const hasScore2 = (m.s2 ?? '') !== '';
     const scoreReady = hasScore1 && hasScore2;
@@ -3181,35 +3183,28 @@ function renderSchedule() {
           <span class="sched-match-status${hasWinner ? ' done' : ''}">${hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU'}</span>
         </div>
         <div class="sched-match-body">
-          <!-- Player 1 (left) -->
-          <div class="sched-player left">
-            <div class="sched-name-row">
-              <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
-              ${p1IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
-              ${p1IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
-              ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
-            </div>
-            <div class="sched-meta-row">
-              ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
-              ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
-            </div>
+          <div class="sched-player-inline left">
+            <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
           </div>
-          <!-- Center ball icon -->
+
+          <div class="sched-outcome-inline">
+            ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
+            ${p1IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
+            ${p1IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
+          </div>
+
           <div class="sched-vs-col">
             ${BALL_SVG}
           </div>
-          <!-- Player 2 (right) -->
-          <div class="sched-player right">
-            <div class="sched-name-row">
-              ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
-              ${p2IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
-              ${p2IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
-              <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
-            </div>
-            <div class="sched-meta-row">
-              ${hasP2 && p2.rank ? `<span class="sched-rank">${p2.rank}</span>` : ''}
-              ${hasP2 && p2.unit ? `<div class="sched-unit">${p2.unit}</div>` : ''}
-            </div>
+
+          <div class="sched-outcome-inline">
+            ${p2IsLoser ? `<span class="sched-loser-badge">LOST</span>` : ''}
+            ${p2IsWinner ? `<span class="sched-winner-badge">WIN</span>` : ''}
+            ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
+          </div>
+
+          <div class="sched-player-inline right">
+            <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
           </div>
         </div>
       </div>`;
