@@ -236,7 +236,7 @@ export function advanceWinner(bracket, roundIdx, matchIdx, winnerId) {
  * @param {{ saveState?: () => void, drawWheel?: () => void, drawBracketLines?: () => void }} hooks
  */
 export function applyTheme(themeId, appState, hooks = {}) {
-  const fallbackTheme = THEMES['navy-gold'] || Object.values(THEMES)[0];
+  const fallbackTheme = THEMES['aurora-navy'] || Object.values(THEMES)[0];
   const t = THEMES[themeId] || fallbackTheme;
   appState.theme = themeId;
   const r = document.documentElement;

@@ -3164,8 +3164,6 @@ function renderSchedule() {
     const n1 = Number(m.s1), n2 = Number(m.s2);
     const p1ScoreClass = scoreReady ? (n1 > n2 ? 'win' : n1 < n2 ? 'lose' : '') : '';
     const p2ScoreClass = scoreReady ? (n2 > n1 ? 'win' : n2 < n1 ? 'lose' : '') : '';
-    const p1IsLoser = scoreReady && n1 < n2;
-    const p2IsLoser = scoreReady && n2 < n1;
 
     const getNameSizeClass = (name = '') => {
       const n = String(name || '').trim().length;
