@@ -1608,6 +1608,78 @@ const DEFAULTS = {
 
 const genBracket = generateBracket;
 
+function nextPow2(n) {
+  return Math.pow(2, Math.ceil(Math.log2(Math.max(2, n))));
+}
+
+function buildSeedOrder(size) {
+  let order = [1, 2];
+  let cur = 2;
+  while (cur < size) {
+    const next = [];
+    const target = cur * 2 + 1;
+    order.forEach(v => {
+      next.push(v);
+      next.push(target - v);
+    });
+    order = next;
+    cur *= 2;
+  }
+  return order;
+}
+
+function makeByePlayer(seedNo) {
+  return { id: `bye_${seedNo}`, name: 'BYE', unit: '', rank: '', drawn: true, isBye: true };
+}
+
+function propagateByes(bracket) {
+  for (let r = 0; r < bracket.length - 1; r++) {
+    for (let mi = 0; mi < bracket[r].length; mi++) {
+      const m = bracket[r][mi];
+      const p1 = m.p1;
+      const p2 = m.p2;
+      const p1Real = p1 && !p1.isBye;
+      const p2Real = p2 && !p2.isBye;
+      if (p1Real === p2Real) continue;
+      const w = p1Real ? p1 : p2;
+      m.winner = w;
+      const nr = r + 1;
+      const nm = Math.floor(mi / 2);
+      const np = mi % 2 === 0 ? 'p1' : 'p2';
+      bracket[nr][nm][np] = { ...w };
+    }
+  }
+}
+
+function createBracketForCount(count) {
+  const size = nextPow2(count);
+  const bracket = generateBracket(size);
+  const seeds = buildSeedOrder(size);
+
+  const entries = seeds.map(seedNo => {
+    if (seedNo <= count) {
+      return {
+        id: `seed_${seedNo}`,
+        name: `P${seedNo}`,
+        unit: `Seed ${seedNo}`,
+        rank: `${seedNo}`,
+        drawn: true,
+        seedNo,
+      };
+    }
+    return makeByePlayer(seedNo);
+  });
+
+  let i = 0;
+  for (let m = 0; m < bracket[0].length; m++) {
+    bracket[0][m].p1 = entries[i++] || null;
+    bracket[0][m].p2 = entries[i++] || null;
+  }
+
+  propagateByes(bracket);
+  return { size, bracket };
+}
+
 let S = {
   players: [], bracketSize: DEFAULTS.size, bracket: [],
   theme: DEFAULTS.theme, wheelRotation: 0, isSpinning: false,
@@ -3059,17 +3131,30 @@ function updateBracketSize() {
   let raw = parseInt(document.getElementById('bracket-size-input').value);
   if (isNaN(raw) || raw < 2) raw = 4;
   pushHistory();
-  const sz = Math.pow(2, Math.ceil(Math.log2(raw)));
+
+  const built = createBracketForCount(raw);
   document.getElementById('bracket-columns').innerHTML = '';
   document.getElementById('bracket-lines').innerHTML = '';
-  S.bracketSize = sz;
-  S.bracket = genBracket(sz);
-  S.players.forEach(p => p.drawn = false);
+
+  S.bracketSize = built.size;
+  S.bracket = built.bracket;
+  S.players = [];
+  for (let i = 1; i <= raw; i++) {
+    S.players.push({
+      id: `seed_${i}`,
+      name: `P${i}`,
+      unit: `Seed ${i}`,
+      rank: `${i}`,
+      drawn: true,
+      seedNo: i,
+    });
+  }
+
   saveState();
   renderAll();
   checkBracketTabVisibility();
   closeModal('count-modal');
-  showToast(`🔢 Bracket: ${sz} người`, 'info');
+  showToast(`🔢 Đã tạo sơ đồ ${raw} cơ thủ (khung ${built.size}, BYE ${built.size - raw})`, 'info');
 }
 
 /* ================================================================
