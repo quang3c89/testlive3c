@@ -1598,9 +1598,9 @@ const TITLE_FONTS = [
 const DEFAULTS = {
   size: 16,
   tbVals: ['3-Cushion Masters', 'Sat, 14:00', 'CLB Arena', 'Single Elim.', '5,000,000đ', ''],
-  tbBg: '#0d1117', tbFont: "'DM Sans',sans-serif",
+  tbBg: '#0d1117', tbFont: "'Barlow Condensed', sans-serif",
   titleFont: "'Barlow Condensed', sans-serif",
-  theme: 'navy-gold'
+  theme: 'aurora-navy'
 };
 
 const genBracket = generateBracket;
@@ -2110,7 +2110,17 @@ function applyTheme(key) {
 /* ================================================================
    FONT
    ================================================================ */
+function applyGlobalFont(fontKey) {
+  document.documentElement.style.setProperty('--font-main', fontKey);
+  document.documentElement.style.setProperty('--font-display', fontKey);
+  document.documentElement.style.setProperty('--font-mono', fontKey);
+  document.documentElement.style.setProperty('--tb-font', fontKey);
+  document.documentElement.style.setProperty('--title-font', fontKey);
+}
+
 function buildFontSelects() {
+  const currentFont = S.titleFont || DEFAULTS.titleFont;
+
   // Font selector in settings
   const sel = document.getElementById('title-font-select');
   sel.innerHTML = '';
@@ -2119,10 +2129,11 @@ function buildFontSelects() {
     opt.value = f.key;
     opt.textContent = f.name;
     opt.style.fontFamily = f.key;
-    if (f.key === S.titleFont) opt.selected = true;
+    if (f.key === currentFont) opt.selected = true;
     sel.appendChild(opt);
   });
-  // Header bar font select (keep for tb-font)
+
+  // Header bar font select (đồng bộ cùng font toàn trang)
   const tfSel = document.getElementById('tb-font');
   if (tfSel) {
     tfSel.innerHTML = '';
@@ -2130,13 +2141,13 @@ function buildFontSelects() {
       const opt = document.createElement('option');
       opt.value = f.key;
       opt.textContent = f.name;
-      if (f.key === (S.tbFont || DEFAULTS.tbFont)) opt.selected = true;
+      if (f.key === currentFont) opt.selected = true;
       tfSel.appendChild(opt);
     });
   }
-  // Apply current title font
-  document.documentElement.style.setProperty('--title-font', S.titleFont);
-  updateFontPreview(S.titleFont);
+
+  applyGlobalFont(currentFont);
+  updateFontPreview(currentFont);
 }
 
 function previewTitleFont(val) {
@@ -2155,13 +2166,15 @@ function updateFontPreview(font) {
 function applyTitleFont() {
   const val = document.getElementById('title-font-select').value;
   S.titleFont = val;
-  document.documentElement.style.setProperty('--title-font', val);
-  // Apply only to the title element in tourney bar
-  const titleEl = document.getElementById('tb-v0');
-  if (titleEl) titleEl.style.fontFamily = val;
+  S.tbFont = val;
+  applyGlobalFont(val);
+
+  const fontEl = document.getElementById('tb-font');
+  if (fontEl) fontEl.value = val;
+
   saveState();
   supaPushDebounced();
-  showToast('✅ Đã đổi font tiêu đề', 'success');
+  showToast('✅ Đã áp dụng font toàn trang', 'success');
 }
 
 /* ================================================================
@@ -2199,11 +2212,17 @@ function setupTopBar() {
 
   const fontEl = document.getElementById('tb-font');
   if (fontEl) {
-    fontEl.value = S.tbFont || "'DM Sans',sans-serif";
+    fontEl.value = S.titleFont || DEFAULTS.titleFont;
     fontEl.onchange = e => {
-      S.tbFont = e.target.value;
-      document.documentElement.style.setProperty('--tb-font', S.tbFont);
+      const f = e.target.value;
+      S.titleFont = f;
+      S.tbFont = f;
+      applyGlobalFont(f);
+      const titleSel = document.getElementById('title-font-select');
+      if (titleSel) titleSel.value = f;
+      updateFontPreview(f);
       saveState();
+      supaPushDebounced();
     };
   }
 }
