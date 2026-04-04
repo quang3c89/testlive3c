@@ -956,6 +956,13 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+  width: 100%;
+}
+#schedule-columns {
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
 }
 
 .sched-match {
@@ -978,6 +985,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .schedule-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+  #schedule-columns {
+    max-height: calc(100vh - 220px);
   }
 }
 

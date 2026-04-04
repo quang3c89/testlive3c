@@ -405,6 +405,9 @@ export function renderSchedule(S) {
 
   if (subtitle) subtitle.textContent = `${filledRounds} vòng · ${totalMatchCount} trận đấu`;
 
+  container.style.overflowY = 'auto';
+  container.style.maxHeight = 'calc(100vh - 180px)';
+
   const grid = document.createElement('div');
   grid.className = 'schedule-grid';
 
