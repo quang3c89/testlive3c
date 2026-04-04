@@ -1055,7 +1055,10 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 .sched-player-inline.right {
   justify-content: flex-end;
+  flex-direction: row !important;
 }
+.sched-player-inline.right .sched-name { order: 1; }
+.sched-player-inline.right .sched-meta-inline { order: 2; }
 .sched-player-inline .sched-name {
   flex: 1;
   min-width: 0;
@@ -3260,8 +3263,8 @@ function renderSchedule() {
           </div>
 
           <div class="sched-player-inline right">
-            ${p2Meta ? `<span class="sched-meta-inline" title="${p2Meta}">${p2MetaShort}</span>` : ''}
             <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
+            ${p2Meta ? `<span class="sched-meta-inline" title="${p2Meta}">${p2MetaShort}</span>` : ''}
           </div>
         </div>
       </div>`;
