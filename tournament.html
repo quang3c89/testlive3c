@@ -1010,7 +1010,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 8px 2px;
+  padding: 2px 7px 1px;
   background: rgba(255,255,255,0.03);
   border-bottom: 1px solid var(--border);
 }
@@ -1040,9 +1040,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .sched-match-body {
   display: flex;
   align-items: center;
-  padding: 6px 8px;
-  gap: 6px;
-  min-height: 44px;
+  padding: 4px 7px;
+  gap: 5px;
+  min-height: 38px;
 }
 
 /* One-line battle row */
@@ -1051,8 +1051,13 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
+.sched-player-inline.left {
+  flex-direction: row !important;
+}
+.sched-player-inline.left .sched-name { order: 1; }
+.sched-player-inline.left .sched-meta-inline { order: 2; }
 .sched-player-inline.right {
   justify-content: flex-end;
   flex-direction: row !important;
