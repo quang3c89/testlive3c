@@ -1528,6 +1528,8 @@ import { toast as uiToast, setupRealtime as uiTableRealtime } from './assets/js/
 /* uiTableRealtime: từ ui.js (landing); trang giải đấu giữ function setupRealtime() WebSocket cục bộ */
 import {
   generateBracket,
+  generateBracketFromPlayers,
+  nextPowerOfTwo,
   getRoundName,
   advanceWinner,
   THEMES,
@@ -1608,76 +1610,20 @@ const DEFAULTS = {
 
 const genBracket = generateBracket;
 
-function nextPow2(n) {
-  return Math.pow(2, Math.ceil(Math.log2(Math.max(2, n))));
-}
-
-function buildSeedOrder(size) {
-  let order = [1, 2];
-  let cur = 2;
-  while (cur < size) {
-    const next = [];
-    const target = cur * 2 + 1;
-    order.forEach(v => {
-      next.push(v);
-      next.push(target - v);
-    });
-    order = next;
-    cur *= 2;
-  }
-  return order;
-}
-
-function makeByePlayer(seedNo) {
-  return { id: `bye_${seedNo}`, name: 'BYE', unit: '', rank: '', drawn: true, isBye: true };
-}
-
-function propagateByes(bracket) {
-  for (let r = 0; r < bracket.length - 1; r++) {
-    for (let mi = 0; mi < bracket[r].length; mi++) {
-      const m = bracket[r][mi];
-      const p1 = m.p1;
-      const p2 = m.p2;
-      const p1Real = p1 && !p1.isBye;
-      const p2Real = p2 && !p2.isBye;
-      if (p1Real === p2Real) continue;
-      const w = p1Real ? p1 : p2;
-      m.winner = w;
-      const nr = r + 1;
-      const nm = Math.floor(mi / 2);
-      const np = mi % 2 === 0 ? 'p1' : 'p2';
-      bracket[nr][nm][np] = { ...w };
-    }
-  }
-}
-
 function createBracketForCount(count) {
-  const size = nextPow2(count);
-  const bracket = generateBracket(size);
-  const seeds = buildSeedOrder(size);
+  const normalizedCount = Math.max(2, Number(count) || 2);
+  const seedPlayers = Array.from({ length: normalizedCount }, (_, idx) => ({
+    id: `seed_${idx + 1}`,
+    name: `P${idx + 1}`,
+    unit: `Seed ${idx + 1}`,
+    rank: `${idx + 1}`,
+    drawn: true,
+    seedNo: idx + 1,
+  }));
 
-  const entries = seeds.map(seedNo => {
-    if (seedNo <= count) {
-      return {
-        id: `seed_${seedNo}`,
-        name: `P${seedNo}`,
-        unit: `Seed ${seedNo}`,
-        rank: `${seedNo}`,
-        drawn: true,
-        seedNo,
-      };
-    }
-    return makeByePlayer(seedNo);
-  });
-
-  let i = 0;
-  for (let m = 0; m < bracket[0].length; m++) {
-    bracket[0][m].p1 = entries[i++] || null;
-    bracket[0][m].p2 = entries[i++] || null;
-  }
-
-  propagateByes(bracket);
-  return { size, bracket };
+  const bracket = generateBracketFromPlayers(seedPlayers);
+  const size = nextPowerOfTwo(normalizedCount);
+  return { size, bracket, seedPlayers };
 }
 
 let S = {
@@ -3138,17 +3084,7 @@ function updateBracketSize() {
 
   S.bracketSize = built.size;
   S.bracket = built.bracket;
-  S.players = [];
-  for (let i = 1; i <= raw; i++) {
-    S.players.push({
-      id: `seed_${i}`,
-      name: `P${i}`,
-      unit: `Seed ${i}`,
-      rank: `${i}`,
-      drawn: true,
-      seedNo: i,
-    });
-  }
+  S.players = built.seedPlayers;
 
   saveState();
   renderAll();

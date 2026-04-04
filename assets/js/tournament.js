@@ -183,14 +183,34 @@ export const THEMES = {
   },
 };
 
-/** Gốc HTML: genBracket(size) — size là lũy thừa 2 */
+export function nextPowerOfTwo(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v < 2) return 4;
+  return Math.pow(2, Math.ceil(Math.log2(v)));
+}
+
+/** Seed order chuẩn để phân bố đối xứng trái/phải */
+export function generateSeedOrder(size) {
+  let order = [1, 2];
+  while (order.length < size) {
+    const nextSize = order.length * 2;
+    const next = [];
+    order.forEach((seed) => {
+      next.push(seed);
+      next.push(nextSize + 1 - seed);
+    });
+    order = next;
+  }
+  return order;
+}
+
+/** Gốc HTML: genBracket(size) — nhận mọi số, tự quy chuẩn 2^k */
 export function generateBracket(players) {
   let raw;
   if (typeof players === 'number') raw = players;
   else if (Array.isArray(players)) raw = players.length;
   else raw = 16;
-  if (isNaN(raw) || raw < 2) raw = 4;
-  const size = Math.pow(2, Math.ceil(Math.log2(raw)));
+  const size = nextPowerOfTwo(raw);
   const rounds = Math.log2(size);
   const br = [];
   for (let r = 0; r < rounds; r++) {
@@ -200,6 +220,59 @@ export function generateBracket(players) {
     br.push(ms);
   }
   return br;
+}
+
+/**
+ * Tạo bracket chuẩn dữ liệu từ danh sách người chơi bất kỳ N.
+ * - Tự tính BYE theo 2^k
+ * - Phân bổ theo seed order đối xứng
+ * - Tự động propagate BYE lên các vòng sau
+ */
+export function generateBracketFromPlayers(players = []) {
+  const list = Array.isArray(players) ? players.filter(Boolean) : [];
+  const n = Math.max(2, list.length);
+  const size = nextPowerOfTwo(n);
+  const bracket = generateBracket(size);
+  const seedOrder = generateSeedOrder(size);
+
+  const seededSlots = seedOrder.map((seed) => {
+    const p = list[seed - 1];
+    if (p) return { ...p, seed, isBye: false };
+    return { id: `bye_${seed}`, name: 'BYE', unit: '', rank: '', seed, isBye: true };
+  });
+
+  for (let m = 0; m < bracket[0].length; m++) {
+    bracket[0][m].p1 = seededSlots[m * 2] || null;
+    bracket[0][m].p2 = seededSlots[m * 2 + 1] || null;
+  }
+
+  // Propagate BYE tự động qua các vòng
+  for (let r = 0; r < bracket.length - 1; r++) {
+    for (let mi = 0; mi < bracket[r].length; mi++) {
+      const match = bracket[r][mi];
+      const p1 = match.p1;
+      const p2 = match.p2;
+      const p1Bye = !!p1?.isBye;
+      const p2Bye = !!p2?.isBye;
+
+      if (!p1 && !p2) continue;
+      if (p1 && p2 && !p1Bye && !p2Bye) continue;
+
+      let autoWinner = null;
+      if (p1 && (!p2 || p2Bye) && !p1Bye) autoWinner = p1;
+      if (p2 && (!p1 || p1Bye) && !p2Bye) autoWinner = p2;
+      if (!autoWinner) continue;
+
+      match.winner = autoWinner;
+      const nr = r + 1;
+      const nm = Math.floor(mi / 2);
+      const np = mi % 2 === 0 ? 'p1' : 'p2';
+      bracket[nr][nm][np] = autoWinner;
+      bracket[nr][nm].winner = null;
+    }
+  }
+
+  return bracket;
 }
 
 export function getRoundName(r, totalRounds) {
