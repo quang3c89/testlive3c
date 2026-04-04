@@ -188,8 +188,15 @@ body.viewer-mode .gear-btn { display: none !important; }
 .spin-btn:hover { transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 6px 24px rgba(240,165,0,0.6), 0 0 0 6px rgba(0,0,0,0.3); }
 .spin-btn:active { transform: translate(-50%, -50%) scale(0.94); }
 .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: translate(-50%, -50%) scale(1); }
+.stop-spin-btn{
+  position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+  width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.45);color:#fff;font-size:10px;line-height:1;cursor:pointer;
+  opacity:.35;transition:opacity .2s,transform .2s;z-index:12;
+}
+.stop-spin-btn:hover{opacity:.9;transform:translateX(-50%) scale(1.08);}
 /* Hide spin button in viewer mode */
-body.viewer-mode .spin-btn { display: none; }
+body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 .wheel-ptr {
   position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
   font-size: 22px; color: var(--accent); z-index: 20;
@@ -895,38 +902,25 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* ============ SCHEDULE COLUMNS ============ */
 .schedule-columns {
-  display: flex;
-  gap: 0;
-  align-items: flex-start;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+  padding-right: 4px;
 }
-.schedule-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 10px;
-  position: relative;
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
 }
-
-/* Divider line between columns */
-.schedule-divider {
-  width: 1px;
-  align-self: stretch;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--accent) 20%,
-    var(--accent) 80%,
-    transparent
-  );
-  opacity: 0.2;
-  position: relative;
-  flex-shrink: 0;
-  margin: 0 4px;
+@media (max-width: 768px) {
+  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .schedule-columns { max-height: calc(100vh - 250px); }
 }
+.schedule-col { display: none; }
+.schedule-divider { display: none; }
 
 /* ============ MATCH CARD — NEW DESIGN ============ */
 .sched-match {
@@ -1032,11 +1026,15 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2;
-  letter-spacing: 0.3px;
+  line-height: 1.15;
+  letter-spacing: 0.2px;
+  max-width: 100%;
 }
-.sched-name.left-name { color: #60a5fa; }
-.sched-name.right-name { color: #f87171; }
+.sched-name.name-md { font-size: 18px; }
+.sched-name.name-sm { font-size: 15px; }
+.sched-name.name-xs { font-size: 13px; letter-spacing: 0; }
+.sched-name.left-name { color: #ffffff; }
+.sched-name.right-name { color: #ffd447; }
 .sched-name.empty-name {
   font-size: 13px;
   font-weight: 400;
@@ -1075,14 +1073,22 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* Winner badge on player side */
 .sched-winner-badge {
+  display:inline-flex;align-items:center;gap:5px;
   font-family: var(--font-mono);
-  font-size: 7px;
-  font-weight: 800;
+  font-size: 8px;
+  font-weight: 900;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #d2ffe1;
   margin-top: 3px;
-  opacity: 0.8;
+  padding:2px 6px;border-radius:999px;
+  border:1px solid rgba(34,197,94,.7);
+  background:linear-gradient(135deg,rgba(34,197,94,.24),rgba(20,83,45,.28));
+  box-shadow:0 0 12px rgba(34,197,94,.35);
+}
+.sched-winner-badge .win-dot{
+  width:10px;height:10px;border-radius:50%;background:#22c55e;
+  box-shadow:0 0 8px rgba(34,197,94,.95),0 0 0 1px rgba(255,255,255,.35) inset;
 }
 
 /* Center icon */
@@ -1112,6 +1118,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .schedule-columns { flex-direction: column; gap: 10px; }
   .schedule-divider { display: none; }
   .sched-name { font-size: 15px; }
+  .sched-name.name-sm { font-size: 13px; }
+  .sched-name.name-xs { font-size: 12px; }
   .sched-unit { font-size: 11px; }
   .tournament-bc-nav { display: none; }
   .tournament-bc-mobile { display: inline-flex !important; }
@@ -1253,7 +1261,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     <div class="wheel-wrap">
       <div class="wheel-ptr">▼</div>
       <div class="wheel-inner"><canvas id="wheel-canvas" width="500" height="500"></canvas></div>
-      <button id="spin-btn" class="spin-btn" onclick="spinWheel()">SPIN</button>
+      <button id="spin-btn" class="spin-btn" onclick="startAutoSpin()">SPIN</button>
+      <button id="stop-auto-spin" class="stop-spin-btn" onclick="stopAutoSpin()" title="Dừng auto spin">⏹</button>
     </div>
 
     <div class="ctrl-row">
@@ -1491,6 +1500,10 @@ let pushDebounceTimer = null;
 let lastSyncTime = null;
 let pendingSpinPlayer = null;
 let pendingSpinSlot = null;
+let autoSpinEnabled = false;
+let autoSpinStopRequested = false;
+let spinAudioCtx = null;
+let spinAudioOsc = null;
 
 /* ================================================================
    UNDO / REDO
@@ -2248,6 +2261,46 @@ function drawWheel(rotation = 0) {
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.stroke();
 }
 
+function startSpinSound() {
+  try {
+    if (!spinAudioCtx) spinAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (spinAudioOsc) return;
+    const osc = spinAudioCtx.createOscillator();
+    const gain = spinAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, spinAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(420, spinAudioCtx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.0001, spinAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.03, spinAudioCtx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(spinAudioCtx.destination);
+    osc.start();
+    spinAudioOsc = { osc, gain };
+  } catch {}
+}
+
+function stopSpinSound() {
+  try {
+    if (!spinAudioOsc || !spinAudioCtx) return;
+    const { osc, gain } = spinAudioOsc;
+    gain.gain.exponentialRampToValueAtTime(0.0001, spinAudioCtx.currentTime + 0.08);
+    osc.stop(spinAudioCtx.currentTime + 0.1);
+    spinAudioOsc = null;
+  } catch {}
+}
+
+function startAutoSpin() {
+  autoSpinEnabled = true;
+  autoSpinStopRequested = false;
+  spinWheel();
+}
+
+function stopAutoSpin() {
+  autoSpinStopRequested = true;
+  autoSpinEnabled = false;
+  stopSpinSound();
+}
+
 function spinWheel() {
   if (S.isSpinning) return;
   if (!S.isAdmin) return;
@@ -2257,6 +2310,7 @@ function spinWheel() {
   if (!slot) { showToast('🏆 Bracket đã đầy!'); return; }
 
   S.isSpinning = true;
+  startSpinSound();
   document.getElementById('spin-btn').disabled = true;
 
   const ti = Math.floor(Math.random() * undrawn.length);
@@ -2301,6 +2355,7 @@ function spinWheel() {
         pendingSpinPlayer = freshPlayer;
       }
       pendingSpinSlot = freshSlot;
+      stopSpinSound();
       showSpinPopup(pendingSpinPlayer);
     }
   }
@@ -2347,7 +2402,7 @@ function closeSpinPopupAndSpin() {
     const p = pendingSpinPlayer, sl = pendingSpinSlot;
     pendingSpinPlayer = null;
     pendingSpinSlot = null;
-    flyPlayer(p, sl, true); // spinAgain=true → sau khi bay xong sẽ tự spin
+    flyPlayer(p, sl, autoSpinEnabled && !autoSpinStopRequested); // auto spin đến khi đầy bracket
   } else {
     resetWheel();
   }
@@ -2964,23 +3019,7 @@ function checkBracketTabVisibility() {
 }
 
 /* ---- Billiards ball SVG (inline data, used as center icon) ---- */
-const BALL_SVG = `<svg class="sched-ball-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="ballGrad" cx="38%" cy="32%" r="60%">
-      <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
-      <stop offset="40%" stop-color="#f0a500"/>
-      <stop offset="100%" stop-color="#8a5a00"/>
-    </radialGradient>
-    <radialGradient id="shineGrad" cx="38%" cy="28%" r="35%">
-      <stop offset="0%" stop-color="#fff" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="30" cy="30" r="28" fill="url(#ballGrad)"/>
-  <ellipse cx="24" cy="22" rx="10" ry="7" fill="url(#shineGrad)"/>
-  <circle cx="30" cy="30" r="9" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-  <text x="30" y="35" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-size="10" font-weight="900" fill="rgba(255,255,255,0.9)">3C</text>
-</svg>`;
+const BALL_SVG = `<img class="sched-batte-icon" src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte.png" alt="vs">`;
 
 function renderSchedule() {
   const container = document.getElementById('schedule-columns');
@@ -2995,13 +3034,10 @@ function renderSchedule() {
     return;
   }
 
-  // Count total matches filled across all rounds
+  // Count total matches across all rounds (kể cả TBD)
   let totalMatchCount = 0;
-  let filledRounds = 0;
-  bracket.forEach(round => {
-    const hasAny = round.some(m => m.p1 || m.p2);
-    if (hasAny) { filledRounds++; totalMatchCount += round.length; }
-  });
+  const filledRounds = bracket.length;
+  bracket.forEach(round => { totalMatchCount += round.length; });
 
   if (totalMatchCount === 0) {
     container.innerHTML = '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
@@ -3022,8 +3058,14 @@ function renderSchedule() {
     const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
     const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
 
-    const p1NameCls = !hasP1 ? 'empty-name' : (p1IsWinner ? 'left-name' : '');
-    const p2NameCls = !hasP2 ? 'empty-name' : (p2IsWinner ? 'right-name' : '');
+    const getNameSizeClass = (name = '') => {
+      const n = String(name || '').trim().length;
+      if (n >= 26) return 'name-xs';
+      if (n >= 20) return 'name-sm';
+      return 'name-md';
+    };
+    const p1NameCls = !hasP1 ? 'empty-name' : `left-name ${getNameSizeClass(p1?.name)}`;
+    const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
 
     return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
@@ -3039,7 +3081,7 @@ function renderSchedule() {
               ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
             </div>
             ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
-            ${p1IsWinner ? `<span class="sched-winner-badge">🏆 THẮNG</span>` : ''}
+            ${p1IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>THẮNG</span>` : ''}
           </div>
           <!-- Center ball icon -->
           <div class="sched-vs-col">
@@ -3052,57 +3094,25 @@ function renderSchedule() {
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
             ${hasP2 && p2.unit ? `<div class="sched-unit">${p2.unit}</div>` : ''}
-            ${p2IsWinner ? `<span class="sched-winner-badge">🏆 THẮNG</span>` : ''}
+            ${p2IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>THẮNG</span>` : ''}
           </div>
         </div>
       </div>`;
   }
 
-  // Render each round as a section
+  const grid = document.createElement('div');
+  grid.className = 'schedule-grid';
+
   bracket.forEach((round, rIdx) => {
     const hasAny = round.some(m => m.p1 || m.p2);
     if (!hasAny) return;
-
-    const section = document.createElement('div');
-    section.className = 'sched-round-section';
-
-    const rnLabel = document.createElement('div');
-    rnLabel.className = 'sched-round-label';
-    rnLabel.textContent = getRoundName(rIdx, rounds).toUpperCase();
-    section.appendChild(rnLabel);
-
-    const colsWrap = document.createElement('div');
-    colsWrap.className = 'schedule-columns';
-
-    const half = Math.ceil(round.length / 2);
-    const leftMatches = round.slice(0, half);
-    const rightMatches = round.slice(half);
-
-    const leftCol = document.createElement('div');
-    leftCol.className = 'schedule-col';
-    leftMatches.forEach((m, i) => {
+    round.forEach((m, mIdx) => {
       const num = globalMatchNum++;
-      leftCol.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, i, i * 50));
+      grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, num * 16));
     });
-    colsWrap.appendChild(leftCol);
-
-    if (rightMatches.length > 0) {
-      const divider = document.createElement('div');
-      divider.className = 'schedule-divider';
-      colsWrap.appendChild(divider);
-
-      const rightCol = document.createElement('div');
-      rightCol.className = 'schedule-col';
-      rightMatches.forEach((m, i) => {
-        const num = globalMatchNum++;
-        rightCol.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, half + i, (i + half) * 50));
-      });
-      colsWrap.appendChild(rightCol);
-    }
-
-    section.appendChild(colsWrap);
-    container.appendChild(section);
   });
+
+  container.appendChild(grid);
 }
 
 /* ================================================================
@@ -3250,7 +3260,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, handleExcel, handleVideoUpload,
-  previewTitleFont,
+  previewTitleFont, startAutoSpin, stopAutoSpin,
 });
 </script>
 
