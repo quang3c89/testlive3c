@@ -46,7 +46,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
         <div class="field"><label for="location">Địa điểm</label><input id="location"></div>
       </div>
       <div class="row">
-        <div class="field"><label for="format">Thể thức</label><input id="format"></div>
+        <div class="field"><label for="format">Thể thức</label>
+          <select id="format">
+            <option value="Loại Trực Tiếp">Loại Trực Tiếp</option>
+            <option value="Thi Đấu 2 Mạng">Thi Đấu 2 Mạng</option>
+          </select>
+        </div>
         <div class="field"><label for="status">Trạng thái</label>
           <select id="status">
             <option value="registration">Mở đăng ký</option>
@@ -57,7 +62,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
       </div>
       <div class="row">
         <div class="field"><label for="prize">Giải thưởng</label><input id="prize"></div>
-        <div class="field"><label for="cover_url">Cover URL</label><input id="cover_url"></div>
+        <div class="field">
+          <label for="cover_file">Ảnh cover</label>
+          <input id="cover_file" type="file" accept="image/png,image/jpeg,image/webp">
+          <input id="cover_url" type="hidden">
+          <small style="font-size:11px;opacity:.65;line-height:1.5;display:block;">Khuyến nghị: 1200×630 px (tỷ lệ 1.91:1). Định dạng: JPG/PNG/WEBP. Kích thước tối đa: 2MB.</small>
+        </div>
       </div>
       <div class="field"><label for="description">Mô tả</label><textarea id="description"></textarea></div>
 
@@ -78,23 +88,47 @@ requireAdmin();
 
 document.getElementById('logout-btn').addEventListener('click', () => logout());
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Không thể đọc file ảnh cover'));
+    reader.readAsDataURL(file);
+  });
+}
+
 document.getElementById('create-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const payload = {
-    name: document.getElementById('name').value.trim(),
-    date_str: document.getElementById('date_str').value.trim(),
-    location: document.getElementById('location').value.trim(),
-    format: document.getElementById('format').value.trim(),
-    content: document.getElementById('format').value.trim(),
-    status: document.getElementById('status').value,
-    prize: document.getElementById('prize').value.trim(),
-    cover_url: document.getElementById('cover_url').value.trim(),
-    description: document.getElementById('description').value.trim(),
-    bracket_size: 4,
-    bracket_state: JSON.stringify([[{ p1:null,p2:null,s1:'',s2:'',winner:null },{ p1:null,p2:null,s1:'',s2:'',winner:null }],[{ p1:null,p2:null,s1:'',s2:'',winner:null }]]),
-  };
 
   try {
+    const coverFile = document.getElementById('cover_file').files?.[0] || null;
+    let coverUrl = '';
+
+    if (coverFile) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(coverFile.type)) {
+        throw new Error('Ảnh cover chỉ hỗ trợ JPG/PNG/WEBP');
+      }
+      if (coverFile.size > 2 * 1024 * 1024) {
+        throw new Error('Ảnh cover vượt quá 2MB');
+      }
+      coverUrl = await readFileAsDataUrl(coverFile);
+    }
+
+    const payload = {
+      name: document.getElementById('name').value.trim(),
+      date_str: document.getElementById('date_str').value.trim(),
+      location: document.getElementById('location').value.trim(),
+      format: document.getElementById('format').value,
+      content: document.getElementById('format').value,
+      status: document.getElementById('status').value,
+      prize: document.getElementById('prize').value.trim(),
+      cover_url: coverUrl,
+      description: document.getElementById('description').value.trim(),
+      bracket_size: 4,
+      bracket_state: JSON.stringify([[{ p1:null,p2:null,s1:'',s2:'',winner:null },{ p1:null,p2:null,s1:'',s2:'',winner:null }],[{ p1:null,p2:null,s1:'',s2:'',winner:null }]]),
+    };
+
     const rows = await supaFetch('tournaments', 'POST', [payload]);
     const id = rows?.[0]?.id;
     if (!id) throw new Error('Không nhận được ID giải đấu mới');
