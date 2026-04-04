@@ -1405,9 +1405,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 /* ── NAV ── */
 nav{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--nav-height);display:flex;align-items:center;padding:0 24px;gap:16px;background:rgba(8,11,16,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
 .nav-logo{font-family:var(--display);font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;text-decoration:none;}
-.nav-logo .y{color:#ffd447;}
-.nav-logo .r{color:#d72638;}
-.nav-logo .w{color:#ffffff;}
+.nav-logo .y{color:#d72638;}
+.nav-logo .r{color:#ffffff;}
+.nav-logo .w{color:#ffd447;}
 .nav-spacer{flex:1;}
 .nav-link{font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;letter-spacing:.3px;transition:color .15s;padding:4px 2px;}
 .nav-link:hover{color:var(--text);}

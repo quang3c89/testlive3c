@@ -156,9 +156,9 @@ body.viewer-mode .gear-btn { display: none !important; }
   line-height: 1; position: relative; z-index: 1; letter-spacing: -1px;
   animation: brandPulse 3s ease-in-out infinite;
 }
-.brand-txt .by { color: #f0a500; text-shadow: 0 0 20px rgba(240,165,0,0.4); }
-.brand-txt .br { color: #e05a2b; text-shadow: 0 0 20px rgba(224,90,43,0.4); }
-.brand-txt .bw { color: rgba(255,255,255,0.5); }
+.brand-txt .by { color: #d72638; text-shadow: 0 0 20px rgba(215,38,56,0.4); }
+.brand-txt .br { color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.35); }
+.brand-txt .bw { color: #ffd447; text-shadow: 0 0 20px rgba(255,212,71,0.35); }
 @keyframes brandPulse {
   0%,100% { filter: drop-shadow(0 0 6px rgba(240,165,0,0.2)); }
   50% { filter: drop-shadow(0 0 14px rgba(240,165,0,0.5)); }
@@ -1017,6 +1017,16 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .sched-player.right .sched-name-row {
   flex-direction: row-reverse;
 }
+.sched-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  max-width: 100%;
+}
+.sched-player.right .sched-meta-row {
+  flex-direction: row-reverse;
+}
 
 .sched-name {
   font-family: var(--font-display);
@@ -1065,9 +1075,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
-  margin-top: 2px;
-  opacity: 0.8;
+  max-width: 72%;
+  opacity: 0.9;
   line-height: 1.3;
 }
 
@@ -1101,10 +1110,12 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   width: 50px;
   gap: 4px;
 }
-.sched-ball-icon {
-  width: 32px;
-  height: 32px;
+.sched-ball-icon,
+.sched-batte-icon {
+  width: 60px;
+  height: 60px;
   flex-shrink: 0;
+  object-fit: contain;
   filter: drop-shadow(0 2px 6px rgba(240,165,0,0.4));
   animation: ballSpin 8s linear infinite;
 }
@@ -1172,10 +1183,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     <div class="spin-popup-name" id="popup-name">—</div>
     <div class="spin-popup-unit" id="popup-unit"></div>
     <div id="popup-rank-wrap"></div>
-    <div class="spin-popup-actions">
-      <button class="btn-close" onclick="closeSpinPopup()">Vào bracket</button>
-      <button class="btn-continue" onclick="closeSpinPopupAndSpin()">🎯 Quay tiếp</button>
-    </div>
   </div>
 </div>
 
@@ -1247,11 +1254,10 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   <aside class="left">
     <div class="header-banner">
       <div class="hb-video">
-        <video id="header-video" autoplay loop muted playsinline></video>
+        <video id="header-video" autoplay loop muted playsinline src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/intro.mp4"></video>
         <div class="header-controls-wrap">
           <div style="display:flex;gap:5px;">
-            <button class="hb-ctrl-btn" onclick="document.getElementById('vid-upload').click()">📹 Video</button>
-            <input type="file" id="vid-upload" accept="video/*" style="display:none" onchange="handleVideoUpload(event)">
+            <button class="hb-ctrl-btn" onclick="showToast('Header video đã gán cố định', 'success')">📹 Video</button>
           </div>
         </div>
       </div>
@@ -1481,7 +1487,7 @@ const DEFAULTS = {
   tbVals: ['3-Cushion Masters', 'Sat, 14:00', 'CLB Arena', 'Single Elim.', '5,000,000đ', ''],
   tbBg: '#0d1117', tbFont: "'DM Sans',sans-serif",
   titleFont: "'Barlow Condensed', sans-serif",
-  theme: 'carbon-gold'
+  theme: 'navy-gold'
 };
 
 const genBracket = generateBracket;
@@ -1662,11 +1668,8 @@ function saveVideoToDB(dataUrl) {
   });
 }
 function loadVideoFromDB() {
-  openVideoDB(db => {
-    if (!db) return;
-    const req = db.transaction('videos','readonly').objectStore('videos').get('brandVideo');
-    req.onsuccess = () => { if (req.result) document.getElementById('header-video').src = req.result; };
-  });
+  const v = document.getElementById('header-video');
+  if (v) v.src = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/intro.mp4';
 }
 
 /* ================================================================
@@ -2092,14 +2095,8 @@ function setupTopBar() {
 }
 
 function handleVideoUpload(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    document.getElementById('header-video').src = ev.target.result;
-    saveVideoToDB(ev.target.result);
-    showToast('🎥 Video đã tải lên', 'success');
-  };
-  reader.readAsDataURL(file);
+  void e;
+  showToast('🎥 Header video đã gán cố định', 'success');
 }
 
 /* ================================================================
@@ -2267,11 +2264,12 @@ function startSpinSound() {
     if (spinAudioOsc) return;
     const osc = spinAudioCtx.createOscillator();
     const gain = spinAudioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(180, spinAudioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(420, spinAudioCtx.currentTime + 0.35);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, spinAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(640, spinAudioCtx.currentTime + 0.24);
+    osc.frequency.exponentialRampToValueAtTime(420, spinAudioCtx.currentTime + 0.42);
     gain.gain.setValueAtTime(0.0001, spinAudioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.03, spinAudioCtx.currentTime + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.06, spinAudioCtx.currentTime + 0.05);
     osc.connect(gain);
     gain.connect(spinAudioCtx.destination);
     osc.start();
@@ -2283,8 +2281,8 @@ function stopSpinSound() {
   try {
     if (!spinAudioOsc || !spinAudioCtx) return;
     const { osc, gain } = spinAudioOsc;
-    gain.gain.exponentialRampToValueAtTime(0.0001, spinAudioCtx.currentTime + 0.08);
-    osc.stop(spinAudioCtx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.0001, spinAudioCtx.currentTime + 0.12);
+    osc.stop(spinAudioCtx.currentTime + 0.14);
     spinAudioOsc = null;
   } catch {}
 }
@@ -2382,30 +2380,27 @@ function showSpinPopup(player) {
   popup.style.left = (rect.left + rect.width / 2 - boxW / 2) + 'px';
   popup.style.top  = (rect.top  + rect.height / 2 - 100) + 'px';
   popup.classList.add('show');
+
+  setTimeout(() => {
+    if (!popup.classList.contains('show')) return;
+    popup.classList.remove('show');
+    if (pendingSpinPlayer && pendingSpinSlot) {
+      const p = pendingSpinPlayer, sl = pendingSpinSlot;
+      pendingSpinPlayer = null;
+      pendingSpinSlot = null;
+      flyPlayer(p, sl, autoSpinEnabled && !autoSpinStopRequested);
+    } else {
+      resetWheel();
+    }
+  }, 2000);
 }
 
 function closeSpinPopup() {
   document.getElementById('spin-popup').classList.remove('show');
-  if (pendingSpinPlayer && pendingSpinSlot) {
-    const p = pendingSpinPlayer, sl = pendingSpinSlot;
-    pendingSpinPlayer = null;
-    pendingSpinSlot = null;
-    flyPlayer(p, sl, false);
-  } else {
-    resetWheel();
-  }
 }
 
 function closeSpinPopupAndSpin() {
   document.getElementById('spin-popup').classList.remove('show');
-  if (pendingSpinPlayer && pendingSpinSlot) {
-    const p = pendingSpinPlayer, sl = pendingSpinSlot;
-    pendingSpinPlayer = null;
-    pendingSpinSlot = null;
-    flyPlayer(p, sl, autoSpinEnabled && !autoSpinStopRequested); // auto spin đến khi đầy bracket
-  } else {
-    resetWheel();
-  }
 }
 
 function findNextSlot() {
@@ -3078,10 +3073,12 @@ function renderSchedule() {
           <div class="sched-player left">
             <div class="sched-name-row">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
-              ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
+              ${p1IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>THẮNG</span>` : ''}
             </div>
-            ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
-            ${p1IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>THẮNG</span>` : ''}
+            <div class="sched-meta-row">
+              ${hasP1 && p1.rank ? `<span class="sched-rank">${p1.rank}</span>` : ''}
+              ${hasP1 && p1.unit ? `<div class="sched-unit">${p1.unit}</div>` : ''}
+            </div>
           </div>
           <!-- Center ball icon -->
           <div class="sched-vs-col">
@@ -3090,11 +3087,13 @@ function renderSchedule() {
           <!-- Player 2 (right) -->
           <div class="sched-player right">
             <div class="sched-name-row">
-              ${hasP2 && p2.rank ? `<span class="sched-rank">${p2.rank}</span>` : ''}
+              ${p2IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>THẮNG</span>` : ''}
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
-            ${hasP2 && p2.unit ? `<div class="sched-unit">${p2.unit}</div>` : ''}
-            ${p2IsWinner ? `<span class="sched-winner-badge"><span class="win-dot"></span>THẮNG</span>` : ''}
+            <div class="sched-meta-row">
+              ${hasP2 && p2.rank ? `<span class="sched-rank">${p2.rank}</span>` : ''}
+              ${hasP2 && p2.unit ? `<div class="sched-unit">${p2.unit}</div>` : ''}
+            </div>
           </div>
         </div>
       </div>`;
