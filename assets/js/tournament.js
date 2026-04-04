@@ -246,8 +246,10 @@ export function generateBracketFromPlayers(players = []) {
     bracket[0][m].p2 = seededSlots[m * 2 + 1] || null;
   }
 
-  // Propagate BYE tự động qua các vòng
-  for (let r = 0; r < bracket.length - 1; r++) {
+  // Propagate BYE chỉ 1 bước: từ vòng hiện tại lên đúng vòng kế tiếp
+  // (không auto-chain qua nhiều vòng để tránh line chạy một mạch đến cuối)
+  const r = 0;
+  if (bracket[r] && bracket[r + 1]) {
     for (let mi = 0; mi < bracket[r].length; mi++) {
       const match = bracket[r][mi];
       const p1 = match.p1;
