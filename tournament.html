@@ -1135,6 +1135,43 @@ body.left-collapsed .schedule-grid {
   margin: 0;
 }
 
+/* Khi ẩn panel bốc thăm (3 cột), ưu tiên hiển thị đầy đủ tên cơ thủ */
+body.left-collapsed .sched-match-body {
+  gap: 3px;
+  padding: 4px 6px;
+}
+body.left-collapsed .sched-player-inline {
+  display: flex;
+  min-width: 0;
+  gap: 3px;
+}
+body.left-collapsed .sched-player-inline.left {
+  justify-content: flex-end;
+}
+body.left-collapsed .sched-player-inline.right {
+  justify-content: flex-start;
+}
+body.left-collapsed .sched-player-inline .sched-meta-inline {
+  display: none;
+}
+body.left-collapsed .sched-vs-col {
+  width: 30px;
+}
+body.left-collapsed .sched-center-logo,
+body.left-collapsed .sched-batte-icon {
+  width: 28px;
+  height: 28px;
+}
+body.left-collapsed .sched-outcome-inline {
+  padding: 1px 3px;
+  gap: 2px;
+}
+body.left-collapsed .sched-score {
+  min-width: 16px;
+  height: 14px;
+  font-size: 9px;
+}
+
 .sched-outcome-inline {
   display: inline-flex;
   align-items: center;
