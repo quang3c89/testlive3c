@@ -112,6 +112,9 @@ body.viewer-mode .tb-actions { display: none; }
 body.left-collapsed .left { display: none !important; }
 body.left-collapsed .center { padding-left: 12px; }
 body.left-collapsed .bracket-cols { min-height: calc(100vh - 120px); }
+/* Schedule phải giữ nguyên bố cục dù panel bốc thăm ẩn/hiện */
+body.left-collapsed .center.schedule-active { padding-left: 12px; }
+body.left-collapsed .center.schedule-active #schedule-panel { left: 0; right: 0; }
 #left-toggle-floating {
   display: none;
   position: fixed;
@@ -1142,10 +1145,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   margin: 0;
 }
 
-/* Khi ẩn panel bốc thăm, ẩn meta để ưu tiên hiển thị tên */
-body.left-collapsed .sched-player-inline .sched-meta-inline {
-  display: none;
-}
 
 .sched-outcome-inline {
   display: inline-flex;
