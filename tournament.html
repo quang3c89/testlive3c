@@ -1098,41 +1098,17 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   opacity: 0.7;
 }
 
-/* Match body: [ Player1 ] [ ICON ] [ Player2 ] */
+/* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(56px, 0.75fr) minmax(110px, 1.25fr) auto minmax(110px, 1.25fr) minmax(56px, 0.75fr);
   align-items: center;
+  column-gap: 6px;
   padding: 4px 7px;
-  gap: 5px;
   min-height: 38px;
 }
 
-/* One-line battle row */
-.sched-player-inline {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.sched-player-inline.left {
-  justify-content: flex-end;
-  flex-direction: row-reverse;
-}
-.sched-player-inline.right {
-  justify-content: flex-start;
-  flex-direction: row;
-}
-.sched-player-inline.left .sched-name { text-align: right; }
-.sched-player-inline.left .sched-meta-inline { text-align: right; }
-.sched-player-inline.right .sched-name { text-align: left; }
-.sched-player-inline.right .sched-meta-inline { text-align: left; }
-.sched-player-inline .sched-name {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.sched-player-inline .sched-meta-inline {
-  flex: 0 0 auto;
+.sched-side-unit {
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
@@ -1142,15 +1118,31 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
-  margin: 0;
 }
+.sched-side-unit.left { text-align: left; }
+.sched-side-unit.right { text-align: right; }
 
+.sched-side-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sched-side-name.left { text-align: right; }
+.sched-side-name.right { text-align: left; }
+
+.sched-center-pack {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
 
 .sched-outcome-inline {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
+  gap: 3px;
+  padding: 1px 5px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.04);
@@ -3563,31 +3555,35 @@ function renderSchedule() {
               </div>
             </div>
           ` : `
-            <div class="sched-player-inline left">
+            <div class="sched-side-unit left" title="${p1Meta}">${p1MetaShort || ''}</div>
+
+            <div class="sched-side-name left">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
-              ${p1Meta ? `<span class="sched-meta-inline" title="${p1Meta}">${p1MetaShort}</span>` : ''}
             </div>
 
-            <div class="sched-outcome-inline">
-              ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
-              ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
-              ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
+            <div class="sched-center-pack">
+              <div class="sched-outcome-inline">
+                ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
+                ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
+                ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
+              </div>
+
+              <div class="sched-vs-col">
+                ${BALL_SVG}
+              </div>
+
+              <div class="sched-outcome-inline">
+                ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
+                ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
+                ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
+              </div>
             </div>
 
-            <div class="sched-vs-col">
-              ${BALL_SVG}
-            </div>
-
-            <div class="sched-outcome-inline">
-              ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
-              ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
-              ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
-            </div>
-
-            <div class="sched-player-inline right">
+            <div class="sched-side-name right">
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
-              ${p2Meta ? `<span class="sched-meta-inline" title="${p2Meta}">${p2MetaShort}</span>` : ''}
             </div>
+
+            <div class="sched-side-unit right" title="${p2Meta}">${p2MetaShort || ''}</div>
           `}
         </div>
       </div>`;
