@@ -124,7 +124,10 @@ body.left-collapsed .bracket-cols { min-height: calc(100vh - 90px); }
 body.viewer-mode .ctrl-row { display: none; }
 body.viewer-mode .pc .dx { display: none !important; }
 body.viewer-mode .hb-ctrl-btn { display: none !important; }
-body.viewer-mode .gear-btn { display: none !important; }
+body.viewer-mode .theme-strip #undo-btn,
+body.viewer-mode .theme-strip #redo-btn,
+body.viewer-mode .theme-strip button[title="Settings"],
+body.viewer-mode .theme-strip button[title="Đăng xuất"] { display: none !important; }
 
 /* ============ HEADER BANNER ============ */
 .header-banner {
@@ -3233,19 +3236,17 @@ function updateBracketSize() {
     for (let mi = 0; mi < S.bracket[0].length; mi++) {
       const s1 = seedOrder[mi * 2];
       const s2 = seedOrder[mi * 2 + 1];
-      if (byeSeeds.has(s1) || byeSeeds.has(s2)) {
-        // Gán BYE vào đúng seed là BYE, seed còn lại để trống cho bốc thăm
-        if (byeSeeds.has(s1) && !byeSeeds.has(s2)) {
-          S.bracket[0][mi].p1 = { id: `bye_${s1}_${mi}_p1`, name: '', isBye: true, drawn: true };
-          S.bracket[0][mi].p2 = null;
-        } else if (!byeSeeds.has(s1) && byeSeeds.has(s2)) {
-          S.bracket[0][mi].p1 = null;
-          S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}_p2`, name: '', isBye: true, drawn: true };
-        } else {
-          S.bracket[0][mi].p1 = { id: `bye_${s1}_${mi}_p1`, name: '', isBye: true, drawn: true };
-          S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}_p2`, name: '', isBye: true, drawn: true };
-        }
+      if (!(byeSeeds.has(s1) || byeSeeds.has(s2))) continue;
+
+      // Chỉ đánh dấu ô gộp BYE khi có đúng 1 seed BYE
+      if (byeSeeds.has(s1) && !byeSeeds.has(s2)) {
+        S.bracket[0][mi].p1 = { id: `bye_${s1}_${mi}_p1`, name: '', isBye: true, drawn: true };
+        S.bracket[0][mi].p2 = null;
+      } else if (!byeSeeds.has(s1) && byeSeeds.has(s2)) {
+        S.bracket[0][mi].p1 = null;
+        S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}_p2`, name: '', isBye: true, drawn: true };
       }
+      // Trường hợp cả 2 đều BYE: để trống cả 2 slot, không dựng node ảo
     }
   }
 
