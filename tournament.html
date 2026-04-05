@@ -2595,13 +2595,6 @@ function findNextSlot() {
 function syncRound1ByesToRound2() {
   if (!S.bracket?.[0] || !S.bracket?.[1]) return;
 
-  // reset round2 first
-  S.bracket[1].forEach((m) => {
-    m.p1 = null;
-    m.p2 = null;
-    m.winner = null;
-  });
-
   for (let mi = 0; mi < S.bracket[0].length; mi++) {
     const m = S.bracket[0][mi];
     const p1 = m.p1;
@@ -2614,11 +2607,14 @@ function syncRound1ByesToRound2() {
     const nr = 1;
     const nm = Math.floor(mi / 2);
     const np = mi % 2 === 0 ? 'p1' : 'p2';
+    const next = S.bracket[nr]?.[nm];
+    if (!next) continue;
 
-    // Chỉ auto-advance khi đã có ĐỦ 2 slot (1 người thật + 1 BYE).
-    // Nếu còn slot trống thì KHÔNG nhảy vòng.
-    const hasBothSlots = !!p1 && !!p2;
-    if (!hasBothSlots) {
+    // luôn reset đúng slot map từ match hiện tại
+    next[np] = null;
+
+    // chưa đủ 2 slot thì chưa được auto-advance
+    if (!p1 || !p2) {
       m.winner = null;
       continue;
     }
@@ -2626,10 +2622,17 @@ function syncRound1ByesToRound2() {
     if ((p1Real && p2Bye) || (p2Real && p1Bye)) {
       const w = p1Real ? p1 : p2;
       m.winner = w;
-      S.bracket[nr][nm][np] = { ...w };
+      next[np] = { ...w };
+    } else if (p1Real && p2Real) {
+      // đã đủ 2 cơ thủ thật: chỉ đẩy lên khi đã có winner hợp lệ
+      const validWinner = m.winner && (m.winner.id === p1.id || m.winner.id === p2.id) ? m.winner : null;
+      if (validWinner) next[np] = { ...validWinner };
+      else m.winner = null;
     } else {
       m.winner = null;
     }
+
+    next.winner = null;
   }
 }
 
