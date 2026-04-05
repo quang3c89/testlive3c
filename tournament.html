@@ -29,7 +29,19 @@
   font-family: var(--font-mono); font-size: 9px; font-weight: 700;
   opacity: 0.3; margin-right: 2px; white-space: nowrap; letter-spacing: 1.5px;
 }
-#theme-dots { display: flex; gap: 5px; align-items: center; }
+#theme-dots {
+  display: none;
+  position: absolute;
+  right: 120px;
+  top: 6px;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(8,12,20,0.95);
+}
+.theme-strip.theme-open #theme-dots { display: flex; }
 .t-dot {
   width: 18px; height: 18px; border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.15);
@@ -1017,23 +1029,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   box-shadow: 0 5px 14px rgba(0,0,0,0.32), 0 0 0 1px rgba(240,165,0,0.12);
 }
 .sched-match.dragging { opacity: 0.55; }
-.sched-seq {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.05);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  line-height: 14px;
-  text-align: center;
-  opacity: 0.75;
-}
+.sched-seq { display: none !important; }
 .sched-match.has-winner {
   border-color: rgba(240,165,0,0.3);
   box-shadow: 0 0 20px rgba(240,165,0,0.1);
@@ -1278,25 +1274,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<header class="tournament-page-header">
-  <nav class="tournament-site-nav" aria-label="Trang chính">
-    <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
-    <span class="nav-spacer"></span>
-    <a class="nav-link" href="tournaments.html">Giải đấu</a>
-    <a class="nav-link" href="index.html#contact">Liên hệ</a>
-  </nav>
-  <div class="tournament-header-row">
-    <a href="tournaments.html" class="btn btn-ghost">← Tất cả giải đấu</a>
-    <a href="tournaments.html" class="btn btn-ghost tournament-bc-mobile">← Giải đấu</a>
-    <div class="breadcrumb tournament-bc-nav" role="navigation" aria-label="breadcrumb">
-      <a href="index.html">Trang chủ</a>
-      <span class="bc-sep">›</span>
-      <a href="tournaments.html">Giải đấu</a>
-      <span class="bc-sep">›</span>
-      <span id="bc-name">Đang tải...</span>
-    </div>
-  </div>
-</header>
+
 
 <!-- SPIN RESULT POPUP -->
 <div id="spin-popup">
@@ -1373,7 +1351,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 <!-- THEME STRIP (admin only) -->
 <div class="theme-strip" id="theme-strip">
-  <span class="label">THEME</span>
+  <button class="gear-btn" type="button" id="theme-toggle-btn" onclick="toggleThemeDots()" title="Theme">🎨</button>
   <div id="theme-dots"></div>
   <div class="strip-spacer"></div>
   <div class="rt-indicator" id="rt-indicator"><div class="rt-dot offline" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
@@ -2127,6 +2105,12 @@ function renderAll() {
 /* ================================================================
    THEMES
    ================================================================ */
+function toggleThemeDots() {
+  const strip = document.getElementById('theme-strip');
+  if (!strip) return;
+  strip.classList.toggle('theme-open');
+}
+
 function buildThemeDots() {
   const c = document.getElementById('theme-dots');
   c.innerHTML = '';
@@ -2135,7 +2119,11 @@ function buildThemeDots() {
     d.className = 't-dot' + (S.theme === k ? ' active' : '');
     d.style.background = `linear-gradient(135deg,${t.dot1},${t.dot2})`;
     d.title = t.name;
-    d.onclick = () => { applyTheme(k); buildThemeDots(); };
+    d.onclick = () => {
+      applyTheme(k);
+      buildThemeDots();
+      document.getElementById('theme-strip')?.classList.remove('theme-open');
+    };
     c.appendChild(d);
   }
 }
@@ -3486,7 +3474,7 @@ function renderSchedule() {
     return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}" data-playable="${(hasP1 && hasP2 && !p1?.isBye && !p2?.isBye) ? '1' : '0'}" draggable="${(hasP1 && hasP2 && !p1?.isBye && !p2?.isBye) ? 'true' : 'false'}">
         <div class="sched-match-header">
-          <span class="sched-match-num">${byeCase ? '' : `#${matchNum}`}</span>
+          <span class="sched-match-num">${byeCase ? '' : `T${matchNum}`}</span>
           <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? '' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
           <span class="sched-seq"></span>
         </div>
@@ -3550,7 +3538,7 @@ function renderSchedule() {
       const seq = card.querySelector('.sched-seq');
       if (seq) seq.textContent = String(i + 1);
       const numEl = card.querySelector('.sched-match-num');
-      if (numEl) numEl.textContent = `#${i + 1}`;
+      if (numEl) numEl.textContent = `T${i + 1}`;
     });
   }
 
