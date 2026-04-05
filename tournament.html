@@ -3429,8 +3429,12 @@ function checkBracketTabVisibility() {
   if (strip) strip.classList.remove('theme-open');
 }
 
-/* ---- Billiards ball SVG (inline data, used as center icon) ---- */
-let BALL_SVG = `<img class="sched-batte-icon" src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte1.png" alt="vs">`;
+/* ---- Center logo giữa 2 cơ thủ ---- */
+const BALL_SVG = `
+  <div class="logo">
+    <img src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/logobatte.png" alt="logo" />
+  </div>
+`;
 
 async function prepareScheduleLogo() {
   const url = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte1.png';
