@@ -2156,8 +2156,6 @@ function toggleLeftPanel() {
   document.body.classList.toggle('left-collapsed');
   setTimeout(() => {
     renderBracket();
-    const schedulePanel = document.getElementById('schedule-panel');
-    if (schedulePanel && schedulePanel.classList.contains('active')) renderSchedule();
 
     const toggleBtn = document.querySelector('.left .cb[title="Ẩn/Hiện bốc thăm"]') || document.getElementById('left-toggle-floating');
     if (toggleBtn) {
@@ -3608,15 +3606,6 @@ function renderSchedule() {
     const num = globalMatchNum++;
     grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || idx + 1) * 12));
   });
-
-  // Căn layout 3 cột khi ẩn panel bốc thăm: hàng cuối cân đối hơn
-  grid.classList.remove('grid-last-1', 'grid-last-2');
-  if (document.body.classList.contains('left-collapsed')) {
-    const playableCount = grid.querySelectorAll('.sched-match').length;
-    const rem = playableCount % 3;
-    if (rem === 1) grid.classList.add('grid-last-1');
-    if (rem === 2) grid.classList.add('grid-last-2');
-  }
 
   container.appendChild(grid);
 
