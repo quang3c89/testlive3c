@@ -2893,19 +2893,39 @@ function isByeMatch(m) {
 }
 
 function makeByeMergedRow(match, r, mi) {
-  const passPlayer = (match.p1 && !match.p1.isBye) ? match.p1 : match.p2;
+  const realIsP1 = !!(match.p1 && !match.p1.isBye);
+  const passPlayer = realIsP1 ? match.p1 : match.p2;
+  const realKey = realIsP1 ? 'p1' : 'p2';
+  const scoreVal = realIsP1 ? (match.s1 || '') : (match.s2 || '');
+
   const row = document.createElement('div');
   row.className = 'mp mp-bye-merged';
   row.id = `match-${r}-${mi}-bye`;
-  row.innerHTML = `
-    <div class="mp-info">
-      <div class="mp-top">
-        <span class="mn" title="${passPlayer?.name || '—'}">${passPlayer?.name || '—'}</span>
-        ${passPlayer?.rank ? `<span class="mp-rank">${passPlayer.rank}</span>` : ''}
-      </div>
-      ${passPlayer?.unit ? `<div class="mp-unit">${passPlayer.unit}</div>` : ''}
+
+  const info = document.createElement('div');
+  info.className = 'mp-info';
+  info.innerHTML = `
+    <div class="mp-top">
+      <span class="mn" title="${passPlayer?.name || '—'}">${passPlayer?.name || '—'}</span>
+      ${passPlayer?.rank ? `<span class="mp-rank">${passPlayer.rank}</span>` : ''}
     </div>
+    ${passPlayer?.unit ? `<div class="mp-unit">${passPlayer.unit}</div>` : ''}
   `;
+
+  const scoreEl = document.createElement('input');
+  scoreEl.type = 'text';
+  scoreEl.className = 'ms';
+  scoreEl.value = scoreVal;
+  scoreEl.onclick = e => e.stopPropagation();
+  scoreEl.onchange = e => updateScore(r, mi, realKey, e);
+
+  row.appendChild(info);
+  row.appendChild(scoreEl);
+
+  if (S.isAdmin) {
+    row.onclick = () => setWinner(r, mi, realKey);
+  }
+
   return row;
 }
 
@@ -3291,10 +3311,13 @@ function renderSchedule() {
     return;
   }
 
-  // Count total matches across all rounds (kể cả TBD)
+  // Chỉ tính trận thực đấu (loại các trận BYE gộp)
   let totalMatchCount = 0;
-  const filledRounds = bracket.length;
-  bracket.forEach(round => { totalMatchCount += round.length; });
+  bracket.forEach(round => {
+    round.forEach(m => {
+      if (!isByeMatch(m)) totalMatchCount += 1;
+    });
+  });
 
   if (totalMatchCount === 0) {
     container.innerHTML = '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
@@ -3343,8 +3366,8 @@ function renderSchedule() {
     return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
         <div class="sched-match-header">
-          <span class="sched-match-num">MATCH ${matchNum}</span>
-          <span class="sched-match-status${hasWinner ? ' done' : ''}">${hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU'}</span>
+          <span class="sched-match-num">${byeCase ? 'AUTO ADVANCE' : `MATCH ${matchNum}`}</span>
+          <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? 'BYE' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
         </div>
         <div class="sched-match-body">
           ${byeCase ? `
@@ -3390,8 +3413,8 @@ function renderSchedule() {
 
   bracket.forEach((round, rIdx) => {
     round.forEach((m, mIdx) => {
-      const num = globalMatchNum++;
-      grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, num * 16));
+      const num = isByeMatch(m) ? null : globalMatchNum++;
+      grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || 0) * 16));
     });
   });
 
@@ -3403,6 +3426,12 @@ function renderSchedule() {
       const m = Number(card.dataset.match);
       const match = S.bracket?.[r]?.[m];
       if (!match) return;
+
+      if (isByeMatch(match)) {
+        const w = (match.p1 && !match.p1.isBye) ? match.p1 : match.p2;
+        if (w) showWinnerPopup(w, match, r, m, r === S.bracket.length - 1);
+        return;
+      }
 
       const s1 = Number(match.s1);
       const s2 = Number(match.s2);
