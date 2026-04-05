@@ -1079,7 +1079,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 /* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
   display: grid;
-  grid-template-columns: minmax(56px, 0.75fr) minmax(110px, 1.25fr) auto minmax(110px, 1.25fr) minmax(56px, 0.75fr);
+  grid-template-columns: minmax(72px, 0.9fr) minmax(120px, 1.6fr) auto minmax(120px, 1.6fr) minmax(72px, 0.9fr);
   align-items: center;
   column-gap: 6px;
   padding: 4px 7px;
@@ -1091,7 +1091,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   font-size: 9px;
   font-weight: 700;
   color: var(--text);
-  opacity: 0.9;
+  opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1102,18 +1102,20 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 .sched-side-name {
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .sched-side-name.left { text-align: right; }
 .sched-side-name.right { text-align: left; }
+.sched-side-name .sched-name {
+  display: block;
+  width: 100%;
+}
 
 .sched-center-pack {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+  min-width: 64px;
 }
 
 .sched-outcome-inline {
@@ -1125,6 +1127,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.04);
   flex-shrink: 0;
+}
+.sched-outcome-inline:empty {
+  display: none;
 }
 
 .sched-name {
