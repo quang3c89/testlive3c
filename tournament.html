@@ -1283,8 +1283,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
     <span class="nav-spacer"></span>
     <a class="nav-link" href="tournaments.html">Giải đấu</a>
-    <a class="nav-link" href="players.html">Cơ thủ</a>
-    <a class="nav-link" href="leaderboard.html">Bảng xếp hạng</a>
     <a class="nav-link" href="index.html#contact">Liên hệ</a>
   </nav>
   <div class="tournament-header-row">
@@ -3469,9 +3467,9 @@ function renderSchedule() {
     const loseTxt = isMobile ? 'L' : 'LOST';
 
     return `
-      <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}" data-playable="${(!byeCase && hasP1 && hasP2) ? '1' : '0'}" draggable="${(!byeCase && hasP1 && hasP2) ? 'true' : 'false'}">
+      <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}" data-playable="${(hasP1 && hasP2 && !p1?.isBye && !p2?.isBye) ? '1' : '0'}" draggable="${(hasP1 && hasP2 && !p1?.isBye && !p2?.isBye) ? 'true' : 'false'}">
         <div class="sched-match-header">
-          <span class="sched-match-num">${byeCase ? '' : `MATCH ${matchNum}`}</span>
+          <span class="sched-match-num">${byeCase ? '' : `#${matchNum}`}</span>
           <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? '' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
           <span class="sched-seq"></span>
         </div>
