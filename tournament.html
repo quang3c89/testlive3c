@@ -3395,15 +3395,20 @@ function renderSchedule() {
   function getScheduleOrder() {
     const ordered = [];
     bracket.forEach((round, rIdx) => {
-      const half = round.length / 2;
-      for (let mi = 0; mi < half; mi++) ordered.push({ m: round[mi], rIdx, mIdx: mi });
-      for (let mi = half; mi < round.length; mi++) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+      const half = Math.floor(round.length / 2);
+      for (let mi = 0; mi < half; mi++) {
+        if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+      }
+      for (let mi = half; mi < round.length; mi++) {
+        if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+      }
     });
     return ordered;
   }
 
   // Build match card HTML
   function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay) {
+    if (!m || typeof m !== 'object') return '';
     const p1 = m.p1, p2 = m.p2;
     const hasP1 = !!p1, hasP2 = !!p2;
     const hasWinner = !!m.winner;
