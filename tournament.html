@@ -1091,15 +1091,16 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   font-size: 9px;
   font-weight: 700;
   color: var(--text);
-  opacity: 0.85;
+  opacity: 0.95;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  min-width: 0;
   background: transparent !important;
 }
 .sched-side-unit.left { text-align: left; }
-.sched-side-unit.right { text-align: right; }
+.sched-side-unit.right { text-align: right; padding-right: 2px; }
 
 .sched-side-name {
   min-width: 0;
@@ -1118,7 +1119,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 64px;
+  min-width: 52px;
 }
 
 .sched-outcome-inline {
@@ -3536,21 +3537,25 @@ function renderSchedule() {
             </div>
 
             <div class="sched-center-pack">
-              <div class="sched-outcome-inline">
-                ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
-                ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
-                ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
-              </div>
+              ${ (hasScore1 || p1IsWinner || p1IsLoser) ? `
+                <div class="sched-outcome-inline">
+                  ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
+                  ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
+                  ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
+                </div>
+              ` : ''}
 
               <div class="sched-vs-col">
                 ${BALL_SVG}
               </div>
 
-              <div class="sched-outcome-inline">
-                ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
-                ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
-                ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
-              </div>
+              ${ (hasScore2 || p2IsWinner || p2IsLoser) ? `
+                <div class="sched-outcome-inline">
+                  ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
+                  ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
+                  ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
+                </div>
+              ` : ''}
             </div>
 
             <div class="sched-side-name right">
