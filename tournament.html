@@ -1546,7 +1546,6 @@ import { toast as uiToast, setupRealtime as uiTableRealtime } from './assets/js/
 /* uiTableRealtime: từ ui.js (landing); trang giải đấu giữ function setupRealtime() WebSocket cục bộ */
 import {
   generateBracket,
-  generateBracketFromPlayers,
   nextPowerOfTwo,
   getRoundName,
   advanceWinner,
@@ -1628,21 +1627,7 @@ const DEFAULTS = {
 
 const genBracket = generateBracket;
 
-function createBracketForCount(count) {
-  const normalizedCount = Math.max(2, Number(count) || 2);
-  const seedPlayers = Array.from({ length: normalizedCount }, (_, idx) => ({
-    id: `seed_${idx + 1}`,
-    name: `P${idx + 1}`,
-    unit: `Seed ${idx + 1}`,
-    rank: `${idx + 1}`,
-    drawn: true,
-    seedNo: idx + 1,
-  }));
 
-  const bracket = generateBracketFromPlayers(seedPlayers);
-  const size = nextPowerOfTwo(normalizedCount);
-  return { size, bracket, seedPlayers };
-}
 
 let S = {
   players: [], bracketSize: DEFAULTS.size, bracket: [],
@@ -2583,35 +2568,15 @@ function closeSpinPopupAndSpin() {
 function findNextSlot() {
   const r0 = S.bracket[0];
   for (let m = 0; m < r0.length; m++) {
-    if (!r0[m].p1 || r0[m].p1.isBye) return { r:0, m, pKey:'p1' };
-    if (!r0[m].p2 || r0[m].p2.isBye) return { r:0, m, pKey:'p2' };
+    if (!r0[m].p1) return { r:0, m, pKey:'p1' };
+    if (!r0[m].p2) return { r:0, m, pKey:'p2' };
   }
   return null;
 }
 
 function syncRound1ByesToRound2() {
-  if (!S.bracket?.[0] || !S.bracket?.[1]) return;
-  for (let mi = 0; mi < S.bracket[0].length; mi++) {
-    const m = S.bracket[0][mi];
-    const p1 = m.p1;
-    const p2 = m.p2;
-    const p1Real = !!p1 && !p1.isBye;
-    const p2Real = !!p2 && !p2.isBye;
-
-    const nr = 1;
-    const nm = Math.floor(mi / 2);
-    const np = mi % 2 === 0 ? 'p1' : 'p2';
-
-    if (p1Real !== p2Real) {
-      const w = p1Real ? p1 : p2;
-      m.winner = w;
-      S.bracket[nr][nm][np] = w;
-    } else {
-      m.winner = null;
-      S.bracket[nr][nm][np] = null;
-    }
-    if (S.bracket[nr][nm]) S.bracket[nr][nm].winner = null;
-  }
+  // phiên bản hiện tại không auto-BYE trên bracket trống
+  // giữ hook để tương thích các chỗ đã gọi
 }
 
 function flyPlayer(player, slot, spinAgain = false) {
@@ -2700,13 +2665,6 @@ function commitPlayer(player, slot) {
   S.players.forEach(p => { if (p.id === player.id) p.drawn = true; });
   // Ghi vào bracket
   S.bracket[slot.r][slot.m][slot.pKey] = { ...player, drawn: true, isBye: false };
-
-  // Nếu slot đối diện trống thì giữ BYE để gộp ô nhưng vẫn nhận bốc thăm về sau
-  const m = S.bracket[slot.r][slot.m];
-  const otherKey = slot.pKey === 'p1' ? 'p2' : 'p1';
-  if (!m[otherKey]) {
-    m[otherKey] = { id: `bye_auto_${slot.r}_${slot.m}_${otherKey}`, name: 'BYE', unit: '', rank: '', drawn: true, isBye: true };
-  }
 
   syncRound1ByesToRound2();
 
@@ -2920,11 +2878,8 @@ function renderLinearBracket(container) {
 }
 
 function isByeMatch(m) {
-  const p1Bye = !!m?.p1?.isBye;
-  const p2Bye = !!m?.p2?.isBye;
-  const p1Real = !!m?.p1 && !p1Bye;
-  const p2Real = !!m?.p2 && !p2Bye;
-  return (p1Real && p2Bye) || (p2Real && p1Bye);
+  void m;
+  return false;
 }
 
 function makeByeMergedRow(match, r, mi) {
@@ -3199,19 +3154,20 @@ function updateBracketSize() {
   if (isNaN(raw) || raw < 2) raw = 4;
   pushHistory();
 
-  const built = createBracketForCount(raw);
+  const sz = nextPowerOfTwo(raw);
   document.getElementById('bracket-columns').innerHTML = '';
   document.getElementById('bracket-lines').innerHTML = '';
 
-  S.bracketSize = built.size;
-  S.bracket = built.bracket;
-  S.players = built.seedPlayers;
+  // Tạo khung bracket trống, KHÔNG tự chèn tên seed giả
+  S.bracketSize = sz;
+  S.bracket = genBracket(sz);
+  S.players.forEach(p => { p.drawn = false; });
 
   saveState();
   renderAll();
   checkBracketTabVisibility();
   closeModal('count-modal');
-  showToast(`🔢 Đã tạo sơ đồ ${raw} cơ thủ (khung ${built.size}, BYE ${built.size - raw})`, 'info');
+  showToast(`🔢 Bracket: ${raw} người (khung ${sz})`, 'info');
 }
 
 /* ================================================================
