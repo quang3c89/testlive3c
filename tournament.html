@@ -1135,46 +1135,9 @@ body.left-collapsed .schedule-grid {
   margin: 0;
 }
 
-/* Khi ẩn panel bốc thăm (3 cột), ưu tiên hiển thị đầy đủ tên cơ thủ */
-body.left-collapsed .sched-match-body {
-  gap: 3px;
-  padding: 4px 6px;
-}
-body.left-collapsed .sched-player-inline {
-  display: flex;
-  min-width: 0;
-  gap: 3px;
-  flex: 1 1 0;
-}
-body.left-collapsed .sched-player-inline.left {
-  justify-content: flex-end;
-}
-body.left-collapsed .sched-player-inline.right {
-  justify-content: flex-start;
-}
+/* 3 cột chỉ đổi layout ngoài, giữ nguyên cấu trúc card để tránh mất tên cơ thủ */
 body.left-collapsed .sched-player-inline .sched-meta-inline {
   display: none;
-}
-body.left-collapsed .sched-player-inline .sched-name {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-body.left-collapsed .sched-vs-col {
-  width: 30px;
-}
-body.left-collapsed .sched-center-logo,
-body.left-collapsed .sched-batte-icon {
-  width: 28px;
-  height: 28px;
-}
-body.left-collapsed .sched-outcome-inline {
-  padding: 1px 3px;
-  gap: 2px;
-}
-body.left-collapsed .sched-score {
-  min-width: 16px;
-  height: 14px;
-  font-size: 9px;
 }
 
 .sched-outcome-inline {
