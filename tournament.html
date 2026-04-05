@@ -1245,16 +1245,24 @@ body.left-collapsed .schedule-grid {
   width: 45px;
   gap: 4px;
 }
-.sched-ball-icon,
-.sched-batte-icon {
+.sched-center-logo {
   width: 38px;
   height: 38px;
-  flex-shrink: 0;
-  object-fit: cover;
   border-radius: 50%;
-  background: transparent !important;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: transparent;
   filter: drop-shadow(0 2px 6px rgba(240,165,0,0.35));
   animation: ballSpin 8s linear infinite;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sched-center-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 @keyframes ballSpin {
   0% { filter: drop-shadow(0 2px 6px rgba(240,165,0,0.4)); }
@@ -3430,11 +3438,7 @@ function checkBracketTabVisibility() {
 }
 
 /* ---- Center logo giữa 2 cơ thủ ---- */
-const BALL_SVG = `
-  <div class="logo">
-    <img src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/logobatte.png" alt="logo" />
-  </div>
-`;
+const BALL_SVG = `<div class="sched-center-logo"><img src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/logobatte.png" alt="logo" /></div>`;
 
 async function prepareScheduleLogo() {
   // Giữ nguyên BALL_SVG đã khai báo const phía trên
