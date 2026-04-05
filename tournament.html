@@ -1016,6 +1016,24 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   border-color: rgba(240,165,0,0.35);
   box-shadow: 0 5px 14px rgba(0,0,0,0.32), 0 0 0 1px rgba(240,165,0,0.12);
 }
+.sched-match.dragging { opacity: 0.55; }
+.sched-seq {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 14px;
+  text-align: center;
+  opacity: 0.75;
+}
 .sched-match.has-winner {
   border-color: rgba(240,165,0,0.3);
   box-shadow: 0 0 20px rgba(240,165,0,0.1);
@@ -1077,8 +1095,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   flex-direction: row !important;
   justify-content: flex-end;
 }
-.sched-player-inline.left .sched-meta-inline { order: 1; }
-.sched-player-inline.left .sched-name { order: 2; }
+.sched-player-inline.left .sched-meta-inline { order: 1; margin-right: 2px; }
+.sched-player-inline.left .sched-name { order: 2; margin-left: 0; text-align: right; }
 .sched-player-inline.right {
   justify-content: flex-end;
   flex-direction: row !important;
@@ -3451,10 +3469,11 @@ function renderSchedule() {
     const loseTxt = isMobile ? 'L' : 'LOST';
 
     return `
-      <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
+      <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}" data-playable="${(!byeCase && hasP1 && hasP2) ? '1' : '0'}" draggable="${(!byeCase && hasP1 && hasP2) ? 'true' : 'false'}">
         <div class="sched-match-header">
           <span class="sched-match-num">${byeCase ? '' : `MATCH ${matchNum}`}</span>
           <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? '' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
+          <span class="sched-seq"></span>
         </div>
         <div class="sched-match-body">
           ${byeCase ? `
@@ -3507,6 +3526,31 @@ function renderSchedule() {
   });
 
   container.appendChild(grid);
+
+  function refreshScheduleSequence() {
+    const cards = [...container.querySelectorAll('.sched-match[data-playable="1"]')];
+    cards.forEach((card, i) => {
+      const seq = card.querySelector('.sched-seq');
+      if (seq) seq.textContent = String(i + 1);
+      const numEl = card.querySelector('.sched-match-num');
+      if (numEl) numEl.textContent = `MATCH ${i + 1}`;
+    });
+  }
+
+  refreshScheduleSequence();
+
+  let dragged = null;
+  container.querySelectorAll('.sched-match[data-playable="1"]').forEach(card => {
+    card.addEventListener('dragstart', () => { dragged = card; card.classList.add('dragging'); });
+    card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragged = null; refreshScheduleSequence(); });
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!dragged || dragged === card) return;
+      const rect = card.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height / 2;
+      card.parentNode.insertBefore(dragged, before ? card : card.nextSibling);
+    });
+  });
 
   container.querySelectorAll('.sched-match').forEach(card => {
     card.onclick = () => {
