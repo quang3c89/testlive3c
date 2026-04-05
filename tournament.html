@@ -3342,7 +3342,8 @@ function captureScheduleImage() {
 /* ================================================================
    BOOT — Load thẳng, không chặn bởi login
    ================================================================ */
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  await prepareScheduleLogo();
   // Luôn khởi động ngay, viewer mode là mặc định
   init();
 
@@ -3397,7 +3398,44 @@ function checkBracketTabVisibility() {
 }
 
 /* ---- Billiards ball SVG (inline data, used as center icon) ---- */
-const BALL_SVG = `<img class="sched-batte-icon" src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte1.png" alt="vs">`;
+let BALL_SVG = `<img class="sched-batte-icon" src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte1.png" alt="vs">`;
+
+async function prepareScheduleLogo() {
+  const url = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte1.png';
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = imgData.data;
+
+    // Xóa nền trắng triệt để (near-white -> alpha 0)
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3];
+      const isNearWhite = r > 238 && g > 238 && b > 238;
+      if (isNearWhite && a > 0) {
+        d[i + 3] = 0;
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    const cleaned = canvas.toDataURL('image/png');
+    BALL_SVG = `<img class="sched-batte-icon" src="${cleaned}" alt="vs">`;
+  } catch {
+    BALL_SVG = `<img class="sched-batte-icon" src="${url}" alt="vs">`;
+  }
+}
 
 function renderSchedule() {
   const container = document.getElementById('schedule-columns');
