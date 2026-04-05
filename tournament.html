@@ -1105,42 +1105,34 @@ body.left-collapsed .schedule-grid {
 .sched-player-inline {
   flex: 1;
   min-width: 0;
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 4px;
+  column-gap: 6px;
 }
 .sched-player-inline.left {
-  flex-direction: row !important;
-  justify-content: flex-end;
+  grid-template-columns: minmax(56px, 42%) minmax(0, 1fr);
 }
-.sched-player-inline.left .sched-meta-inline { order: 1; margin-right: 2px; }
-.sched-player-inline.left .sched-name { order: 2; margin-left: 0; text-align: right; }
 .sched-player-inline.right {
-  justify-content: flex-end;
-  flex-direction: row !important;
+  grid-template-columns: minmax(0, 1fr) minmax(56px, 42%);
 }
-.sched-player-inline.right .sched-name { order: 1; }
-.sched-player-inline.right .sched-meta-inline { order: 2; }
+.sched-player-inline.left .sched-meta-inline { order: 1; text-align: right; }
+.sched-player-inline.left .sched-name { order: 2; text-align: right; }
+.sched-player-inline.right .sched-name { order: 1; text-align: left; }
+.sched-player-inline.right .sched-meta-inline { order: 2; text-align: left; }
 .sched-player-inline .sched-name {
-  flex: 1;
   min-width: 0;
 }
 .sched-player-inline .sched-meta-inline {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--text);
-  opacity: 1;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: 46%;
-  line-height: 1.22;
-  text-align: left;
-  margin: 0 5px;
-}
-.sched-player-inline.right .sched-meta-inline {
-  text-align: right;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .sched-outcome-inline {
@@ -1255,10 +1247,11 @@ body.left-collapsed .schedule-grid {
 }
 .sched-ball-icon,
 .sched-batte-icon {
-  width: 45px;
-  height: 45px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 50%;
   background: transparent !important;
   filter: drop-shadow(0 2px 6px rgba(240,165,0,0.35));
   animation: ballSpin 8s linear infinite;
@@ -1409,9 +1402,7 @@ body.left-collapsed .schedule-grid {
       <div class="hb-video">
         <video id="header-video" autoplay loop muted playsinline src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/intro.mp4"></video>
         <div class="header-controls-wrap">
-          <div style="display:flex;gap:5px;">
-            <button class="hb-ctrl-btn" onclick="showToast('Header video đã gán cố định', 'success')">📹 Video</button>
-          </div>
+          <div style="display:flex;gap:5px;"></div>
         </div>
       </div>
       <div class="hb-brand"><div class="brand-txt"><span class="by">live</span><span class="br">3c</span><span class="bw">.xyz</span></div></div>
@@ -1429,7 +1420,6 @@ body.left-collapsed .schedule-grid {
       <button class="cb" title="Cài số bracket" onclick="openModal('count-modal')">🔢</button>
       <button class="cb" title="Import Excel" onclick="document.getElementById('import-excel').click()">📥</button>
       <button class="cb" title="Tải template" onclick="downloadTemplate()">📄</button>
-      <button class="cb" title="Đẩy lên cloud" onclick="supaPushDebounced()">⬆️</button>
       <button class="cb" title="Ẩn/Hiện bốc thăm" onclick="toggleLeftPanel()">↔️</button>
       <input type="file" id="import-excel" accept=".xlsx,.xls" style="display:none" onchange="handleExcel(event)">
     </div>
@@ -2135,6 +2125,12 @@ function closeThemeDots() {
   if (!strip) return;
   strip.classList.remove('theme-open');
 }
+
+document.addEventListener('pointermove', (e) => {
+  const strip = document.getElementById('theme-strip');
+  if (!strip || !strip.classList.contains('theme-open')) return;
+  if (!strip.contains(e.target)) closeThemeDots();
+});
 
 function toggleLeftPanel() {
   document.body.classList.toggle('left-collapsed');
@@ -2977,8 +2973,11 @@ function isByeMatch(m) {
   const p1Bye = !!p1?.isBye;
   const p2Bye = !!p2?.isBye;
 
-  // Chỉ hiện BYE khi đã có đối thủ thật
-  return (p1Real && p2Bye) || (p2Real && p1Bye);
+  // Bracket: ô BYE gộp khi có BYE ở một nhánh
+  // Schedule đã lọc chỉ trận playable nên không bị hiện BYE card
+  if ((p1Real && p2Bye) || (p2Real && p1Bye)) return true;
+  if ((p1Bye && !p2Real) || (p2Bye && !p1Real)) return true;
+  return false;
 }
 
 function makeByeMergedRow(match, r, mi) {
