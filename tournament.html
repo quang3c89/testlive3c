@@ -1009,31 +1009,27 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   padding-right: 4px;
 }
 .schedule-grid {
+  --sched-col-min: 430px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--sched-col-min)), 1fr));
+  gap: 8px;
   align-items: start;
 }
-/* Chỉ khi ẩn panel bốc thăm mới lên 3 cột desktop */
+/* Khi ẩn panel bốc thăm, mở rộng không gian và tự chia cột tối ưu */
 body.left-collapsed .schedule-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-body.left-collapsed .schedule-grid.grid-last-1 .sched-match:last-child {
-  grid-column: 2;
-}
-body.left-collapsed .schedule-grid.grid-last-2 .sched-match:nth-last-child(2) {
-  grid-column: 1;
-}
-body.left-collapsed .schedule-grid.grid-last-2 .sched-match:last-child {
-  grid-column: 3;
+  --sched-col-min: 360px;
 }
 @media (max-width: 1200px) {
-  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body.left-collapsed .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .schedule-grid,
+  body.left-collapsed .schedule-grid {
+    --sched-col-min: 330px;
+  }
 }
 @media (max-width: 768px) {
-  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  body.left-collapsed .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .schedule-grid,
+  body.left-collapsed .schedule-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .schedule-columns { max-height: calc(100vh - 250px); }
 }
 .schedule-col { display: none; }
