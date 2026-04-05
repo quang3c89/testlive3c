@@ -3347,21 +3347,10 @@ function switchBracketTab(tab) {
 }
 
 function checkBracketTabVisibility() {
-  // Hiện tab bar khi đã có ít nhất 1 player được bốc vào bracket
+  // Luôn hiển thị tab để có thể mở Lịch Thi Đấu mọi lúc
   const tabBar = document.getElementById('bracket-tab-bar');
   if (!tabBar) return;
-  const r0 = S.bracket && S.bracket[0];
-  const hasDrawn = r0 && r0.some(m => m.p1 || m.p2);
-  if (hasDrawn) {
-    tabBar.classList.add('visible');
-  } else {
-    tabBar.classList.remove('visible');
-    // Nếu tab schedule đang active → quay về bracket
-    const schedulePanel = document.getElementById('schedule-panel');
-    if (schedulePanel && schedulePanel.classList.contains('active')) {
-      switchBracketTab('bracket');
-    }
-  }
+  tabBar.classList.add('visible');
 }
 
 /* ---- Billiards ball SVG (inline data, used as center icon) ---- */
