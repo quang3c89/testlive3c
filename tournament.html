@@ -3346,9 +3346,12 @@ function switchBracketTab(tab) {
   const btabBracket = document.getElementById('btab-bracket');
   const btabSchedule = document.getElementById('btab-schedule');
 
+  if (!bracketContainer || !schedulePanel || !centerPanel || !btabBracket || !btabSchedule) return;
+
   if (tab === 'bracket') {
     bracketContainer.style.display = '';
     schedulePanel.classList.remove('active');
+    schedulePanel.style.display = 'none';
     centerPanel.classList.remove('schedule-active');
     btabBracket.classList.add('active');
     btabSchedule.classList.remove('active');
@@ -3356,6 +3359,7 @@ function switchBracketTab(tab) {
   } else {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.add('active');
+    schedulePanel.style.display = 'block';
     centerPanel.classList.add('schedule-active');
     btabBracket.classList.remove('active');
     btabSchedule.classList.add('active');
