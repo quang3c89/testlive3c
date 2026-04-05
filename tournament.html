@@ -112,6 +112,15 @@ body.viewer-mode .tb-actions { display: none; }
 body.left-collapsed .left { display: none !important; }
 body.left-collapsed .center { padding-left: 6px; }
 body.left-collapsed .bracket-cols { min-height: calc(100vh - 90px); }
+#left-toggle-floating {
+  display: none;
+  position: fixed;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 120;
+}
+body.left-collapsed #left-toggle-floating { display: flex; }
 
 /* ============ LEFT PANEL ============ */
 .left {
@@ -1245,7 +1254,6 @@ body.left-collapsed .schedule-grid {
   height: 45px;
   flex-shrink: 0;
   object-fit: contain;
-  mix-blend-mode: multiply;
   background: transparent !important;
   filter: drop-shadow(0 2px 6px rgba(240,165,0,0.35));
   animation: ballSpin 8s linear infinite;
@@ -1385,6 +1393,8 @@ body.left-collapsed .schedule-grid {
     <select id="tb-font" title="Font tiêu đề"></select>
   </div>
 </div>
+
+<button class="cb" id="left-toggle-floating" type="button" onclick="toggleLeftPanel()" title="Hiện bốc thăm">⬅️</button>
 
 <!-- MAIN -->
 <main class="main">
@@ -2115,12 +2125,24 @@ function toggleThemeDots() {
   strip.classList.toggle('theme-open');
 }
 
+function closeThemeDots() {
+  const strip = document.getElementById('theme-strip');
+  if (!strip) return;
+  strip.classList.remove('theme-open');
+}
+
 function toggleLeftPanel() {
   document.body.classList.toggle('left-collapsed');
   setTimeout(() => {
     renderBracket();
     const schedulePanel = document.getElementById('schedule-panel');
     if (schedulePanel && schedulePanel.classList.contains('active')) renderSchedule();
+
+    const toggleBtn = document.querySelector('.left .cb[title="Ẩn/Hiện bốc thăm"]') || document.getElementById('left-toggle-floating');
+    if (toggleBtn) {
+      toggleBtn.textContent = document.body.classList.contains('left-collapsed') ? '⬅️' : '↔️';
+      toggleBtn.title = document.body.classList.contains('left-collapsed') ? 'Hiện bốc thăm' : 'Ẩn bốc thăm';
+    }
   }, 40);
 }
 
@@ -3347,6 +3369,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Luôn khởi động ngay, viewer mode là mặc định
   init();
 
+  document.addEventListener('click', (e) => {
+    const strip = document.getElementById('theme-strip');
+    if (!strip) return;
+    if (!strip.contains(e.target)) closeThemeDots();
+  });
+
   // Keyboard shortcuts for undo/redo
   document.addEventListener('keydown', e => {
     if (!S.isAdmin) return;
@@ -3402,39 +3430,7 @@ let BALL_SVG = `<img class="sched-batte-icon" src="https://lfetbyxrxxmljqeiribi.
 
 async function prepareScheduleLogo() {
   const url = 'https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/batte1.png';
-  try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = url;
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(img, 0, 0);
-
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const d = imgData.data;
-
-    // Xóa nền trắng triệt để (near-white -> alpha 0)
-    for (let i = 0; i < d.length; i += 4) {
-      const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3];
-      const isNearWhite = r > 238 && g > 238 && b > 238;
-      if (isNearWhite && a > 0) {
-        d[i + 3] = 0;
-      }
-    }
-
-    ctx.putImageData(imgData, 0, 0);
-    const cleaned = canvas.toDataURL('image/png');
-    BALL_SVG = `<img class="sched-batte-icon" src="${cleaned}" alt="vs">`;
-  } catch {
-    BALL_SVG = `<img class="sched-batte-icon" src="${url}" alt="vs">`;
-  }
+  BALL_SVG = `<img class="sched-batte-icon" src="${url}" alt="vs">`;
 }
 
 function renderSchedule() {
