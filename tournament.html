@@ -1100,12 +1100,17 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
-  display: grid;
-  grid-template-columns: minmax(56px, 0.75fr) minmax(110px, 1.25fr) auto minmax(110px, 1.25fr) minmax(56px, 0.75fr);
+  display: grid !important;
+  grid-template-columns: minmax(56px, 0.75fr) minmax(110px, 1.25fr) auto minmax(110px, 1.25fr) minmax(56px, 0.75fr) !important;
   align-items: center;
   column-gap: 6px;
   padding: 4px 7px;
   min-height: 38px;
+}
+/* Khóa cứng layout body để ẩn/hiện bốc thăm không làm lệch thứ tự */
+body.left-collapsed .sched-match-body {
+  display: grid !important;
+  grid-template-columns: minmax(56px, 0.75fr) minmax(110px, 1.25fr) auto minmax(110px, 1.25fr) minmax(56px, 0.75fr) !important;
 }
 
 .sched-side-unit {
