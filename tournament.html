@@ -2610,17 +2610,22 @@ function syncRound1ByesToRound2() {
     const p2 = m.p2;
     const p1Real = !!p1 && !p1.isBye;
     const p2Real = !!p2 && !p2.isBye;
+    const p1Bye = !!p1?.isBye;
+    const p2Bye = !!p2?.isBye;
 
     const nr = 1;
     const nm = Math.floor(mi / 2);
     const np = mi % 2 === 0 ? 'p1' : 'p2';
 
-    if (p1Real && p2Real) {
+    // Chỉ auto-advance khi đã có ĐỦ 2 slot (1 người thật + 1 BYE).
+    // Nếu còn slot trống thì KHÔNG nhảy vòng.
+    const hasBothSlots = !!p1 && !!p2;
+    if (!hasBothSlots) {
       m.winner = null;
       continue;
     }
 
-    if (p1Real || p2Real) {
+    if ((p1Real && p2Bye) || (p2Real && p1Bye)) {
       const w = p1Real ? p1 : p2;
       m.winner = w;
       S.bracket[nr][nm][np] = { ...w };
@@ -3236,9 +3241,17 @@ function updateBracketSize() {
       const s1 = seedOrder[mi * 2];
       const s2 = seedOrder[mi * 2 + 1];
       if (byeSeeds.has(s1) || byeSeeds.has(s2)) {
-        // để trống 1 bên, bên còn lại là slot BYE (không hiện text)
-        S.bracket[0][mi].p1 = null;
-        S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}`, name: '', isBye: true, drawn: true };
+        // Gán BYE vào đúng seed là BYE, seed còn lại để trống cho bốc thăm
+        if (byeSeeds.has(s1) && !byeSeeds.has(s2)) {
+          S.bracket[0][mi].p1 = { id: `bye_${s1}_${mi}_p1`, name: '', isBye: true, drawn: true };
+          S.bracket[0][mi].p2 = null;
+        } else if (!byeSeeds.has(s1) && byeSeeds.has(s2)) {
+          S.bracket[0][mi].p1 = null;
+          S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}_p2`, name: '', isBye: true, drawn: true };
+        } else {
+          S.bracket[0][mi].p1 = { id: `bye_${s1}_${mi}_p1`, name: '', isBye: true, drawn: true };
+          S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}_p2`, name: '', isBye: true, drawn: true };
+        }
       }
     }
   }
@@ -3523,7 +3536,9 @@ function renderSchedule() {
     const p1Real = !!m?.p1 && !m.p1.isBye;
     const p2Real = !!m?.p2 && !m.p2.isBye;
     const isPlayable = p1Real && p2Real;
-    const num = isPlayable ? globalMatchNum++ : null;
+    if (!isPlayable) return; // không hiển thị card BYE trong lịch
+
+    const num = globalMatchNum++;
     grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || idx + 1) * 12));
   });
 
@@ -3535,7 +3550,7 @@ function renderSchedule() {
       const seq = card.querySelector('.sched-seq');
       if (seq) seq.textContent = String(i + 1);
       const numEl = card.querySelector('.sched-match-num');
-      if (numEl) numEl.textContent = `MATCH ${i + 1}`;
+      if (numEl) numEl.textContent = `#${i + 1}`;
     });
   }
 
