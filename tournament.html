@@ -3032,7 +3032,6 @@ function updateScore(r, mi, pk, e) {
   if (pk === 'p1') S.bracket[r][mi].s1 = e.target.value;
   else S.bracket[r][mi].s2 = e.target.value;
 
-  const m = S.bracket[r][mi];
   const rawS1 = String(m.s1 ?? '').trim();
   const rawS2 = String(m.s2 ?? '').trim();
   const hasBothScores = rawS1 !== '' && rawS2 !== '';
