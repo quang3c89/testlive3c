@@ -115,12 +115,26 @@ body.left-collapsed .bracket-cols { min-height: calc(100vh - 90px); }
 #left-toggle-floating {
   display: none;
   position: fixed;
-  left: 10px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 120;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(8,12,20,0.9);
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+  backdrop-filter: blur(8px);
+  font-size: 12px;
 }
-body.left-collapsed #left-toggle-floating { display: flex; }
+#left-toggle-floating:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-50%) scale(1.05);
+}
+body.left-collapsed #left-toggle-floating { display: inline-flex; }
 
 /* ============ LEFT PANEL ============ */
 .left {
@@ -1009,27 +1023,16 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   padding-right: 4px;
 }
 .schedule-grid {
-  --sched-col-min: 430px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--sched-col-min)), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   align-items: start;
 }
-/* Khi ẩn panel bốc thăm, mở rộng không gian và tự chia cột tối ưu */
-body.left-collapsed .schedule-grid {
-  --sched-col-min: 360px;
-}
 @media (max-width: 1200px) {
-  .schedule-grid,
-  body.left-collapsed .schedule-grid {
-    --sched-col-min: 330px;
-  }
+  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
-  .schedule-grid,
-  body.left-collapsed .schedule-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .schedule-columns { max-height: calc(100vh - 250px); }
 }
 .schedule-col { display: none; }
