@@ -1075,6 +1075,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 .sched-player-inline.left {
   flex-direction: row !important;
+  justify-content: flex-end;
 }
 .sched-player-inline.left .sched-meta-inline { order: 1; }
 .sched-player-inline.left .sched-name { order: 2; }
@@ -3394,15 +3395,24 @@ function renderSchedule() {
 
   function getScheduleOrder() {
     const ordered = [];
+    const playable = [];
+    const waiting = [];
+
     bracket.forEach((round, rIdx) => {
       const half = Math.floor(round.length / 2);
-      for (let mi = 0; mi < half; mi++) {
-        if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
-      }
-      for (let mi = half; mi < round.length; mi++) {
-        if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
-      }
+      const scan = [];
+      for (let mi = 0; mi < half; mi++) if (round[mi]) scan.push({ m: round[mi], rIdx, mIdx: mi });
+      for (let mi = half; mi < round.length; mi++) if (round[mi]) scan.push({ m: round[mi], rIdx, mIdx: mi });
+
+      scan.forEach((it) => {
+        const p1Real = !!it.m?.p1 && !it.m.p1.isBye;
+        const p2Real = !!it.m?.p2 && !it.m.p2.isBye;
+        if (p1Real && p2Real) playable.push(it);
+        else if (p1Real || p2Real) waiting.push(it);
+      });
     });
+
+    ordered.push(...playable, ...waiting);
     return ordered;
   }
 
@@ -3488,9 +3498,12 @@ function renderSchedule() {
   const grid = document.createElement('div');
   grid.className = 'schedule-grid';
 
-  getScheduleOrder().forEach(({ m, rIdx, mIdx }) => {
-    const num = isByeMatch(m) ? null : globalMatchNum++;
-    grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || 0) * 16));
+  getScheduleOrder().forEach(({ m, rIdx, mIdx }, idx) => {
+    const p1Real = !!m?.p1 && !m.p1.isBye;
+    const p2Real = !!m?.p2 && !m.p2.isBye;
+    const isPlayable = p1Real && p2Real;
+    const num = isPlayable ? globalMatchNum++ : null;
+    grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || idx + 1) * 12));
   });
 
   container.appendChild(grid);
