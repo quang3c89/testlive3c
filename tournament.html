@@ -1106,26 +1106,28 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* One-line battle row */
 .sched-player-inline {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
-  display: grid;
+  display: flex;
   align-items: center;
-  column-gap: 6px;
+  gap: 4px;
 }
 .sched-player-inline.left {
-  grid-template-columns: minmax(56px, 42%) minmax(0, 1fr);
+  justify-content: flex-end;
 }
 .sched-player-inline.right {
-  grid-template-columns: minmax(0, 1fr) minmax(56px, 42%);
+  justify-content: flex-start;
 }
 .sched-player-inline.left .sched-meta-inline { order: 1; text-align: right; }
 .sched-player-inline.left .sched-name { order: 2; text-align: right; }
 .sched-player-inline.right .sched-name { order: 1; text-align: left; }
 .sched-player-inline.right .sched-meta-inline { order: 2; text-align: left; }
 .sched-player-inline .sched-name {
+  flex: 1 1 auto;
   min-width: 0;
 }
 .sched-player-inline .sched-meta-inline {
+  flex: 0 0 auto;
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
@@ -1138,7 +1140,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   margin: 0;
 }
 
-/* 3 cột chỉ đổi layout ngoài, giữ nguyên cấu trúc card để tránh mất tên cơ thủ */
+/* Khi ẩn panel bốc thăm, ẩn meta để ưu tiên hiển thị tên */
 body.left-collapsed .sched-player-inline .sched-meta-inline {
   display: none;
 }
