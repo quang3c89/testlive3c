@@ -822,8 +822,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   }
 
   .center {
-    flex: none; width: 100%; min-height: 70vh;
-    overflow-x: auto; padding: 8px;
+    flex: none; width: 100%; min-height: 72vh;
+    overflow-x: auto; padding: 6px;
   }
 
   .right {
@@ -836,10 +836,32 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .left  { display: none; }
   .right { display: none !important; }
 
-  /* Tourney bar compact */
-  .tourney-bar { flex-wrap: wrap; height: auto; min-height: 38px; overflow: visible; }
+  /* Tourney info: gọn trong 1 khung, cuộn ngang thay vì xuống dòng */
+  .tourney-bar {
+    flex-wrap: nowrap;
+    height: 34px;
+    min-height: 34px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tourney-bar::-webkit-scrollbar { display: none; }
+  .tvi {
+    flex: 0 0 auto;
+    padding: 0 10px;
+    font-size: 10px;
+    gap: 4px;
+  }
+  .tvi .tvi-icon { font-size: 10px; }
+  .tvi [contenteditable] { font-size: 10px; }
 
-  /* Theme strip: ẩn bớt dots trên mobile, giữ actions */
+  /* Theme strip gọn hơn trên mobile */
+  .theme-strip {
+    height: 32px;
+    padding: 4px 10px;
+    gap: 4px;
+  }
   .theme-strip .label { display: none; }
 
   /* Player cards: tăng font size tối thiểu */
@@ -1261,12 +1283,24 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 
 @media (max-width: 768px) {
-  .schedule-columns { flex-direction: column; gap: 10px; }
+  .schedule-columns { flex-direction: column; gap: 8px; }
   .schedule-divider { display: none; }
+  .schedule-title { font-size: 20px; letter-spacing: 1px; }
+  .sched-match-header { padding: 2px 6px; }
+  .sched-match-num { font-size: 9px; letter-spacing: 1px; }
+  .sched-match-status { font-size: 7px; }
+  .sched-match-body {
+    grid-template-columns: minmax(48px, 0.7fr) minmax(84px, 1.2fr) auto minmax(84px, 1.2fr) minmax(48px, 0.7fr);
+    column-gap: 4px;
+    padding: 3px 5px;
+  }
   .sched-name { font-size: 12px; }
   .sched-name.name-sm { font-size: 11px; }
   .sched-name.name-xs { font-size: 10px; }
-  .sched-player-inline .sched-meta-inline { font-size: 7px; max-width: 46%; }
+  .sched-side-unit { font-size: 8px; }
+  .sched-center-pack { gap: 2px; min-width: 56px; }
+  .sched-vs-col { width: 32px; }
+  .sched-center-logo { width: 30px; height: 30px; }
   .tournament-bc-nav { display: none; }
   .tournament-bc-mobile { display: inline-flex !important; }
 }
