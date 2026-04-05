@@ -2926,10 +2926,11 @@ function isByeMatch(m) {
 }
 
 function makeByeMergedRow(match, r, mi) {
-  const realIsP1 = !!(match.p1 && !match.p1.isBye);
-  const passPlayer = realIsP1 ? match.p1 : match.p2;
-  const realKey = realIsP1 ? 'p1' : 'p2';
-  const scoreVal = realIsP1 ? (match.s1 || '') : (match.s2 || '');
+  const p1Real = !!(match.p1 && !match.p1.isBye);
+  const p2Real = !!(match.p2 && !match.p2.isBye);
+  const passPlayer = p1Real ? match.p1 : (p2Real ? match.p2 : null);
+  const realKey = p1Real ? 'p1' : 'p2';
+  const scoreVal = p1Real ? (match.s1 || '') : (p2Real ? (match.s2 || '') : '');
 
   const row = document.createElement('div');
   row.className = 'mp mp-bye-merged';
@@ -2945,18 +2946,22 @@ function makeByeMergedRow(match, r, mi) {
     ${passPlayer?.unit ? `<div class="mp-unit">${passPlayer.unit}</div>` : ''}
   `;
 
-  const scoreEl = document.createElement('input');
-  scoreEl.type = 'text';
-  scoreEl.className = 'ms';
-  scoreEl.value = scoreVal;
-  scoreEl.onclick = e => e.stopPropagation();
-  scoreEl.onchange = e => updateScore(r, mi, realKey, e);
+  if (passPlayer) {
+    const scoreEl = document.createElement('input');
+    scoreEl.type = 'text';
+    scoreEl.className = 'ms';
+    scoreEl.value = scoreVal;
+    scoreEl.onclick = e => e.stopPropagation();
+    scoreEl.onchange = e => updateScore(r, mi, realKey, e);
+    row.appendChild(info);
+    row.appendChild(scoreEl);
 
-  row.appendChild(info);
-  row.appendChild(scoreEl);
-
-  if (S.isAdmin) {
-    row.onclick = () => setWinner(r, mi, realKey);
+    if (S.isAdmin) {
+      row.onclick = () => setWinner(r, mi, realKey);
+    }
+  } else {
+    row.appendChild(info);
+    row.classList.add('bye-empty-merged');
   }
 
   return row;
@@ -3214,9 +3219,9 @@ function updateBracketSize() {
       const s1 = seedOrder[mi * 2];
       const s2 = seedOrder[mi * 2 + 1];
       if (byeSeeds.has(s1) || byeSeeds.has(s2)) {
-        // để trống 1 bên, bên còn lại là BYE -> render ô gộp
+        // để trống 1 bên, bên còn lại là slot BYE (không hiện text)
         S.bracket[0][mi].p1 = null;
-        S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}`, name: 'BYE', isBye: true, drawn: true };
+        S.bracket[0][mi].p2 = { id: `bye_${s2}_${mi}`, name: '', isBye: true, drawn: true };
       }
     }
   }
@@ -3444,8 +3449,8 @@ function renderSchedule() {
     return `
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}">
         <div class="sched-match-header">
-          <span class="sched-match-num">${byeCase ? 'AUTO ADVANCE' : `MATCH ${matchNum}`}</span>
-          <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? 'BYE' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
+          <span class="sched-match-num">${byeCase ? '' : `MATCH ${matchNum}`}</span>
+          <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? '' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
         </div>
         <div class="sched-match-body">
           ${byeCase ? `
