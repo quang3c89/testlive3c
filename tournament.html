@@ -2583,10 +2583,35 @@ function closeSpinPopupAndSpin() {
 function findNextSlot() {
   const r0 = S.bracket[0];
   for (let m = 0; m < r0.length; m++) {
-    if (!r0[m].p1) return { r:0, m, pKey:'p1' };
-    if (!r0[m].p2) return { r:0, m, pKey:'p2' };
+    if (!r0[m].p1 || r0[m].p1.isBye) return { r:0, m, pKey:'p1' };
+    if (!r0[m].p2 || r0[m].p2.isBye) return { r:0, m, pKey:'p2' };
   }
   return null;
+}
+
+function syncRound1ByesToRound2() {
+  if (!S.bracket?.[0] || !S.bracket?.[1]) return;
+  for (let mi = 0; mi < S.bracket[0].length; mi++) {
+    const m = S.bracket[0][mi];
+    const p1 = m.p1;
+    const p2 = m.p2;
+    const p1Real = !!p1 && !p1.isBye;
+    const p2Real = !!p2 && !p2.isBye;
+
+    const nr = 1;
+    const nm = Math.floor(mi / 2);
+    const np = mi % 2 === 0 ? 'p1' : 'p2';
+
+    if (p1Real !== p2Real) {
+      const w = p1Real ? p1 : p2;
+      m.winner = w;
+      S.bracket[nr][nm][np] = w;
+    } else {
+      m.winner = null;
+      S.bracket[nr][nm][np] = null;
+    }
+    if (S.bracket[nr][nm]) S.bracket[nr][nm].winner = null;
+  }
 }
 
 function flyPlayer(player, slot, spinAgain = false) {
@@ -2674,7 +2699,17 @@ function commitPlayer(player, slot) {
   // Mark drawn trong S.players
   S.players.forEach(p => { if (p.id === player.id) p.drawn = true; });
   // Ghi vào bracket
-  S.bracket[slot.r][slot.m][slot.pKey] = { ...player, drawn: true };
+  S.bracket[slot.r][slot.m][slot.pKey] = { ...player, drawn: true, isBye: false };
+
+  // Nếu slot đối diện trống thì giữ BYE để gộp ô nhưng vẫn nhận bốc thăm về sau
+  const m = S.bracket[slot.r][slot.m];
+  const otherKey = slot.pKey === 'p1' ? 'p2' : 'p1';
+  if (!m[otherKey]) {
+    m[otherKey] = { id: `bye_auto_${slot.r}_${slot.m}_${otherKey}`, name: 'BYE', unit: '', rank: '', drawn: true, isBye: true };
+  }
+
+  syncRound1ByesToRound2();
+
   // Render lại toàn bộ
   renderBracket();
   renderPlayers();
@@ -2980,6 +3015,20 @@ function makeMatchPlayer(player, score, pKey, isWinner, r, mi) {
 
 function updateScore(r, mi, pk, e) {
   if (!S.isAdmin) return;
+
+  const m = S.bracket[r][mi];
+  if (m?.p1?.isBye || m?.p2?.isBye) {
+    if (pk === 'p1') S.bracket[r][mi].s1 = '';
+    else S.bracket[r][mi].s2 = '';
+    syncRound1ByesToRound2();
+    renderBracket();
+    const schedPanel = document.getElementById('schedule-panel');
+    if (schedPanel && schedPanel.classList.contains('active')) renderSchedule();
+    saveState();
+    supaPushDebounced();
+    return;
+  }
+
   if (pk === 'p1') S.bracket[r][mi].s1 = e.target.value;
   else S.bracket[r][mi].s2 = e.target.value;
 
@@ -3330,6 +3379,16 @@ function renderSchedule() {
   // Update subtitle
   if (subtitle) subtitle.textContent = `${rounds} vòng · ${totalMatchCount} trận đấu`;
 
+  function getScheduleOrder() {
+    const ordered = [];
+    bracket.forEach((round, rIdx) => {
+      const half = round.length / 2;
+      for (let mi = 0; mi < half; mi++) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+      for (let mi = half; mi < round.length; mi++) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+    });
+    return ordered;
+  }
+
   // Build match card HTML
   function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay) {
     const p1 = m.p1, p2 = m.p2;
@@ -3411,11 +3470,9 @@ function renderSchedule() {
   const grid = document.createElement('div');
   grid.className = 'schedule-grid';
 
-  bracket.forEach((round, rIdx) => {
-    round.forEach((m, mIdx) => {
-      const num = isByeMatch(m) ? null : globalMatchNum++;
-      grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || 0) * 16));
-    });
+  getScheduleOrder().forEach(({ m, rIdx, mIdx }) => {
+    const num = isByeMatch(m) ? null : globalMatchNum++;
+    grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || 0) * 16));
   });
 
   container.appendChild(grid);
