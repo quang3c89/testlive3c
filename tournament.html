@@ -818,7 +818,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .left {
     flex: none; width: 100%; min-width: unset; max-width: unset;
     border-right: none; border-bottom: 1px solid var(--border);
-    max-height: unset; overflow-y: visible;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
   }
 
   .center {
@@ -893,10 +894,18 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   body.tab-center .center { display: flex !important; }
   body.tab-center .right  { display: none !important; }
 
-  /* Khi tab right active */
+  /* Khi tab right active: Cơ thủ full màn hình */
   body.tab-right .left   { display: none !important; }
   body.tab-right .center { display: none !important; }
-  body.tab-right .right  { display: flex !important; }
+  body.tab-right .right  {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    flex: 1 1 100% !important;
+    padding: 10px 10px 70px !important;
+    border-top: none !important;
+  }
 }
 
 /* ============ BRACKET TABS (Bracket / Lịch Thi Đấu) ============ */
@@ -1035,7 +1044,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
-  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .schedule-grid { grid-template-columns: 1fr; }
   .schedule-columns { max-height: calc(100vh - 250px); }
 }
 .schedule-col { display: none; }
