@@ -1144,6 +1144,7 @@ body.left-collapsed .sched-player-inline {
   display: flex;
   min-width: 0;
   gap: 3px;
+  flex: 1 1 0;
 }
 body.left-collapsed .sched-player-inline.left {
   justify-content: flex-end;
@@ -1153,6 +1154,10 @@ body.left-collapsed .sched-player-inline.right {
 }
 body.left-collapsed .sched-player-inline .sched-meta-inline {
   display: none;
+}
+body.left-collapsed .sched-player-inline .sched-name {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 body.left-collapsed .sched-vs-col {
   width: 30px;
