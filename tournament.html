@@ -344,9 +344,15 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 /* Match box */
 .mb {
-  background: var(--card); border-radius: 8px; border: 1px solid var(--border);
-  display: flex; flex-direction: column; transition: all 0.2s; overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3); position: relative;
+  background: #fff7ea;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 241, 214, 0.98);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.35) inset;
+  position: relative;
 }
 .mb:hover { border-color: rgba(240,165,0,0.4); transform: scale(1.02); z-index: 5; box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(240,165,0,0.2); }
 .mb.anim-enter { animation: matchEnter 0.5s cubic-bezier(0.34,1.56,0.64,1); }
@@ -384,8 +390,8 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 .mp::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.2s; }
 .mp.p1-slot::before { background: #3b82f6; }
 .mp.p2-slot::before { background: #ef4444; }
-.mp:first-child { border-bottom: 1px solid var(--border); }
-.mp:hover { background: rgba(255,255,255,0.04); }
+.mp:first-child { border-bottom: 1.5px solid rgba(255, 241, 214, 0.9); }
+.mp:hover { background: rgba(255, 241, 214, 0.45); }
 .mp.winner { font-weight: 800; background: rgba(240,165,0,0.08); }
 .mp.winner::before { background: var(--accent) !important; }
 .mp.winner .mn { color: var(--accent); }
@@ -408,9 +414,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 .mp-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .mp-top { display: flex; align-items: center; gap: 4px; }
-.mn { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; font-weight: 700; flex: 1; }
+.mn { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; font-weight: 800; flex: 1; color: #1f2937; }
 .mp-rank { font-size: 8px; background: var(--rank-color); color: #000; padding: 0 3px; border-radius: 2px; font-weight: 800; white-space: nowrap; font-family: var(--font-mono); flex-shrink: 0; }
-.mp-unit { font-size: 8.5px; color: var(--unit-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; line-height: 1.2; }
+.mp-unit { font-size: 8.5px; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; line-height: 1.2; }
 .ms {
   width: 28px; border: 1px solid var(--border); border-radius: 4px;
   background: rgba(255,255,255,0.05); color: inherit; padding: 1px;
@@ -3561,19 +3567,20 @@ function drawBracketLines() {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', d);
     path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', accent);
+    path.setAttribute('stroke', '#fff6d9');
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
     if (winner) {
-      path.setAttribute('stroke-width', '2');
-      path.setAttribute('opacity', '0.75');
-      path.setAttribute('stroke-dasharray', '8 4');
-      path.style.animation = 'flowl 1.2s linear infinite';
-      path.style.filter = `drop-shadow(0 0 4px ${accent})`;
+      path.setAttribute('stroke-width', '3.2');
+      path.setAttribute('opacity', '1');
+      path.setAttribute('stroke-dasharray', '');
+      path.style.animation = 'none';
+      path.style.filter = 'drop-shadow(0 0 4px rgba(255,246,217,0.95))';
     } else {
-      path.setAttribute('stroke-width', '1.2');
-      path.setAttribute('opacity', '0.2');
-      path.setAttribute('stroke-dasharray', '4 6');
+      path.setAttribute('stroke-width', '2.6');
+      path.setAttribute('opacity', '1');
+      path.setAttribute('stroke-dasharray', '');
+      path.style.filter = 'drop-shadow(0 0 3px rgba(255,246,217,0.88))';
     }
     return path;
   }
