@@ -2699,6 +2699,29 @@ function renderPlayers() {
 let wheelAnim = null;
 let flyLock = false; // Ngăn 2 flyPlayer chạy đồng thời
 
+function syncFullscreenMiniWheel() {
+  const miniWheel = document.getElementById('fs-mini-wheel');
+  const miniCanvas = document.getElementById('fs-mini-wheel-canvas');
+  const mainCanvas = document.getElementById('wheel-canvas');
+  const isBracketFullscreen = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
+
+  if (!miniWheel || !miniCanvas || !mainCanvas) return;
+
+  if (!isBracketFullscreen) {
+    miniWheel.classList.remove('show');
+    return;
+  }
+
+  miniWheel.classList.add('show');
+  const mw = 240;
+  miniWheel.style.left = (window.innerWidth / 2 - mw / 2) + 'px';
+  miniWheel.style.top = '16px';
+
+  const mctx = miniCanvas.getContext('2d');
+  mctx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+  mctx.drawImage(mainCanvas, 0, 0, miniCanvas.width, miniCanvas.height);
+}
+
 function drawWheel(rotation = 0) {
   const canvas = document.getElementById('wheel-canvas');
   const ctx = canvas.getContext('2d');
@@ -2757,6 +2780,8 @@ function drawWheel(rotation = 0) {
   capGrad.addColorStop(0,'#2a2a2a'); capGrad.addColorStop(1,'#111');
   ctx.fillStyle = capGrad; ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+
+  syncFullscreenMiniWheel();
 }
 
 function playTickSound() {
@@ -2917,6 +2942,7 @@ function showSpinPopup(player) {
     if (!popup.classList.contains('show')) return;
     popup.classList.remove('show');
     popup.classList.remove('centered');
+    if (miniWheel) miniWheel.classList.remove('show');
     if (pendingSpinPlayer && pendingSpinSlot) {
       const p = pendingSpinPlayer, sl = pendingSpinSlot;
       pendingSpinPlayer = null;
@@ -3763,10 +3789,11 @@ document.addEventListener('fullscreenchange', () => {
     }
   }
 
-  if (miniWheel) {
-    if (targetFullscreenRoot) miniWheel.classList.add('show');
-    else miniWheel.classList.remove('show');
+  if (!targetFullscreenRoot && miniWheel) {
+    miniWheel.classList.remove('show');
   }
+
+  syncFullscreenMiniWheel();
 });
 
 /* ================================================================
