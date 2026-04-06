@@ -2942,7 +2942,6 @@ function showSpinPopup(player) {
     if (!popup.classList.contains('show')) return;
     popup.classList.remove('show');
     popup.classList.remove('centered');
-    if (miniWheel) miniWheel.classList.remove('show');
     if (pendingSpinPlayer && pendingSpinSlot) {
       const p = pendingSpinPlayer, sl = pendingSpinSlot;
       pendingSpinPlayer = null;
