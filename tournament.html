@@ -535,6 +535,16 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   from { opacity:0; transform: scale(0.72) translateY(12px); }
   to { opacity:1; transform: scale(1) translateY(0); }
 }
+.spin-popup-wheel {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(240,165,0,0.28);
+  box-shadow: 0 0 0 4px rgba(240,165,0,0.08);
+  overflow: hidden;
+}
+#popup-wheel-canvas { width: 100%; height: 100%; display: block; }
 .spin-popup-confetti { font-size: 26px; animation: confettiBounce 0.7s ease-in-out infinite alternate; display: block; }
 @keyframes confettiBounce { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.18) rotate(6deg); } }
 .spin-popup-label {
@@ -1577,6 +1587,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 <!-- SPIN RESULT POPUP -->
 <div id="spin-popup">
   <div class="spin-popup-box">
+    <div class="spin-popup-wheel" id="spin-popup-wheel" style="display:none;">
+      <canvas id="popup-wheel-canvas" width="120" height="120"></canvas>
+    </div>
     <span class="spin-popup-confetti" id="popup-emoji">🎉</span>
     <div class="spin-popup-label">Đã bốc được</div>
     <div class="spin-popup-name" id="popup-name">—</div>
@@ -2867,6 +2880,17 @@ function showSpinPopup(player) {
   const popup  = document.getElementById('spin-popup');
   const isBracketFullscreen = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
 
+  const popupWheelWrap = document.getElementById('spin-popup-wheel');
+  const popupWheelCanvas = document.getElementById('popup-wheel-canvas');
+  if (isBracketFullscreen && popupWheelWrap && popupWheelCanvas && canvas) {
+    popupWheelWrap.style.display = 'block';
+    const pctx = popupWheelCanvas.getContext('2d');
+    pctx.clearRect(0, 0, popupWheelCanvas.width, popupWheelCanvas.height);
+    pctx.drawImage(canvas, 0, 0, popupWheelCanvas.width, popupWheelCanvas.height);
+  } else if (popupWheelWrap) {
+    popupWheelWrap.style.display = 'none';
+  }
+
   popup.classList.remove('centered');
   popup.style.transform = '';
 
@@ -2969,7 +2993,9 @@ function flyPlayer(player, slot, spinAgain = false) {
   const te = document.getElementById(`match-${slot.r}-${slot.m}-${slot.pKey}`);
 
   // Lấy tọa độ đích TRƯỚC KHI commit (commit sẽ gọi renderBracket xóa DOM)
-  const wR = canvas.getBoundingClientRect();
+  const isBracketFullscreen = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
+  const startSource = isBracketFullscreen ? document.getElementById('spin-popup') : canvas;
+  const wR = startSource ? startSource.getBoundingClientRect() : canvas.getBoundingClientRect();
   let tR = te ? te.getBoundingClientRect() : null;
 
   // Nếu element bị ẩn (mobile tab) hoặc không tìm thấy → tọa độ (0,0) → bỏ animation
