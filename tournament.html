@@ -391,7 +391,8 @@ body.viewer-mode .bracket-color-tools { display: none !important; }
 }
 .round-label {
   text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase;
-  opacity: 0.35; margin-bottom: 8px; font-family: var(--font-mono); letter-spacing: 1.5px;
+  opacity: 1; color: #ffffff; margin-bottom: 8px; font-family: var(--font-mono); letter-spacing: 1.5px;
+  text-shadow: 0 0 10px rgba(255,255,255,0.25);
   position: sticky; top: 0;
 }
 /* Match box */
@@ -1805,6 +1806,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <div class="bct-item" data-k="matchBg"><button class="bct-btn" type="button" title="Màu ô trận" onclick="toggleBracketColorPicker(event, 'matchBg')">◼</button><input class="bct-picker" id="bct-matchBg" type="color" value="#ffdf80" oninput="setBracketColor('matchBg', this.value)"></div>
       <div class="bct-item" data-k="line"><button class="bct-btn" type="button" title="Màu line nối" onclick="toggleBracketColorPicker(event, 'line')">╱</button><input class="bct-picker" id="bct-line" type="color" value="#fff6d9" oninput="setBracketColor('line', this.value)"></div>
       <div class="bct-item" data-k="matchBorder"><button class="bct-btn" type="button" title="Màu viền ô trận" onclick="toggleBracketColorPicker(event, 'matchBorder')">▣</button><input class="bct-picker" id="bct-matchBorder" type="color" value="#78580c" oninput="setBracketColor('matchBorder', this.value)"></div>
+      <div class="bct-item" data-k="nameColor"><button class="bct-btn" type="button" title="Màu tên" onclick="toggleBracketColorPicker(event, 'nameColor')">T</button><input class="bct-picker" id="bct-nameColor" type="color" value="#1f2937" oninput="setBracketColor('nameColor', this.value)"></div>
+      <div class="bct-item" data-k="unitColor"><button class="bct-btn" type="button" title="Màu đơn vị" onclick="toggleBracketColorPicker(event, 'unitColor')">U</button><input class="bct-picker" id="bct-unitColor" type="color" value="#4b5563" oninput="setBracketColor('unitColor', this.value)"></div>
     </div>
     <div id="fs-draw-stage"></div>
 
@@ -2007,6 +2010,8 @@ const DEFAULTS = {
     matchBg: '#FFDF80',
     matchBorder: '#78580c',
     line: '#fff6d9',
+    nameColor: '#1f2937',
+    unitColor: '#4b5563',
   }
 };
 
@@ -2498,12 +2503,16 @@ function applyBracketColorVars() {
   root.style.setProperty('--match-bg', c.matchBg || DEFAULTS.bracketColors.matchBg);
   root.style.setProperty('--match-border', c.matchBorder || DEFAULTS.bracketColors.matchBorder);
   root.style.setProperty('--line-color', c.line || DEFAULTS.bracketColors.line);
+  root.style.setProperty('--name-color', c.nameColor || DEFAULTS.bracketColors.nameColor);
+  root.style.setProperty('--unit-color', c.unitColor || DEFAULTS.bracketColors.unitColor);
 
   const map = {
     bg: 'bct-bg',
     matchBg: 'bct-matchBg',
     line: 'bct-line',
     matchBorder: 'bct-matchBorder',
+    nameColor: 'bct-nameColor',
+    unitColor: 'bct-unitColor',
   };
   Object.entries(map).forEach(([k, id]) => {
     const el = document.getElementById(id);
@@ -2522,6 +2531,10 @@ function setBracketColor(key, value) {
     S.bracketColors.line = value;
   } else if (key === 'matchBorder') {
     S.bracketColors.matchBorder = value;
+  } else if (key === 'nameColor') {
+    S.bracketColors.nameColor = value;
+  } else if (key === 'unitColor') {
+    S.bracketColors.unitColor = value;
   }
   applyBracketColorVars();
   drawBracketLines();
@@ -2821,7 +2834,7 @@ function renderPlayers() {
       <div class="pr-row">
         <span class="pn" title="Số thứ tự">${stt}</span>
         <span class="pr" title="${p.name}">${p.name}</span>
-        <span class="pu">${p.rank ? p.rank : ''}</span>
+        <span class="pu">${p.rank ? p.rank : '—'}</span>
       </div>
       <div class="pk">${p.unit || ''}</div>
     `;
