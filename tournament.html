@@ -3506,13 +3506,40 @@ function handleExcel(e) {
     const wb = XLSX.read(new Uint8Array(evt.target.result), {type:'array'});
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
     let added = 0;
+
+    const normalize = (v) => String(v || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '');
+
+    const header = Array.isArray(rows[0]) ? rows[0] : [];
+    const headerNorm = header.map(normalize);
+
+    const idxStt = headerNorm.findIndex(h => h === 'stt' || h === 'sothutu');
+    const idxName = headerNorm.findIndex(h => h === 'ten' || h === 'tencothu' || h === 'tencothu');
+    const idxUnit = headerNorm.findIndex(h => h === 'donvi');
+    const idxRank = headerNorm.findIndex(h => h === 'hang');
+
+    const useHeaderMap = idxName !== -1;
+
     pushHistory();
     rows.slice(1).forEach((row, idx) => {
-      const hasNewFormat = row.length >= 4;
-      const sttCell = hasNewFormat ? row[0] : idx + 1;
-      const nameCell = hasNewFormat ? row[1] : row[0];
-      const unitCell = hasNewFormat ? row[2] : row[1];
-      const rankCell = hasNewFormat ? row[3] : row[2];
+      const rowLooksLikeFourCols = !useHeaderMap && Array.isArray(row) && row.length >= 4;
+
+      const sttCell = useHeaderMap
+        ? (idxStt !== -1 ? row[idxStt] : idx + 1)
+        : (rowLooksLikeFourCols ? row[0] : idx + 1);
+      const nameCell = useHeaderMap
+        ? row[idxName]
+        : (rowLooksLikeFourCols ? row[1] : row[0]);
+      const unitCell = useHeaderMap
+        ? (idxUnit !== -1 ? row[idxUnit] : '')
+        : (rowLooksLikeFourCols ? row[2] : row[1]);
+      const rankCell = useHeaderMap
+        ? (idxRank !== -1 ? row[idxRank] : '')
+        : (rowLooksLikeFourCols ? row[3] : row[2]);
 
       if (nameCell) {
         S.players.push({
