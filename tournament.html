@@ -1882,7 +1882,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')">🎯 Bracket</button>
       <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')">⚔️ Lịch Thi Đấu</button>
       <span class="bracket-tab-spacer"></span>
-      <button class="bracket-full-btn" onclick="exportImage('center-panel','bracket')" title="Chụp bracket">📸</button>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
@@ -1918,7 +1917,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <h3>Players</h3>
       <div style="display:flex;gap:4px;">
         <button class="export-btn" onclick="exportImage('right-panel','players')">📸</button>
-        <button class="export-btn" onclick="exportImage('center-panel','bracket')">🖼</button>
       </div>
     </div>
     <div class="overview-table" id="overview-table">
@@ -1949,7 +1947,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 <div id="count-modal" class="modal">
   <div class="modal-c">
     <h2>🔢 Cỡ Bracket</h2>
-    <p style="font-size:11px;opacity:0.5;font-family:'JetBrains Mono',monospace;">Làm tròn lên số chẵn lũy thừa 2. Sẽ reset bracket!</p>
+    <p style="font-size:11px;opacity:0.5;font-family:var(--font-main);">Làm tròn lên số chẵn lũy thừa 2. Sẽ reset bracket!</p>
     <div class="field-group"><label>Số lượng tay vợt</label><input class="minput" type="number" id="bracket-size-input" placeholder="e.g. 16" min="4" autocomplete="off"></div>
     <div class="mactions">
       <button class="mbtn pri" onclick="updateBracketSize()">Tạo bracket</button>
@@ -1962,7 +1960,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   <div class="modal-c">
     <h2>⚙️ Cài đặt</h2>
     <hr class="sep">
-    <h3 style="font-size:13px;font-weight:800;font-family:'Barlow Condensed',sans-serif;">🎨 Font tiêu đề giải đấu</h3>
+    <h3 style="font-size:13px;font-weight:800;font-family:var(--font-main);">🎨 Font tiêu đề giải đấu</h3>
     <div class="field-group">
       <label>Chọn font</label>
       <select class="mselect" id="title-font-select" onchange="previewTitleFont(this.value)"></select>
@@ -1972,7 +1970,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <button class="mbtn pri" onclick="applyTitleFont()">Áp dụng font</button>
     </div>
     <hr class="sep">
-    <h3 style="font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;letter-spacing:-0.3px;">☁️ Supabase</h3>
+    <h3 style="font-size:14px;font-weight:800;font-family:var(--font-main);letter-spacing:-0.3px;">☁️ Supabase</h3>
     <div class="field-group"><label>Supabase URL</label><input class="minput" type="text" id="supa-url" placeholder="https://xxx.supabase.co" autocomplete="off"></div>
     <div class="field-group"><label>Supabase Anon Key</label><input class="minput" type="text" id="supa-key" placeholder="eyJ..." autocomplete="off"></div>
     <div class="mactions">
@@ -1999,7 +1997,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     </div>
     <div class="supa-status-row">
       <div class="rt-dot" id="supa-rt-dot" style="background:#ef4444"></div>
-      <span id="supa-status-txt" style="font-size:11px;font-family:'JetBrains Mono',monospace;opacity:0.6;">Chưa kết nối</span>
+      <span id="supa-status-txt" style="font-size:11px;font-family:var(--font-main);opacity:0.6;">Chưa kết nối</span>
     </div>
     <div class="field-group"><label>Supabase URL</label><input class="minput" type="text" id="supa-url2" placeholder="https://xxx.supabase.co" autocomplete="off"></div>
     <div class="field-group"><label>Supabase Anon Key</label><input class="minput" type="text" id="supa-key2" placeholder="eyJ..." autocomplete="off"></div>
@@ -2787,6 +2785,14 @@ function applyGlobalFont(fontKey) {
   document.documentElement.style.setProperty('--font-mono', fontKey);
   document.documentElement.style.setProperty('--tb-font', fontKey);
   document.documentElement.style.setProperty('--title-font', fontKey);
+
+  // Force all visible texts in tournament page to follow selected font
+  document.body.style.fontFamily = fontKey;
+  document.querySelectorAll('[style*="font-family"]').forEach((el) => {
+    if (el.id === 'supa-status-txt') return;
+    const s = el.getAttribute('style') || '';
+    el.setAttribute('style', s.replace(/font-family\s*:[^;]+;?/gi, `font-family:${fontKey};`));
+  });
 }
 
 function buildFontSelects() {
