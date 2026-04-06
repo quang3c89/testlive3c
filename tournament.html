@@ -274,11 +274,14 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   text-align: right;
 }
 .pk {
+  display: block;
   font-size: 8px;
-  color: var(--unit-color);
+  color: rgba(255,255,255,0.78);
   font-style: italic;
-  line-height: 1.2;
-  padding-left: 30px;
+  line-height: 1.25;
+  margin-left: 30px;
+  padding-left: 0;
+  max-width: calc(100% - 30px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
