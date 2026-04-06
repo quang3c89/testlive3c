@@ -3513,6 +3513,7 @@ function handleExcel(e) {
     const normalize = (v) => String(v || '')
       .trim()
       .toLowerCase()
+      .replace(/đ/g, 'd')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '');
