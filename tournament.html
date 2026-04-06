@@ -372,23 +372,37 @@ body.fs-mode #center-panel .bracket-bg-layer {
   50% { opacity: 0.55; transform: scale(1.22); }
 }
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; z-index: 2; }
+.bracket-tool-zone {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 90px;
+  z-index: 23;
+}
 .bracket-color-tools {
   position: absolute;
   top: 44px;
   right: 10px;
   z-index: 24;
   display: flex;
-  gap: 4px;
+  gap: 3px;
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(0.98);
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
-.center:hover .bracket-color-tools { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.bracket-tool-zone:hover + .bracket-color-tools,
+.bracket-color-tools:hover {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+body.viewer-mode .bracket-tool-zone,
 body.viewer-mode .bracket-color-tools { display: none !important; }
 .bct-item { position: relative; }
 .bct-btn {
-  width: 22px; height: 22px;
+  width: 18px; height: 18px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: rgba(10,14,22,0.72);
@@ -1852,8 +1866,10 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')">🎯 Bracket</button>
       <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')">⚔️ Lịch Thi Đấu</button>
       <span class="bracket-tab-spacer"></span>
+      <button class="bracket-full-btn" onclick="exportImage('center-panel','bracket')" title="Chụp bracket">📸</button>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
+    <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
     <div class="bracket-color-tools" id="bracket-color-tools">
       <div class="bct-item" data-k="bg"><button class="bct-btn" type="button" title="Màu nền bracket" onclick="toggleBracketColorPicker(event, 'bg')">🎨</button><input class="bct-picker" id="bct-bg" type="color" value="#0d1117" oninput="setBracketColor('bg', this.value)"></div>
       <div class="bct-item" data-k="matchBg"><button class="bct-btn" type="button" title="Màu ô trận" onclick="toggleBracketColorPicker(event, 'matchBg')">◼</button><input class="bct-picker" id="bct-matchBg" type="color" value="#ffdf80" oninput="setBracketColor('matchBg', this.value)"></div>
@@ -4071,6 +4087,8 @@ let miniWheelOriginalParent = null;
 document.addEventListener('fullscreenchange', () => {
   const popup = document.getElementById('spin-popup');
   const miniWheel = document.getElementById('fs-mini-wheel');
+  const center = document.getElementById('center-panel');
+  const toolZone = document.getElementById('bracket-tool-zone');
 
   if (popup && !popupOriginalParent) popupOriginalParent = popup.parentElement;
   if (miniWheel && !miniWheelOriginalParent) miniWheelOriginalParent = miniWheel.parentElement;
@@ -4091,6 +4109,14 @@ document.addEventListener('fullscreenchange', () => {
       miniWheelOriginalParent.appendChild(miniWheel);
       miniWheel.classList.remove('show');
     }
+  }
+
+  if (targetFullscreenRoot && center && targetFullscreenRoot === center) {
+    document.body.classList.add('fs-mode');
+    if (toolZone) toolZone.style.display = 'block';
+  } else {
+    document.body.classList.remove('fs-mode');
+    if (toolZone) toolZone.style.display = '';
   }
 
   syncFullscreenMiniWheel();
