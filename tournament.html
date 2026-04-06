@@ -333,7 +333,6 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   z-index: 0;
 }
 body.fs-mode #center-panel .bracket-bg-layer {
-  width: 100%;
   left: 0;
 }
 .bracket-bg-glow {
@@ -3839,12 +3838,23 @@ function setWinner(r, mi, pk) {
 function drawBracketLines() {
   const svg = document.getElementById('bracket-lines');
   const cont = document.getElementById('bracket-container');
+  const center = document.getElementById('center-panel');
+  const bgLayer = document.getElementById('bracket-bg-layer');
   svg.innerHTML = '';
 
   const cw = cont.scrollWidth, ch = cont.scrollHeight;
   svg.setAttribute('width', cw);
   svg.setAttribute('height', ch);
   svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
+
+  if (bgLayer && center) {
+    const bgW = Math.max(cw, center.clientWidth);
+    const bgH = Math.max(ch, center.clientHeight);
+    bgLayer.style.left = '0px';
+    bgLayer.style.width = `${bgW}px`;
+    bgLayer.style.height = `${bgH}px`;
+    bgLayer.style.minHeight = `${bgH}px`;
+  }
 
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f0a500';
   const rounds = S.bracket.length;
