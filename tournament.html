@@ -510,6 +510,11 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   pointer-events: none;
 }
 #spin-popup.show { display: block; pointer-events: all; }
+#spin-popup.centered {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%);
+}
 .spin-popup-box {
   background: rgba(13,17,23,0.96);
   border: 1px solid rgba(240,165,0,0.45);
@@ -2858,14 +2863,25 @@ function showSpinPopup(player) {
   const canvas = document.getElementById('wheel-canvas');
   const rect   = canvas.getBoundingClientRect();
   const popup  = document.getElementById('spin-popup');
-  const boxW   = 240;
-  popup.style.left = (rect.left + rect.width / 2 - boxW / 2) + 'px';
-  popup.style.top  = (rect.top  + rect.height / 2 - 100) + 'px';
+  const isBracketFullscreen = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
+
+  popup.classList.remove('centered');
+  popup.style.transform = '';
+
+  if (isBracketFullscreen) {
+    popup.classList.add('centered');
+  } else {
+    const boxW = 240;
+    popup.style.left = (rect.left + rect.width / 2 - boxW / 2) + 'px';
+    popup.style.top  = (rect.top  + rect.height / 2 - 100) + 'px';
+  }
+
   popup.classList.add('show');
 
   setTimeout(() => {
     if (!popup.classList.contains('show')) return;
     popup.classList.remove('show');
+    popup.classList.remove('centered');
     if (pendingSpinPlayer && pendingSpinSlot) {
       const p = pendingSpinPlayer, sl = pendingSpinSlot;
       pendingSpinPlayer = null;
@@ -2874,15 +2890,19 @@ function showSpinPopup(player) {
     } else {
       resetWheel();
     }
-  }, 2000);
+  }, 1700);
 }
 
 function closeSpinPopup() {
-  document.getElementById('spin-popup').classList.remove('show');
+  const popup = document.getElementById('spin-popup');
+  popup.classList.remove('show');
+  popup.classList.remove('centered');
 }
 
 function closeSpinPopupAndSpin() {
-  document.getElementById('spin-popup').classList.remove('show');
+  const popup = document.getElementById('spin-popup');
+  popup.classList.remove('show');
+  popup.classList.remove('centered');
 }
 
 function findNextSlot() {
