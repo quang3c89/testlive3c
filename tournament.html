@@ -325,11 +325,11 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; }
 .bracket-color-tools {
   position: absolute;
-  top: 8px;
+  top: 44px;
   right: 10px;
-  z-index: 25;
+  z-index: 24;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   opacity: 0;
   transform: translateY(-4px);
   pointer-events: none;
@@ -339,13 +339,13 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 body.viewer-mode .bracket-color-tools { display: none !important; }
 .bct-item { position: relative; }
 .bct-btn {
-  width: 28px; height: 28px;
+  width: 22px; height: 22px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: rgba(10,14,22,0.72);
   color: var(--text);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 11px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4470,6 +4470,7 @@ Object.assign(globalThis, {
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
+  toggleBracketColorPicker, setBracketColor,
 });
 </script>
 
