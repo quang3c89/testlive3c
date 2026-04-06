@@ -76,13 +76,6 @@ footer, .footer, .footer-lite { border-top: 1px solid var(--c-border); padding: 
 .footer-link:hover { color: var(--c-gold); }
 
 /* Tournament detail shell */
-body.viewer-mode { background: var(--c-bg); color: var(--c-ink); }
-body.viewer-mode .left,
-body.viewer-mode .right,
-body.viewer-mode .center,
-body.viewer-mode .mb,
-body.viewer-mode .schedule-header,
-body.viewer-mode .sched-match { background: var(--c-surface); border-color: var(--c-border); }
 body.viewer-mode .mp.winner,
 body.viewer-mode .mb.has-winner { border-left: 3px solid var(--c-gold); }
 body.viewer-mode .ms,
