@@ -388,12 +388,12 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .overview-table { flex: 1; overflow-y: auto; scroll-behavior: smooth; }
 .ot-head {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 54px;
-  gap: 6px;
-  padding: 5px 6px;
+  grid-template-columns: 1fr 64px;
+  gap: 8px;
+  padding: 6px;
   font-size: 9px;
   font-weight: 800;
-  opacity: 0.5;
+  opacity: 0.55;
   text-transform: uppercase;
   position: sticky;
   top: 0;
@@ -405,32 +405,51 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 }
 .ot-row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 54px;
-  gap: 6px;
-  padding: 6px;
+  grid-template-columns: 1fr 64px;
+  gap: 8px;
+  padding: 8px 6px;
   font-size: 11px;
   border-radius: 6px;
   transition: background 0.1s;
   cursor: default;
   border-bottom: 1px solid rgba(255,255,255,0.03);
+  align-items: start;
 }
 .ot-row:nth-child(even) { background: var(--row-even); }
 .ot-row:hover { background: rgba(255,255,255,0.05); }
 .ot-row.drawn { opacity: 0.42; }
 .ot-row.drawn .ot-name, .ot-row.drawn .ot-unit { text-decoration: line-through; }
-.ot-row .ot-name { font-weight: 800; color: var(--name-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ot-row .ot-unit { color: var(--unit-color); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ot-main { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ot-row .ot-name {
+  font-weight: 800;
+  color: var(--name-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.ot-row .ot-unit {
+  color: var(--unit-color);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.2;
+}
 .ot-row .ot-rank {
-  font-size: 9px;
+  font-size: 14px;
   text-align: center;
   color: var(--rank-color);
   font-weight: 900;
   font-family: var(--font-mono);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 1px 6px;
+  padding: 2px 6px;
   justify-self: end;
   align-self: center;
+  min-width: 48px;
 }
 
 /* ============ SPIN RESULT POPUP (bốc thăm) ============ */
@@ -835,6 +854,18 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 @media (max-width: 768px) {
   body { overflow: auto; height: auto; min-height: 100vh; }
 
+  body.mobile-bracket-overview .center {
+    padding: 4px 4px 64px;
+    overflow: auto;
+    min-height: calc(100vh - 120px);
+  }
+  body.mobile-bracket-overview #bracket-container {
+    transform-origin: top left;
+  }
+  body.mobile-bracket-overview .bracket-cols {
+    min-width: max-content;
+  }
+
   .mobile-tabs { display: flex; }
 
   .main {
@@ -845,13 +876,15 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .left {
     flex: none; width: 100%; min-width: unset; max-width: unset;
     border-right: none; border-bottom: 1px solid var(--border);
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 150px);
     overflow-y: auto;
+    padding-bottom: 70px;
   }
 
   .center {
     flex: none; width: 100%; min-height: 72vh;
     overflow-x: auto; padding: 6px;
+    position: relative;
   }
 
   .right {
@@ -907,8 +940,12 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .pu { font-size: 10px !important; }
   .pk { font-size: 9px; padding: 1px 6px; border-radius: 4px; }
 
-  /* Spin button lớn hơn để dễ tap */
-  .spin-btn { width: 64px !important; height: 64px !important; font-size: 13px !important; }
+  /* Vòng quay nhỏ gọn hơn trên mobile, vẫn dễ thao tác */
+  .wheel-wrap {
+    width: min(72vw, 280px);
+    margin: 2px auto 6px;
+  }
+  .spin-btn { width: 54px !important; height: 54px !important; font-size: 11px !important; }
 
   /* Modal full width trên mobile */
   .modal-c { min-width: unset; width: calc(100vw - 32px); max-width: unset; }
@@ -956,6 +993,24 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   body.tab-right .overview-table {
     padding-bottom: 6px;
   }
+  body.tab-right .ot-head {
+    grid-template-columns: 1fr 58px;
+    gap: 6px;
+    font-size: 8px;
+    padding: 6px 4px;
+  }
+  body.tab-right .ot-row {
+    grid-template-columns: 1fr 58px;
+    gap: 6px;
+    padding: 8px 4px;
+  }
+  body.tab-right .ot-row .ot-name { font-size: 14px; }
+  body.tab-right .ot-row .ot-rank {
+    font-size: 14px;
+    min-width: 44px;
+    padding: 2px 4px;
+  }
+  body.tab-right .ot-row .ot-unit { font-size: 12px; }
 }
 
 /* ============ BRACKET TABS (Bracket / Lịch Thi Đấu) ============ */
@@ -1549,7 +1604,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       </div>
     </div>
     <div class="overview-table" id="overview-table">
-      <div class="ot-head"><span>Tên</span><span>Đơn vị</span><span>Hạng</span></div>
+      <div class="ot-head"><span>Số thứ tự · Tên Cơ Thủ</span><span>Hạng</span></div>
     </div>
   </aside>
 </main>
@@ -2185,7 +2240,10 @@ async function init() {
     setSyncProgress(0);
   }, 400);
 
-  window.addEventListener('resize', () => { drawBracketLines(); });
+  window.addEventListener('resize', () => {
+    drawBracketLines();
+    applyMobileBracketOverview();
+  });
   setTimeout(drawBracketLines, 300);
 
   if (S.supaUrl && S.supaKey) setupRealtime();
@@ -2447,28 +2505,30 @@ function getUndrawn() { return S.players.filter(p => !p.drawn); }
 function renderPlayers() {
   const list = document.getElementById('player-list');
   list.innerHTML = '';
-  S.players.forEach(p => {
+  S.players.forEach((p, idx) => {
     const c = document.createElement('div');
     c.className = 'pc' + (p.drawn ? ' drawn' : '');
     c.innerHTML = `
       <span class="dx" onclick="removePlayer('${p.id}')">✖</span>
       <div class="pr-row">
-        <span class="pn" title="${p.name}">${p.name}</span>
-        ${p.rank ? `<span class="pk">${p.rank}</span>` : ''}
+        <span class="pn" title="${p.name}">${idx + 1}. ${p.name}</span>
+        <span class="pk">${p.rank || ''}</span>
       </div>
-      ${p.unit ? `<div class="pu">${p.unit}</div>` : ''}
+      <div class="pu">${p.unit || ''}</div>
     `;
     list.appendChild(c);
   });
   const table = document.getElementById('overview-table');
-  table.innerHTML = '<div class="ot-head"><span>Tên</span><span>Đơn vị</span><span>Hạng</span></div>';
-  S.players.forEach((p) => {
+  table.innerHTML = '<div class="ot-head"><span>Số thứ tự · Tên Cơ Thủ</span><span>Hạng</span></div>';
+  S.players.forEach((p, idx) => {
     const row = document.createElement('div');
     row.className = 'ot-row' + (p.drawn ? ' drawn' : '');
     row.innerHTML = `
-      <span class="ot-name" title="${p.name}">${p.name}</span>
-      <span class="ot-unit">${p.unit||'-'}</span>
-      <span class="ot-rank">${p.rank||'-'}</span>
+      <div class="ot-main">
+        <span class="ot-name" title="${p.name}">${idx + 1}. ${p.name}</span>
+        <span class="ot-unit">${p.unit || ''}</span>
+      </div>
+      <span class="ot-rank">${p.rank || ''}</span>
     `;
     table.appendChild(row);
   });
@@ -3384,12 +3444,17 @@ function handleExcel(e) {
     let added = 0;
     pushHistory();
     rows.slice(1).forEach(row => {
-      if (row[0]) {
+      const hasNewFormat = row.length >= 4;
+      const nameCell = hasNewFormat ? row[1] : row[0];
+      const unitCell = hasNewFormat ? row[2] : row[1];
+      const rankCell = hasNewFormat ? row[3] : row[2];
+
+      if (nameCell) {
         S.players.push({
           id: 'p_'+Date.now()+'_'+Math.random().toString(36).substr(2,6),
-          name: String(row[0]),
-          unit: row[1] ? String(row[1]) : '',
-          rank: row[2] ? String(row[2]) : '',
+          name: String(nameCell).trim(),
+          unit: unitCell ? String(unitCell).trim() : '',
+          rank: rankCell ? String(rankCell).trim() : '',
           drawn: false
         });
         added++;
@@ -3404,7 +3469,11 @@ function handleExcel(e) {
 }
 
 function downloadTemplate() {
-  const ws = XLSX.utils.aoa_to_sheet([['Tên','Đơn vị','Hạng'],['Nguyễn Văn A','CLB Arena','A']]);
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Số thứ tự','Tên Cơ Thủ','Đơn Vị','Hạng'],
+    [1,'Nguyễn Văn A','CLB Arena','A'],
+    [2,'Trần Văn B','CLB Star','']
+  ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Players');
   XLSX.writeFile(wb, 'live3c_template.xlsx');
@@ -3466,6 +3535,42 @@ window.addEventListener('DOMContentLoaded', async () => {
 /* ================================================================
    BRACKET TAB — Bracket / Lịch Thi Đấu
    ================================================================ */
+function applyMobileBracketOverview() {
+  if (window.innerWidth > 768) {
+    document.body.classList.remove('mobile-bracket-overview');
+    const bc = document.getElementById('bracket-container');
+    if (bc) bc.style.transform = '';
+    return;
+  }
+
+  const isCenterTab = document.body.classList.contains('tab-center');
+  const isBracketActive = document.getElementById('btab-bracket')?.classList.contains('active');
+  if (!isCenterTab || !isBracketActive) {
+    document.body.classList.remove('mobile-bracket-overview');
+    const bc = document.getElementById('bracket-container');
+    if (bc) bc.style.transform = '';
+    return;
+  }
+
+  const center = document.getElementById('center-panel');
+  const bc = document.getElementById('bracket-container');
+  if (!center || !bc) return;
+
+  document.body.classList.add('mobile-bracket-overview');
+
+  const w = bc.scrollWidth || bc.offsetWidth;
+  const h = bc.scrollHeight || bc.offsetHeight;
+  if (!w || !h) return;
+
+  const rotateW = h;
+  const rotateH = w;
+  const fitW = center.clientWidth / rotateW;
+  const fitH = (center.clientHeight - 12) / rotateH;
+  const scale = Math.max(0.22, Math.min(0.65, Math.min(fitW, fitH)));
+
+  bc.style.transform = `rotate(90deg) scale(${scale})`;
+}
+
 function switchBracketTab(tab) {
   const bracketContainer = document.getElementById('bracket-container');
   const schedulePanel = document.getElementById('schedule-panel');
@@ -3482,7 +3587,10 @@ function switchBracketTab(tab) {
     centerPanel.classList.remove('schedule-active');
     btabBracket.classList.add('active');
     btabSchedule.classList.remove('active');
-    setTimeout(drawBracketLines, 80);
+    setTimeout(() => {
+      drawBracketLines();
+      applyMobileBracketOverview();
+    }, 80);
   } else {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.add('active');
@@ -3491,6 +3599,7 @@ function switchBracketTab(tab) {
     btabBracket.classList.remove('active');
     btabSchedule.classList.add('active');
     renderSchedule();
+    applyMobileBracketOverview();
   }
 }
 
@@ -3885,7 +3994,14 @@ function switchTab(tab) {
   document.querySelectorAll('.m-tab').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
-  if (tab === 'center') setTimeout(drawBracketLines, 100);
+  if (tab === 'center') {
+    setTimeout(() => {
+      drawBracketLines();
+      applyMobileBracketOverview();
+    }, 100);
+  } else {
+    applyMobileBracketOverview();
+  }
 }
 
 Object.assign(globalThis, {

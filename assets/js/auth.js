@@ -10,7 +10,7 @@ export function requireAdmin() {
 
 export function login(password) {
   // hardcode tạm, đổi sau
-  if (password === 'admin2025') {
+  if (password === 'quang3c89') {
     localStorage.setItem('live3c_admin', 'true');
     return true;
   }
