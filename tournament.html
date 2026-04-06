@@ -371,6 +371,23 @@ body.fs-mode #center-panel .bracket-bg-layer {
   0%, 100% { opacity: 0.15; transform: scale(0.9); }
   50% { opacity: 0.55; transform: scale(1.22); }
 }
+body.export-static *,
+body.export-static *::before,
+body.export-static *::after {
+  animation: none !important;
+  transition: none !important;
+  transform-style: flat !important;
+}
+body.export-static .bracket-bg-particles,
+body.export-static .bracket-bg-glow,
+body.export-static #fs-mini-wheel,
+body.export-static #spin-popup,
+body.export-static #winner-popup,
+body.export-static #battle-popup,
+body.export-static .bracket-color-tools,
+body.export-static .bracket-tool-zone {
+  display: none !important;
+}
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; z-index: 2; }
 .bracket-tool-zone {
   position: absolute;
@@ -4065,6 +4082,13 @@ async function exportImage(elementId, filename) {
       windowHeight: height,
       scrollX: 0,
       scrollY: 0,
+      removeContainer: true,
+      logging: false,
+      foreignObjectRendering: false,
+      imageTimeout: 0,
+      onclone: (doc) => {
+        doc.body.classList.add('export-static');
+      },
     });
 
     const a = document.createElement('a');
