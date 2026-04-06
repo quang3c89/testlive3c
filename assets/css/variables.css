@@ -1,39 +1,91 @@
 /* Live3C — variables.css */
 :root {
-  --bg:        #071629;
-  --bg2:       #0b2038;
-  --card:      #10263f;
-  --card2:     #16314f;
-  --border:    rgba(255,255,255,0.10);
-  --border2:   rgba(255,255,255,0.18);
-  --text:      #f7f9fc;
-  --muted:     #b8c5d6;
-  --accent:    #ffd447;
-  --accent2:   #d72638;
-  --green:     #22c55e;
-  --red:       #ef4444;
-  --blue:      #3b82f6;
-  --radius:    12px;
-  --font:      'DM Sans', sans-serif;
-  --display:   'Barlow Condensed', sans-serif;
-  --mono:      'JetBrains Mono', monospace;
+  /* BACKGROUNDS */
+  --c-bg:        #00388D;
+  --c-surface:   #001E5C;
+  --c-surface2:  #002878;
+  --c-surface3:  #003090;
+
+  /* BORDERS */
+  --c-border:    rgba(255, 255, 255, 0.08);
+  --c-border2:   rgba(255, 255, 255, 0.15);
+  --c-border3:   rgba(255, 255, 255, 0.25);
+
+  /* TEXT */
+  --c-ink:       #FFFFFF;
+  --c-ink2:      rgba(255,255,255,0.65);
+  --c-ink3:      rgba(255,255,255,0.38);
+
+  /* ACCENT — Yellow ball */
+  --c-gold:      #E8B820;
+  --c-gold-dk:   #3D2800;
+  --c-gold-dim:  rgba(232,184,32,0.12);
+  --c-gold-rim:  rgba(232,184,32,0.28);
+
+  /* STATUS — Red ball (LIVE) */
+  --c-red:       #D63830;
+  --c-red-dim:   rgba(214,56,48,0.12);
+  --c-red-rim:   rgba(214,56,48,0.28);
+
+  /* STATUS — Open registration */
+  --c-open:      rgba(255,255,255,0.80);
+  --c-open-dim:  rgba(255,255,255,0.08);
+  --c-open-rim:  rgba(255,255,255,0.20);
+
+  /* STATUS — Done */
+  --c-done:      rgba(255,255,255,0.35);
+  --c-done-dim:  rgba(255,255,255,0.05);
+
+  /* SHAPE */
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-xl:   28px;
+
+  /* SHADOWS */
+  --shadow-sm:   0 1px 4px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-md:   0 6px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-lg:   0 16px 56px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-gold: 0 4px 20px rgba(232,184,32,0.20);
+
+  /* FONTS */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+
+  /* Legacy aliases for existing UI logic/styles */
+  --bg: var(--c-bg);
+  --bg2: var(--c-surface2);
+  --card: var(--c-surface);
+  --card2: var(--c-surface2);
+  --border: var(--c-border);
+  --border2: var(--c-border2);
+  --text: var(--c-ink);
+  --muted: var(--c-ink2);
+  --accent: var(--c-gold);
+  --accent2: var(--c-red);
+  --green: #22c55e;
+  --red: var(--c-red);
+  --blue: #3b82f6;
+  --radius: var(--radius-md);
+  --font: var(--font-body);
+  --display: var(--font-display);
+  --mono: 'JetBrains Mono', monospace;
 
   --shadow-light: rgba(255,255,255,0.04);
   --shadow-dark: rgba(0,0,0,0.6);
-  --font-main: 'DM Sans', sans-serif;
-  --font-display: 'Barlow Condensed', sans-serif;
+  --font-main: var(--font-body);
   --font-mono: 'JetBrains Mono', monospace;
-  --tb-bg: #0d1117;
-  --tb-font: 'DM Sans', sans-serif;
-  --title-font: 'Barlow Condensed', sans-serif;
-  --name-color: #e6edf3;
-  --unit-color: #8b949e;
-  --rank-color: #f0a500;
+  --tb-bg: var(--c-surface);
+  --tb-font: var(--font-body);
+  --title-font: var(--font-display);
+  --name-color: var(--c-ink);
+  --unit-color: var(--c-ink2);
+  --rank-color: var(--c-gold);
   --row-even: rgba(255,255,255,0.02);
   --row-odd: transparent;
-  --glow: rgba(240,165,0,0.25);
+  --glow: rgba(232,184,32,0.25);
 
-  --nav-height: 56px;
+  --nav-height: 60px;
   --transition-fast: 0.15s;
   --transition-med: 0.3s;
 }

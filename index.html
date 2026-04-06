@@ -7,11 +7,12 @@
 <meta property="og:title" content="Live3C">
 <meta property="og:image" content="/assets/og-image.jpg">
 <title>Live3C — Billiards Carom 3 Băng</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/variables.css">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/components.css">
 <link rel="stylesheet" href="assets/css/animations.css">
+<link rel="stylesheet" href="assets/css/redesign.css">
 </head>
 <body>
 
@@ -32,12 +33,17 @@
   </div>
   <span class="nav-spacer"></span>
   <a class="nav-link" href="tournaments.html">Giải đấu</a>
-  <a class="nav-link" href="players.html">Cơ thủ</a>
-  <a class="nav-link" href="leaderboard.html">Bảng xếp hạng</a>
   <a class="nav-link" href="#contact">Liên hệ</a>
-  <div class="nav-rt"><div class="rt-dot off" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
-  <a class="nav-btn pri" href="admin/login.html">Đăng nhập</a>
+  <div class="nav-status offline" id="nav-status"><span class="status-dot" id="rt-dot"></span><span id="rt-label">OFFLINE</span></div>
+  <a class="nav-login" href="admin/login.html">Đăng nhập</a>
+  <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Mở menu"><span></span><span></span><span></span></button>
 </nav>
+<div class="nav-drawer-overlay" id="nav-drawer-overlay"></div>
+<aside class="nav-drawer" id="nav-drawer">
+  <a class="nav-link" href="tournaments.html">Giải đấu</a>
+  <a class="nav-link" href="#contact">Liên hệ</a>
+  <a class="nav-login" href="admin/login.html">Đăng nhập</a>
+</aside>
 
 <section class="hero" id="home">
   <div class="hero-bg"></div>

@@ -121,11 +121,20 @@ export function setRT(isOnline, options = {}) {
   const labelId = options.labelId ?? 'rt-label';
   const d = document.getElementById(dotId);
   const l = document.getElementById(labelId);
+  const status = document.getElementById('nav-status');
   if (!d || !l) return;
+
+  d.classList.toggle('pulse', !!isOnline);
   if (mode === 'tournament') {
     d.classList.toggle('offline', !isOnline);
   } else {
     d.classList.toggle('off', !isOnline);
   }
+
+  if (status) {
+    status.classList.toggle('online', !!isOnline);
+    status.classList.toggle('offline', !isOnline);
+  }
+
   l.textContent = isOnline ? 'LIVE' : 'OFFLINE';
 }
