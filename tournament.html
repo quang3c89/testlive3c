@@ -1136,6 +1136,27 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   display: flex;
   pointer-events: all;
 }
+.bracket-tab-spacer { flex: 1; }
+.bracket-full-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+}
+.bracket-full-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(240,165,0,0.12);
+}
 .btab {
   padding: 5px 14px 6px;
   border-radius: 8px 8px 0 0;
@@ -1686,6 +1707,8 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     <div class="bracket-tab-bar" id="bracket-tab-bar">
       <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')">🎯 Bracket</button>
       <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')">⚔️ Lịch Thi Đấu</button>
+      <span class="bracket-tab-spacer"></span>
+      <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
 
     <div class="bracket-wrap" id="bracket-container">
@@ -3652,6 +3675,19 @@ function captureScheduleImage() {
   }).catch(err => showToast('❌ Chụp lịch thi đấu thất bại: ' + err.message, 'error'));
 }
 
+function toggleBracketFullscreen() {
+  const target = document.getElementById('center-panel');
+  if (!target) return;
+
+  if (!document.fullscreenElement) {
+    const req = target.requestFullscreen || target.webkitRequestFullscreen || target.msRequestFullscreen;
+    if (req) req.call(target);
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (exit) exit.call(document);
+  }
+}
+
 /* ================================================================
    BOOT — Load thẳng, không chặn bởi login
    ================================================================ */
@@ -4154,7 +4190,7 @@ Object.assign(globalThis, {
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
-  toggleThemeDots, toggleLeftPanel,
+  toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
 });
 </script>
 
