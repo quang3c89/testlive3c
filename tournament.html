@@ -506,7 +506,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* ============ SPIN RESULT POPUP (bốc thăm) ============ */
 #spin-popup {
-  display: none; position: fixed; z-index: 7000;
+  display: none;
+  position: fixed;
+  z-index: 99999;
   pointer-events: none;
 }
 #spin-popup.show { display: block; pointer-events: all; }
@@ -3707,6 +3709,22 @@ function toggleBracketFullscreen() {
     if (exit) exit.call(document);
   }
 }
+
+let targetFullscreenRoot = null;
+let popupOriginalParent = null;
+
+document.addEventListener('fullscreenchange', () => {
+  const popup = document.getElementById('spin-popup');
+  if (popup && !popupOriginalParent) popupOriginalParent = popup.parentElement;
+  targetFullscreenRoot = document.fullscreenElement || null;
+
+  if (!popup) return;
+  if (targetFullscreenRoot) {
+    targetFullscreenRoot.appendChild(popup);
+  } else if (popupOriginalParent) {
+    popupOriginalParent.appendChild(popup);
+  }
+});
 
 /* ================================================================
    BOOT — Load thẳng, không chặn bởi login
