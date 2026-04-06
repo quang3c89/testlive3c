@@ -1967,6 +1967,7 @@ let pendingSpinPlayer = null;
 let pendingSpinSlot = null;
 let autoSpinEnabled = false;
 let autoSpinStopRequested = false;
+let fsMiniWheelArmed = false;
 let spinAudioCtx = null;
 let spinTickTimer = null;
 
@@ -2722,7 +2723,7 @@ function syncFullscreenMiniWheel() {
 
   if (!miniWheel || !miniCanvas || !mainCanvas) return;
 
-  if (!isBracketFullscreen) {
+  if (!isBracketFullscreen || !S.isSpinning || !fsMiniWheelArmed) {
     miniWheel.classList.remove('show');
     return;
   }
@@ -2861,8 +2862,10 @@ function spinWheel() {
   if (pendingEl) pendingEl.classList.add('pending-slot');
 
   S.isSpinning = true;
+  fsMiniWheelArmed = true;
   startSpinSound();
   document.getElementById('spin-btn').disabled = true;
+  syncFullscreenMiniWheel();
 
   const ti = Math.floor(Math.random() * undrawn.length);
   const tp = undrawn[ti];
@@ -3144,8 +3147,10 @@ function commitPlayer(player, slot) {
 function resetWheel() {
   setTimeout(() => {
     S.isSpinning = false;
+    fsMiniWheelArmed = false;
     document.getElementById('spin-btn').disabled = false;
     drawWheel(S.wheelRotation);
+    syncFullscreenMiniWheel();
   }, 200);
 }
 
