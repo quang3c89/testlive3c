@@ -366,6 +366,15 @@ body.viewer-mode .bracket-color-tools { display: none !important; }
   transition: opacity 0.15s ease;
 }
 .bct-item.open .bct-picker { opacity: 1; pointer-events: auto; }
+@supports selector(::-webkit-color-swatch) {
+  .bct-picker {
+    width: 0;
+    height: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+  }
+}
 #bracket-lines { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; overflow: visible; }
 .bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; min-width: 100%; min-height: calc(100vh - 120px); }
 
@@ -2525,7 +2534,18 @@ function toggleBracketColorPicker(e, key) {
   e?.stopPropagation?.();
   document.querySelectorAll('.bct-item').forEach(item => item.classList.remove('open'));
   const wrap = document.querySelector(`.bct-item[data-k="${key}"]`);
-  if (wrap) wrap.classList.add('open');
+  if (!wrap) return;
+  wrap.classList.add('open');
+
+  const picker = wrap.querySelector('.bct-picker');
+  if (!picker) return;
+
+  // Open native color dialog immediately for faster UX
+  if (typeof picker.showPicker === 'function') {
+    picker.showPicker();
+  } else {
+    picker.click();
+  }
 }
 
 document.addEventListener('click', (e) => {
