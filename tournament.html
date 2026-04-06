@@ -393,6 +393,15 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to right, rgba(240,165,0,0.07), transparent);
 }
+.mp.pending-slot {
+  border-color: rgba(232,184,32,0.7) !important;
+  box-shadow: 0 0 0 1px rgba(232,184,32,0.45) inset, 0 0 16px rgba(232,184,32,0.35);
+  animation: pendingSlotGlow 1s ease-in-out infinite;
+}
+@keyframes pendingSlotGlow {
+  0%,100% { box-shadow: 0 0 0 1px rgba(232,184,32,0.35) inset, 0 0 8px rgba(232,184,32,0.2); }
+  50% { box-shadow: 0 0 0 1px rgba(232,184,32,0.7) inset, 0 0 24px rgba(232,184,32,0.55); }
+}
 /* Disable click in viewer mode */
 body.viewer-mode .mp { cursor: default; }
 body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
@@ -2841,6 +2850,10 @@ function spinWheel() {
   const slot = findNextSlot();
   if (!slot) { showToast('🏆 Bracket đã đầy!'); return; }
 
+  document.querySelectorAll('.mp.pending-slot').forEach(el => el.classList.remove('pending-slot'));
+  const pendingEl = document.getElementById(`match-${slot.r}-${slot.m}-${slot.pKey}`);
+  if (pendingEl) pendingEl.classList.add('pending-slot');
+
   S.isSpinning = true;
   startSpinSound();
   document.getElementById('spin-btn').disabled = true;
@@ -2916,10 +2929,12 @@ function showSpinPopup(player) {
   popup.style.transform = '';
 
   if (isBracketFullscreen) {
+    const mw = 240;
     if (miniWheel && miniWheelCanvas && canvas) {
-      const mw = 240;
       miniWheel.style.left = (window.innerWidth / 2 - mw / 2) + 'px';
       miniWheel.style.top = '16px';
+      miniWheel.style.width = mw + 'px';
+      miniWheel.style.height = mw + 'px';
       miniWheel.classList.add('show');
       const pctx = miniWheelCanvas.getContext('2d');
       pctx.clearRect(0, 0, miniWheelCanvas.width, miniWheelCanvas.height);
@@ -2927,7 +2942,7 @@ function showSpinPopup(player) {
     }
 
     popup.style.left = '50%';
-    popup.style.top = '272px';
+    popup.style.top = (16 + mw + 14) + 'px';
     popup.style.transform = 'translate(-50%, 0)';
   } else {
     if (miniWheel) miniWheel.classList.remove('show');
@@ -3023,12 +3038,15 @@ function flyPlayer(player, slot, spinAgain = false) {
   if (flyLock) return;
   flyLock = true;
 
+  document.querySelectorAll('.mp.pending-slot').forEach(el => el.classList.remove('pending-slot'));
+
   const canvas = document.getElementById('wheel-canvas');
   const te = document.getElementById(`match-${slot.r}-${slot.m}-${slot.pKey}`);
 
   // Lấy tọa độ đích TRƯỚC KHI commit (commit sẽ gọi renderBracket xóa DOM)
   const isBracketFullscreen = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
-  const startSource = isBracketFullscreen ? document.getElementById('spin-popup') : canvas;
+  const fsWheel = document.getElementById('fs-mini-wheel');
+  const startSource = (isBracketFullscreen && fsWheel && fsWheel.classList.contains('show')) ? fsWheel : canvas;
   const wR = startSource ? startSource.getBoundingClientRect() : canvas.getBoundingClientRect();
   let tR = te ? te.getBoundingClientRect() : null;
 
