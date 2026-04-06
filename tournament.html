@@ -3773,12 +3773,14 @@ function toggleBracketFullscreen() {
 
 let targetFullscreenRoot = null;
 let popupOriginalParent = null;
+let miniWheelOriginalParent = null;
 
 document.addEventListener('fullscreenchange', () => {
   const popup = document.getElementById('spin-popup');
   const miniWheel = document.getElementById('fs-mini-wheel');
 
   if (popup && !popupOriginalParent) popupOriginalParent = popup.parentElement;
+  if (miniWheel && !miniWheelOriginalParent) miniWheelOriginalParent = miniWheel.parentElement;
   targetFullscreenRoot = document.fullscreenElement || null;
 
   if (popup) {
@@ -3789,8 +3791,13 @@ document.addEventListener('fullscreenchange', () => {
     }
   }
 
-  if (!targetFullscreenRoot && miniWheel) {
-    miniWheel.classList.remove('show');
+  if (miniWheel) {
+    if (targetFullscreenRoot) {
+      targetFullscreenRoot.appendChild(miniWheel);
+    } else if (miniWheelOriginalParent) {
+      miniWheelOriginalParent.appendChild(miniWheel);
+      miniWheel.classList.remove('show');
+    }
   }
 
   syncFullscreenMiniWheel();
