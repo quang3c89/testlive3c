@@ -320,6 +320,14 @@ export function applyTheme(themeId, appState, hooks = {}) {
   r.style.setProperty('--text', t.text);
   r.style.setProperty('--accent', t.accent);
   r.style.setProperty('--accent2', t.accent2);
+  /* Sync new design tokens so tournament theme switch also affects global/base layers */
+  r.style.setProperty('--c-bg', t.bg);
+  r.style.setProperty('--c-surface', t.card);
+  r.style.setProperty('--c-surface2', t.tb || t.card);
+  r.style.setProperty('--c-ink', t.text);
+  r.style.setProperty('--c-ink2', t.uc || t.text);
+  r.style.setProperty('--c-gold', t.accent);
+  r.style.setProperty('--c-red', t.accent2);
   r.style.setProperty('--shadow-light', t.sL);
   r.style.setProperty('--shadow-dark', t.sD);
   r.style.setProperty('--radius', t.r);
