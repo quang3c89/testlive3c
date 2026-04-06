@@ -332,6 +332,10 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   pointer-events: none;
   z-index: 0;
 }
+body.fs-mode #center-panel .bracket-bg-layer {
+  width: 100%;
+  left: 0;
+}
 .bracket-bg-glow {
   position: absolute;
   left: 50%;
@@ -512,9 +516,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 .mp-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .mp-top { display: flex; align-items: center; gap: 4px; }
-.mn { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; font-weight: 800; flex: 1; color: var(--bracket-name-color, #1f2937); }
-.mp-rank { font-size: 8px; background: var(--rank-color); color: var(--bracket-rank-color, #7c3f00); padding: 0 3px; border-radius: 2px; font-weight: 800; white-space: nowrap; font-family: var(--font-mono); flex-shrink: 0; }
-.mp-unit { font-size: 8.5px; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; line-height: 1.2; }
+.mn { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; font-weight: 800; flex: 1; color: var(--bracket-name-color, #1f2937); opacity: 1; }
+.mp-rank { font-size: 8px; background: var(--rank-color); color: #111827; padding: 0 3px; border-radius: 2px; font-weight: 800; white-space: nowrap; font-family: var(--font-mono); flex-shrink: 0; opacity: 1; }
+.mp-unit { font-size: 8.5px; color: var(--bracket-unit-color, #5b4a16); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; line-height: 1.2; opacity: 1; }
 .ms {
   width: 28px; border: 1px solid var(--border); border-radius: 4px;
   background: rgba(255,255,255,0.05); color: inherit; padding: 1px;
@@ -1856,7 +1860,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <div class="bct-item" data-k="line"><button class="bct-btn" type="button" title="Màu line nối" onclick="toggleBracketColorPicker(event, 'line')">╱</button><input class="bct-picker" id="bct-line" type="color" value="#fff6d9" oninput="setBracketColor('line', this.value)"></div>
       <div class="bct-item" data-k="matchBorder"><button class="bct-btn" type="button" title="Màu viền ô trận" onclick="toggleBracketColorPicker(event, 'matchBorder')">▣</button><input class="bct-picker" id="bct-matchBorder" type="color" value="#78580c" oninput="setBracketColor('matchBorder', this.value)"></div>
       <div class="bct-item" data-k="nameColor"><button class="bct-btn" type="button" title="Màu tên trên bracket" onclick="toggleBracketColorPicker(event, 'nameColor')">T</button><input class="bct-picker" id="bct-nameColor" type="color" value="#1f2937" oninput="setBracketColor('nameColor', this.value)"></div>
-      <div class="bct-item" data-k="rankColor"><button class="bct-btn" type="button" title="Màu hạng trên bracket" onclick="toggleBracketColorPicker(event, 'rankColor')">R</button><input class="bct-picker" id="bct-rankColor" type="color" value="#7c3f00" oninput="setBracketColor('rankColor', this.value)"></div>
+      <div class="bct-item" data-k="unitColor"><button class="bct-btn" type="button" title="Màu đơn vị trên bracket" onclick="toggleBracketColorPicker(event, 'unitColor')">U</button><input class="bct-picker" id="bct-unitColor" type="color" value="#5b4a16" oninput="setBracketColor('unitColor', this.value)"></div>
     </div>
     <div id="fs-draw-stage"></div>
 
@@ -2060,7 +2064,7 @@ const DEFAULTS = {
     matchBorder: '#78580c',
     line: '#fff6d9',
     nameColor: '#1f2937',
-    rankColor: '#7c3f00',
+    unitColor: '#5b4a16',
   }
 };
 
@@ -2607,7 +2611,7 @@ function applyBracketColorVars() {
   root.style.setProperty('--match-border', c.matchBorder || DEFAULTS.bracketColors.matchBorder);
   root.style.setProperty('--line-color', c.line || DEFAULTS.bracketColors.line);
   root.style.setProperty('--bracket-name-color', c.nameColor || DEFAULTS.bracketColors.nameColor);
-  root.style.setProperty('--bracket-rank-color', c.rankColor || DEFAULTS.bracketColors.rankColor || '#7c3f00');
+  root.style.setProperty('--bracket-unit-color', c.unitColor || DEFAULTS.bracketColors.unitColor || '#5b4a16');
 
   const bgLayer = document.getElementById('bracket-bg-layer');
   if (bgLayer) {
@@ -2624,7 +2628,7 @@ function applyBracketColorVars() {
     line: 'bct-line',
     matchBorder: 'bct-matchBorder',
     nameColor: 'bct-nameColor',
-    rankColor: 'bct-rankColor',
+    unitColor: 'bct-unitColor',
   };
   Object.entries(map).forEach(([k, id]) => {
     const el = document.getElementById(id);
@@ -2645,8 +2649,8 @@ function setBracketColor(key, value) {
     S.bracketColors.matchBorder = value;
   } else if (key === 'nameColor') {
     S.bracketColors.nameColor = value;
-  } else if (key === 'rankColor') {
-    S.bracketColors.rankColor = value;
+  } else if (key === 'unitColor') {
+    S.bracketColors.unitColor = value;
   }
   applyBracketColorVars();
   drawBracketLines();
