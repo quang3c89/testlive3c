@@ -876,9 +876,10 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .left {
     flex: none; width: 100%; min-width: unset; max-width: unset;
     border-right: none; border-bottom: 1px solid var(--border);
-    max-height: calc(100vh - 150px);
-    overflow-y: auto;
-    padding-bottom: 70px;
+    min-height: calc(100vh - 124px);
+    max-height: calc(100vh - 124px);
+    overflow: hidden;
+    padding-bottom: 8px;
   }
 
   .center {
@@ -925,11 +926,26 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   }
   .theme-strip .label { display: none; }
 
-  /* Bốc thăm mobile: danh sách cơ thủ full chiều ngang, dễ đọc */
+  /* Bốc thăm mobile: chia vùng rõ ràng, danh sách nằm dưới vòng quay gọn đẹp */
+  .wheel-wrap {
+    width: min(68vw, 248px);
+    margin: 4px auto 8px;
+    flex: 0 0 auto;
+  }
+  .ctrl-row {
+    flex: 0 0 auto;
+    padding: 4px 0 6px;
+    gap: 6px;
+  }
   .plist-left {
     grid-template-columns: 1fr;
     gap: 6px;
-    padding: 2px 0;
+    padding: 0 2px 6px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 2px;
   }
   .pc {
     padding: 8px 10px;
@@ -940,12 +956,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .pu { font-size: 10px !important; }
   .pk { font-size: 9px; padding: 1px 6px; border-radius: 4px; }
 
-  /* Vòng quay nhỏ gọn hơn trên mobile, vẫn dễ thao tác */
-  .wheel-wrap {
-    width: min(72vw, 280px);
-    margin: 2px auto 6px;
-  }
-  .spin-btn { width: 54px !important; height: 54px !important; font-size: 11px !important; }
+  .spin-btn { width: 52px !important; height: 52px !important; font-size: 11px !important; }
 
   /* Modal full width trên mobile */
   .modal-c { min-width: unset; width: calc(100vw - 32px); max-width: unset; }
@@ -977,21 +988,31 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     width: 100% !important;
     max-width: 100% !important;
     min-width: 100% !important;
+    min-height: calc(100vh - 124px) !important;
+    max-height: calc(100vh - 124px) !important;
     flex: 1 1 100% !important;
-    padding: 10px 10px 70px !important;
+    padding: 8px 8px 10px !important;
     border-top: none !important;
+    overflow: hidden !important;
+  }
+  body.tab-right .right-header {
+    padding: 2px 0 6px;
+    margin-bottom: 2px;
   }
   body.tab-right .right-header h3 {
-    font-size: 13px;
-    letter-spacing: 1.2px;
+    font-size: 12px;
+    letter-spacing: 1px;
     opacity: 0.75;
   }
   body.tab-right .export-btn {
-    padding: 5px 10px;
+    padding: 4px 8px;
     font-size: 10px;
   }
   body.tab-right .overview-table {
-    padding-bottom: 6px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 4px;
   }
   body.tab-right .ot-head {
     grid-template-columns: 1fr 58px;
