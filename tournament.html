@@ -4039,17 +4039,43 @@ function downloadTemplate() {
 /* ================================================================
    EXPORT
    ================================================================ */
-function exportImage(elementId, filename) {
-  const el = document.getElementById(elementId); if (!el) return;
-  html2canvas(el, {
-    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
-    scale: 2, useCORS: true
-  }).then(canvas => {
+async function exportImage(elementId, filename) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const isBracketShot = elementId === 'center-panel' || elementId === 'bracket-container';
+
+  try {
+    if (isBracketShot) {
+      document.body.classList.add('export-static');
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    }
+
+    const target = isBracketShot ? document.getElementById('center-panel') : el;
+    const width = isBracketShot ? Math.max(target.scrollWidth, target.clientWidth) : undefined;
+    const height = isBracketShot ? Math.max(target.scrollHeight, target.clientHeight) : undefined;
+
+    const canvas = await html2canvas(target, {
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+      scale: 2,
+      useCORS: true,
+      width,
+      height,
+      windowWidth: width,
+      windowHeight: height,
+      scrollX: 0,
+      scrollY: 0,
+    });
+
     const a = document.createElement('a');
     a.download = `live3c_${filename}_${Date.now()}.png`;
     a.href = canvas.toDataURL('image/png');
     a.click();
-  }).catch(err => showToast('❌ Export thất bại: ' + err.message, 'error'));
+  } catch (err) {
+    showToast('❌ Export thất bại: ' + err.message, 'error');
+  } finally {
+    if (isBracketShot) document.body.classList.remove('export-static');
+  }
 }
 
 function captureScheduleImage() {
