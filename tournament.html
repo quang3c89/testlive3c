@@ -535,16 +535,20 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   from { opacity:0; transform: scale(0.72) translateY(12px); }
   to { opacity:1; transform: scale(1) translateY(0); }
 }
-.spin-popup-wheel {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 8px;
+#fs-mini-wheel {
+  display: none;
+  position: fixed;
+  z-index: 99998;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
   border: 1px solid rgba(240,165,0,0.28);
-  box-shadow: 0 0 0 4px rgba(240,165,0,0.08);
+  box-shadow: 0 0 0 4px rgba(240,165,0,0.08), 0 10px 30px rgba(0,0,0,0.45);
   overflow: hidden;
+  pointer-events: none;
 }
-#popup-wheel-canvas { width: 100%; height: 100%; display: block; }
+#fs-mini-wheel.show { display: block; }
+#fs-mini-wheel-canvas { width: 100%; height: 100%; display: block; }
 .spin-popup-confetti { font-size: 26px; animation: confettiBounce 0.7s ease-in-out infinite alternate; display: block; }
 @keyframes confettiBounce { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.18) rotate(6deg); } }
 .spin-popup-label {
@@ -1175,34 +1179,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   background: rgba(240,165,0,0.12);
 }
 #fs-draw-stage { display: none; }
-#center-panel.fs-draw-active #bracket-container,
-#center-panel.fs-draw-active #schedule-panel,
-#center-panel.fs-draw-active .bracket-tab-bar {
-  display: none !important;
-}
-#center-panel.fs-draw-active #fs-draw-stage {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  min-height: calc(100vh - 24px);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  position: relative;
-  gap: 16px;
-}
-#center-panel.fs-draw-active .wheel-wrap {
-  width: min(76vh, 76vw);
-  max-width: 760px;
-  min-width: 320px;
-}
-#center-panel.fs-draw-active #spin-popup {
-  position: absolute;
-  left: 50% !important;
-  top: calc(50% + min(38vh, 280px)) !important;
-  transform: translate(-50%, 0) !important;
-  z-index: 99999;
-}
 .btab {
   padding: 5px 14px 6px;
   border-radius: 8px 8px 0 0;
@@ -1616,9 +1592,6 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 <!-- SPIN RESULT POPUP -->
 <div id="spin-popup">
   <div class="spin-popup-box">
-    <div class="spin-popup-wheel" id="spin-popup-wheel" style="display:none;">
-      <canvas id="popup-wheel-canvas" width="120" height="120"></canvas>
-    </div>
     <span class="spin-popup-confetti" id="popup-emoji">🎉</span>
     <div class="spin-popup-label">Đã bốc được</div>
     <div class="spin-popup-name" id="popup-name">—</div>
@@ -1626,6 +1599,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     <div id="popup-rank-wrap"></div>
   </div>
 </div>
+<div id="fs-mini-wheel"><canvas id="fs-mini-wheel-canvas" width="240" height="240"></canvas></div>
 
 <!-- WINNER POPUP -->
 <div id="winner-popup">
@@ -2909,29 +2883,29 @@ function showSpinPopup(player) {
   const rect   = canvas.getBoundingClientRect();
   const popup  = document.getElementById('spin-popup');
   const isBracketFullscreen = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
-  const isFsDrawActive = document.getElementById('center-panel')?.classList.contains('fs-draw-active');
 
-  const popupWheelWrap = document.getElementById('spin-popup-wheel');
-  const popupWheelCanvas = document.getElementById('popup-wheel-canvas');
-  if (isBracketFullscreen && popupWheelWrap && popupWheelCanvas && canvas) {
-    popupWheelWrap.style.display = 'block';
-    const pctx = popupWheelCanvas.getContext('2d');
-    pctx.clearRect(0, 0, popupWheelCanvas.width, popupWheelCanvas.height);
-    pctx.drawImage(canvas, 0, 0, popupWheelCanvas.width, popupWheelCanvas.height);
-  } else if (popupWheelWrap) {
-    popupWheelWrap.style.display = 'none';
-  }
+  const miniWheel = document.getElementById('fs-mini-wheel');
+  const miniWheelCanvas = document.getElementById('fs-mini-wheel-canvas');
 
   popup.classList.remove('centered');
   popup.style.transform = '';
 
-  if (isBracketFullscreen && !isFsDrawActive) {
-    popup.classList.add('centered');
-  } else if (isFsDrawActive) {
+  if (isBracketFullscreen) {
+    if (miniWheel && miniWheelCanvas && canvas) {
+      const mw = 240;
+      miniWheel.style.left = (window.innerWidth / 2 - mw / 2) + 'px';
+      miniWheel.style.top = '16px';
+      miniWheel.classList.add('show');
+      const pctx = miniWheelCanvas.getContext('2d');
+      pctx.clearRect(0, 0, miniWheelCanvas.width, miniWheelCanvas.height);
+      pctx.drawImage(canvas, 0, 0, miniWheelCanvas.width, miniWheelCanvas.height);
+    }
+
     popup.style.left = '50%';
-    popup.style.top = 'calc(50% + min(38vh, 280px))';
+    popup.style.top = '272px';
     popup.style.transform = 'translate(-50%, 0)';
   } else {
+    if (miniWheel) miniWheel.classList.remove('show');
     const boxW = 240;
     popup.style.left = (rect.left + rect.width / 2 - boxW / 2) + 'px';
     popup.style.top  = (rect.top  + rect.height / 2 - 100) + 'px';
@@ -3760,18 +3734,11 @@ function captureScheduleImage() {
 
 function toggleBracketFullscreen() {
   const target = document.getElementById('center-panel');
-  const stage = document.getElementById('fs-draw-stage');
-  const wheelWrap = document.querySelector('.left .wheel-wrap');
-  if (!target || !stage || !wheelWrap) return;
+  if (!target) return;
 
   if (!document.fullscreenElement) {
     const req = target.requestFullscreen || target.webkitRequestFullscreen || target.msRequestFullscreen;
-    if (req) {
-      req.call(target).then(() => {
-        target.classList.add('fs-draw-active');
-        stage.appendChild(wheelWrap);
-      }).catch(() => {});
-    }
+    if (req) req.call(target);
   } else {
     const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
     if (exit) exit.call(document);
@@ -3783,10 +3750,7 @@ let popupOriginalParent = null;
 
 document.addEventListener('fullscreenchange', () => {
   const popup = document.getElementById('spin-popup');
-  const center = document.getElementById('center-panel');
-  const stage = document.getElementById('fs-draw-stage');
-  const wheelWrap = document.querySelector('#fs-draw-stage .wheel-wrap');
-  const wheelHost = document.querySelector('.left .wheel-control-wrap');
+  const miniWheel = document.getElementById('fs-mini-wheel');
 
   if (popup && !popupOriginalParent) popupOriginalParent = popup.parentElement;
   targetFullscreenRoot = document.fullscreenElement || null;
@@ -3799,10 +3763,9 @@ document.addEventListener('fullscreenchange', () => {
     }
   }
 
-  if (!targetFullscreenRoot) {
-    center?.classList.remove('fs-draw-active');
-    if (wheelWrap && wheelHost) wheelHost.prepend(wheelWrap);
-    if (stage) stage.innerHTML = '';
+  if (miniWheel) {
+    if (targetFullscreenRoot) miniWheel.classList.add('show');
+    else miniWheel.classList.remove('show');
   }
 });
 
