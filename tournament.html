@@ -423,6 +423,18 @@ body.export-static .bracket-tool-zone {
 }
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; z-index: 2; }
 .sponsor-stage { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.sponsor-stage.snap-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+.center-top-info.cti-snap-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
 .sponsor-float {
   position:absolute;
   width:120px; height:120px;
@@ -2017,8 +2029,9 @@ body.fs-mode #bracket-style-toggle {
         <select class="cti-mini-select" id="cti-color-select" title="Màu" onchange="setCtiColor(this.value)"></select>
         <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
         <select class="cti-mini-select" id="cti-bg-select" title="Nền" onchange="setCtiBg(this.value)"></select>
+        <button class="sponsor-upload-btn" type="button" id="cti-snap-btn" title="CTI snap" onclick="toggleCtiSnap(event)">+</button>
         <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
-        <button class="sponsor-upload-btn" type="button" id="sponsor-snap-btn" title="Snap grid" onclick="toggleSponsorSnap(event)">#</button>
+        <button class="sponsor-upload-btn" type="button" id="sponsor-snap-btn" title="Sponsor snap" onclick="toggleSponsorSnap(event)">#</button>
         <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
       </div>
     </div>
@@ -2249,11 +2262,15 @@ const DEFAULTS = {
   },
   sponsorLogos: [],
   sponsorPos: [],
+  sponsorSnap: false,
+  ctiSnap: false,
   cti: {
     titleText: '',
     metaText: '',
     titleX: 8, titleY: 4,
+    titleXPct: 0.02, titleYPct: 0.12,
     metaX: 220, metaY: 8,
+    metaXPct: 0.42, metaYPct: 0.18,
     titleFont: "'Be Vietnam Pro', sans-serif",
     metaFont: "'JetBrains Mono', monospace",
     titleSize: 16,
@@ -3187,11 +3204,19 @@ function renderTopInfo() {
   const time = S.tbVals?.[1] || 'Thời gian';
   meta.textContent = S.cti.metaText || `${loc} · ${time}`;
 
-  title.style.left = `${S.cti.titleX}px`;
-  title.style.top = `${S.cti.titleY}px`;
-  meta.style.left = `${S.cti.metaX}px`;
-  meta.style.top = `${S.cti.metaY}px`;
+  const bw = box.clientWidth || 1;
+  const bh = box.clientHeight || 1;
+  const tLeft = Number.isFinite(S.cti.titleXPct) ? (S.cti.titleXPct * bw) : S.cti.titleX;
+  const tTop = Number.isFinite(S.cti.titleYPct) ? (S.cti.titleYPct * bh) : S.cti.titleY;
+  const mLeft = Number.isFinite(S.cti.metaXPct) ? (S.cti.metaXPct * bw) : S.cti.metaX;
+  const mTop = Number.isFinite(S.cti.metaYPct) ? (S.cti.metaYPct * bh) : S.cti.metaY;
+  title.style.left = `${tLeft}px`;
+  title.style.top = `${tTop}px`;
+  meta.style.left = `${mLeft}px`;
+  meta.style.top = `${mTop}px`;
   meta.style.right = 'auto';
+
+  box.classList.toggle('cti-snap-grid', !!S.ctiSnap);
 
   title.style.fontFamily = S.cti.titleFont;
   meta.style.fontFamily = S.cti.metaFont;
@@ -3232,12 +3257,20 @@ document.addEventListener('pointermove', (ev) => {
   const b = box.getBoundingClientRect();
   let nx = ev.clientX - b.left - ctiDragState.offsetX;
   let ny = ev.clientY - b.top - ctiDragState.offsetY;
+  if (S.ctiSnap) {
+    nx = Math.round(nx / SPONSOR_GRID) * SPONSOR_GRID;
+    ny = Math.round(ny / SPONSOR_GRID) * SPONSOR_GRID;
+  }
   nx = Math.max(0, Math.min(nx, b.width - target.offsetWidth));
   ny = Math.max(0, Math.min(ny, b.height - target.offsetHeight));
   if (ctiDragState.type === 'title') {
     S.cti.titleX = nx; S.cti.titleY = ny;
+    S.cti.titleXPct = nx / Math.max(1, b.width);
+    S.cti.titleYPct = ny / Math.max(1, b.height);
   } else {
     S.cti.metaX = nx; S.cti.metaY = ny;
+    S.cti.metaXPct = nx / Math.max(1, b.width);
+    S.cti.metaYPct = ny / Math.max(1, b.height);
   }
   renderTopInfo();
 });
@@ -3338,14 +3371,19 @@ function renderSponsorMarquee() {
   const stage = document.getElementById('sponsor-stage');
   if (!stage) return;
   const logos = Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [];
+  stage.classList.toggle('snap-grid', !!S.sponsorSnap);
   stage.innerHTML = '';
+  const bw = stage.clientWidth || 1;
+  const bh = stage.clientHeight || 1;
   logos.forEach((src, idx) => {
     const item = document.createElement('div');
     item.className = 'sponsor-float';
     item.dataset.idx = String(idx);
-    const pos = S.sponsorPos?.[idx] || { x: 20 + (idx % 6) * 90, y: 20 + Math.floor(idx / 6) * 90, w: 120, h: 120 };
-    item.style.left = `${pos.x}px`;
-    item.style.top = `${pos.y}px`;
+    const pos = S.sponsorPos?.[idx] || { x: 20 + (idx % 6) * 90, y: 20 + Math.floor(idx / 6) * 90, xPct: 0.05, yPct: 0.08, w: 120, h: 120 };
+    const x = Number.isFinite(pos.xPct) ? pos.xPct * bw : pos.x;
+    const y = Number.isFinite(pos.yPct) ? pos.yPct * bh : pos.y;
+    item.style.left = `${x}px`;
+    item.style.top = `${y}px`;
     item.style.width = `${Math.max(40, pos.w || 120)}px`;
     item.style.height = `${Math.max(40, pos.h || 120)}px`;
     item.innerHTML = `<img src="${src}" alt="sponsor">${S.isAdmin ? '<button class="sponsor-del" title="Xóa" onclick="removeSponsorLogo(event,' + idx + ')">×</button><span class="sponsor-resize" data-rs="1"></span>' : ''}`;
@@ -3389,7 +3427,7 @@ document.addEventListener('pointermove', (ev) => {
     item.style.top = `${y}px`;
     if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
     const prev = S.sponsorPos[sponsorDrag.idx] || {};
-    S.sponsorPos[sponsorDrag.idx] = { ...prev, x, y, w: w, h: h };
+    S.sponsorPos[sponsorDrag.idx] = { ...prev, x, y, xPct: x / Math.max(1, b.width), yPct: y / Math.max(1, b.height), w: w, h: h };
   }
 
   if (sponsorResize) {
@@ -3430,6 +3468,16 @@ function toggleSponsorSnap(ev) {
   S.sponsorSnap = !S.sponsorSnap;
   const btn = document.getElementById('sponsor-snap-btn');
   if (btn) btn.style.opacity = S.sponsorSnap ? '1' : '0.7';
+  saveState();
+  supaPushDebounced();
+}
+
+function toggleCtiSnap(ev) {
+  ev?.stopPropagation?.();
+  if (!S.isAdmin) return;
+  S.ctiSnap = !S.ctiSnap;
+  const btn = document.getElementById('cti-snap-btn');
+  if (btn) btn.style.opacity = S.ctiSnap ? '1' : '0.7';
   saveState();
   supaPushDebounced();
 }
@@ -5252,7 +5300,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
-  handleSponsorUpload, removeSponsorLogo, toggleSponsorSnap, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
+  handleSponsorUpload, removeSponsorLogo, toggleSponsorSnap, toggleCtiSnap, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
