@@ -26,8 +26,9 @@
 .nav-status.online { background: var(--c-red-dim); border: 1px solid var(--c-red-rim); color: var(--c-red); }
 .nav-status.offline { background: var(--c-done-dim); border: 1px solid var(--c-open-rim); color: var(--c-ink3); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.nav-login { height: 34px; padding: 0 14px; background: transparent; border: 1px solid var(--c-border2); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--c-ink2); display: inline-flex; align-items: center; }
+.nav-login { height: 34px; padding: 0 12px; background: transparent; border: 1px solid var(--c-border2); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--c-ink2); display: inline-flex; align-items: center; gap: 5px; }
 .nav-login:hover { border-color: var(--c-gold); color: var(--c-gold); }
+.nav-register { border-color: var(--c-gold-rim); color: var(--c-gold); }
 
 .nav-menu-btn { display: none; width: 34px; height: 34px; margin-left: 8px; border: 1px solid var(--c-border2); background: transparent; border-radius: var(--radius-sm); align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
 .nav-menu-btn span { width: 14px; height: 2px; background: var(--c-ink); border-radius: 4px; }
@@ -66,8 +67,9 @@
 .tc-row { color: var(--c-ink3); }
 .tc-prize { color: var(--c-gold); }
 
-#contact .contact-inner { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-xl); padding: 36px 32px; box-shadow: var(--shadow-sm); }
-.contact-card { background: var(--c-surface2); border: 1px solid var(--c-border2); border-radius: var(--radius-md); }
+#contact .contact-inner { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-xl); padding: 18px 16px; box-shadow: var(--shadow-sm); }
+.contact-grid { display: flex !important; flex-wrap: nowrap; gap: 8px; }
+.contact-card { background: var(--c-surface2); border: 1px solid var(--c-border2); border-radius: var(--radius-md); min-height: 54px; padding: 10px 12px; flex: 1; }
 .contact-card:hover { background: var(--c-gold); border-color: var(--c-gold); color: var(--c-gold-dk); transform: none; }
 
 footer, .footer, .footer-lite { border-top: 1px solid var(--c-border); padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
