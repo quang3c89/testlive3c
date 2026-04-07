@@ -42,8 +42,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <form id="create-form">
       <div class="field"><label for="name">Tên giải *</label><input id="name" required></div>
       <div class="row">
-        <div class="field"><label for="date_str">Ngày / giờ</label><input id="date_str" type="datetime-local"></div>
+        <div class="field"><label for="start_date">Từ ngày</label><input id="start_date" type="date"></div>
+        <div class="field"><label for="end_date">Đến ngày</label><input id="end_date" type="date"></div>
+      </div>
+      <div class="row">
         <div class="field"><label for="location">Địa điểm</label><input id="location"></div>
+        <div class="field"><label for="date_str">Hiển thị ngày thi đấu</label><input id="date_str" placeholder="Tự động: Từ ngày ... đến ngày ..."></div>
       </div>
       <div class="row">
         <div class="field"><label for="format">Thể thức</label>
@@ -82,13 +86,47 @@ requireAdmin();
 
 document.getElementById('logout-btn').addEventListener('click', () => logout());
 
+function toDisplayDateRange(start, end) {
+  if (!start && !end) return '';
+  if (start && end) {
+    if (start === end) return `Ngày ${start}`;
+    return `Từ ngày ${start} đến ngày ${end}`;
+  }
+  return start ? `Từ ngày ${start}` : `Đến ngày ${end}`;
+}
+
+function bindDateRangePreview() {
+  const s = document.getElementById('start_date');
+  const e = document.getElementById('end_date');
+  const d = document.getElementById('date_str');
+  if (!s || !e || !d) return;
+
+  const sync = () => {
+    const auto = toDisplayDateRange(s.value, e.value);
+    if (!d.dataset.manual || d.dataset.manual !== '1') d.value = auto;
+  };
+
+  s.addEventListener('input', sync);
+  e.addEventListener('input', sync);
+  d.addEventListener('input', () => {
+    d.dataset.manual = d.value.trim() ? '1' : '';
+  });
+  sync();
+}
+
+bindDateRangePreview();
+
 document.getElementById('create-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   try {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    const displayDate = document.getElementById('date_str').value.trim() || toDisplayDateRange(startDate, endDate);
+
     const payload = {
       name: document.getElementById('name').value.trim(),
-      date_str: document.getElementById('date_str').value.trim(),
+      date_str: displayDate,
       location: document.getElementById('location').value.trim(),
       format: document.getElementById('format').value,
       content: document.getElementById('format').value,
@@ -103,15 +141,27 @@ document.getElementById('create-form').addEventListener('submit', async (e) => {
     const rows = await supaFetch('tournaments', 'POST', [payload]);
     let id = rows?.[0]?.id || rows?.id || null;
 
-    // Fallback: một số cấu hình Supabase không trả về row khi insert
+    // Fallback 1: tìm theo tên gần đúng
     if (!id) {
+      const safeName = (payload.name || '').replace(/[%*]/g, '').trim();
       const fallbackRows = await supaFetch(
         'tournaments',
         'GET',
         null,
-        `select=id,name,created_at&name=eq.${encodeURIComponent(payload.name)}&order=created_at.desc&limit=1`
+        `select=id,name,created_at&name=ilike.*${encodeURIComponent(safeName)}*&order=created_at.desc&limit=1`
       );
       id = fallbackRows?.[0]?.id || null;
+    }
+
+    // Fallback 2: lấy bản ghi mới nhất (tránh fail do ký tự đặc biệt ở name)
+    if (!id) {
+      const latestRows = await supaFetch(
+        'tournaments',
+        'GET',
+        null,
+        'select=id,name,created_at&order=created_at.desc&limit=1'
+      );
+      id = latestRows?.[0]?.id || null;
     }
 
     if (!id) throw new Error('Không nhận được ID giải đấu mới');
