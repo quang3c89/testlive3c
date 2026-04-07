@@ -2712,6 +2712,12 @@ function applyBracketColorVars() {
   const primarySoftL = Math.min(97, baseL + (isLightMode ? 30 : 22));
   const primaryDarkL = Math.max(8, baseL - (isLightMode ? 18 : 30));
 
+  const matchTint = c.matchBg || DEFAULTS.bracketColors.matchBg;
+  const matchEdge = c.matchBorder || DEFAULTS.bracketColors.matchBorder;
+  const customLine = c.line || DEFAULTS.bracketColors.line;
+  const matchHsl = hexToHsl(matchTint) || hsl;
+  const edgeHsl = hexToHsl(matchEdge) || matchHsl;
+
   const matchIsLight = (matchHsl.l || 0) >= 50;
   const matchBaseS = Math.max(20, Math.min(84, matchHsl.s || 48));
   const matchBaseL = Math.max(18, Math.min(82, matchHsl.l || 50));
@@ -2722,12 +2728,6 @@ function applyBracketColorVars() {
   const matchTintSoft = hslToCss(matchHsl.h, Math.max(16, matchBaseS - 12), matchSoftL);
   const matchTintDark = hslToCss(matchHsl.h, Math.max(22, matchBaseS - 4), matchDarkL);
   const matchEdgeMain = hslToCss(edgeHsl.h, Math.max(22, edgeHsl.s || matchBaseS), Math.max(20, (edgeHsl.l || matchBaseL) - 6));
-
-  const matchTint = c.matchBg || DEFAULTS.bracketColors.matchBg;
-  const matchEdge = c.matchBorder || DEFAULTS.bracketColors.matchBorder;
-  const customLine = c.line || DEFAULTS.bracketColors.line;
-  const matchHsl = hexToHsl(matchTint) || hsl;
-  const edgeHsl = hexToHsl(matchEdge) || matchHsl;
 
   const primary = hslToCss(hsl.h, baseS, baseL);
   const primaryLight = hslToCss(hsl.h, Math.max(24, baseS - 8), primaryLightL);
