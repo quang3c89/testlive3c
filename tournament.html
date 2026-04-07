@@ -2027,12 +2027,10 @@ body.fs-mode #bracket-style-toggle {
         <button class="cb" title="Cài số bracket" onclick="openModal('count-modal')">🔢</button>
         <button class="cb" title="Import Excel" onclick="document.getElementById('import-excel').click()">📥</button>
         <button class="cb" title="Tải template" onclick="downloadTemplate()">📄</button>
-        <button class="cb" id="draw-mode-btn" title="Tùy Chỉnh Quay" onclick="toggleDrawModeMenu(event)">⚙</button>
+        <label style="display:flex;align-items:center;gap:4px;font-size:10px;opacity:.85;white-space:nowrap;">
+          <input type="checkbox" id="fast-draw-toggle" onchange="setFastDrawMode(this.checked)"> Bốc Nhanh
+        </label>
         <input type="file" id="import-excel" accept=".xlsx,.xls" style="display:none" onchange="handleExcel(event)">
-      </div>
-      <div id="draw-mode-menu" style="display:none;position:fixed;z-index:999;background:rgba(8,12,20,.95);border:1px solid var(--border);border-radius:8px;padding:4px;">
-        <button class="cb" style="width:auto;min-width:72px;height:22px;font-size:10px;" onclick="setDrawMode('one')">Bốc từng người</button>
-        <button class="cb" style="width:auto;min-width:72px;height:22px;font-size:10px;margin-left:4px;" onclick="setDrawMode('fast')">Bốc nhanh</button>
       </div>
     </div>
 
@@ -3858,41 +3856,15 @@ function fastDrawAll() {
   step();
 }
 
-function toggleDrawModeMenu(e) {
-  e?.stopPropagation?.();
-  const menu = document.getElementById('draw-mode-menu');
-  const btn = document.getElementById('draw-mode-btn');
-  if (!menu || !btn) return;
-
-  const next = menu.style.display === 'none' || !menu.style.display;
-  if (next) {
-    const br = btn.getBoundingClientRect();
-    menu.style.left = `${Math.round(br.left + br.width + 6)}px`;
-    menu.style.top = `${Math.round(br.top + (br.height - 22) / 2)}px`;
-    menu.style.display = 'block';
-  } else {
-    menu.style.display = 'none';
-  }
-}
-
-function setDrawMode(mode) {
+function setFastDrawMode(enabled) {
   if (!S.isAdmin) return;
-  S.drawMode = mode === 'fast' ? 'fast' : 'one';
-  const btn = document.getElementById('draw-mode-btn');
-  if (btn) {
-    btn.style.borderColor = 'var(--accent)';
-    btn.title = S.drawMode === 'fast' ? 'Tùy Chỉnh Quay: Bốc nhanh' : 'Tùy Chỉnh Quay: Bốc từng người';
-  }
-  const menu = document.getElementById('draw-mode-menu');
-  if (menu) menu.style.display = 'none';
+  S.drawMode = enabled ? 'fast' : 'one';
   saveState();
 }
 
 function stopAutoSpin() {
   autoSpinStopRequested = true;
   autoSpinEnabled = false;
-  const menu = document.getElementById('draw-mode-menu');
-  if (menu) menu.style.display = 'none';
   stopSpinSound();
 }
 
@@ -5487,7 +5459,7 @@ Object.assign(globalThis, {
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
   handleSponsorUpload, removeSponsorLogo, toggleSponsorSnap, toggleCtiSnap, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
-  toggleDrawModeMenu, setDrawMode,
+  setFastDrawMode,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
