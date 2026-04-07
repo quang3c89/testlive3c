@@ -3832,10 +3832,15 @@ function fastDrawAll() {
       return;
     }
 
-    const seeded = undrawn.filter(p => p.isSeed);
-    const pool = seeded.length ? seeded : undrawn;
-    const picked = pool[Math.floor(Math.random() * pool.length)];
-    const slot = findNextSlot(picked);
+    const slot = findNextSlot();
+    if (!slot) {
+      autoSpinEnabled = false;
+      resetWheel();
+      showToast('🏆 Bracket đã đầy!');
+      return;
+    }
+
+    const picked = pickCandidateForSlot(slot, undrawn);
     if (!slot) {
       autoSpinEnabled = false;
       resetWheel();
@@ -3896,7 +3901,7 @@ function spinWheel() {
   if (!S.isAdmin) return;
   const undrawn = getUndrawn();
   if (undrawn.length === 0) { showToast('🏁 Đã bốc hết!'); return; }
-  const slot = findNextSlot(undrawn[0] || null);
+  const slot = findNextSlot();
   if (!slot) { showToast('🏆 Bracket đã đầy!'); return; }
 
   document.querySelectorAll('.mp.pending-slot').forEach(el => el.classList.remove('pending-slot'));
@@ -3909,10 +3914,8 @@ function spinWheel() {
   document.getElementById('spin-btn').disabled = true;
   syncFullscreenMiniWheel();
 
-  const seeded = undrawn.filter(p => p.isSeed);
-  const pool = seeded.length ? seeded : undrawn;
-  const ti = Math.floor(Math.random() * pool.length);
-  const tp = pool[ti];
+  const tp = pickCandidateForSlot(slot, undrawn);
+  const ti = Math.max(0, undrawn.findIndex(p => p.id === tp?.id));
   const sliceDeg = 360 / undrawn.length;
   const targetAngle = 270 - (ti * sliceDeg) - sliceDeg/2 + (Math.random()-0.5) * sliceDeg * 0.6;
   const totalSpins = 5 + Math.random() * 3;
@@ -4033,39 +4036,61 @@ function closeSpinPopupAndSpin() {
   popup.classList.remove('centered');
 }
 
-function findNextSlot(player = null) {
+function findNextSlot() {
   const r0 = S.bracket[0];
   if (!r0) return null;
-
-  if (player?.isSeed) {
-    const half = Math.ceil(r0.length / 2);
-    let leftSeeds = 0;
-    let rightSeeds = 0;
-    for (let i = 0; i < r0.length; i++) {
-      const m = r0[i];
-      const hasSeed = !!(m.p1?.isSeed || m.p2?.isSeed);
-      if (!hasSeed) continue;
-      if (i < half) leftSeeds++; else rightSeeds++;
-    }
-
-    const preferredLeft = leftSeeds <= rightSeeds;
-    const ranges = preferredLeft ? [[0, half], [half, r0.length]] : [[half, r0.length], [0, half]];
-    for (const [start, end] of ranges) {
-      for (let i = start; i < end; i++) {
-        const m = r0[i];
-        const hasSeed = !!(m.p1?.isSeed || m.p2?.isSeed);
-        if (hasSeed) continue;
-        if (!m.p1) return { r: 0, m: i, pKey: 'p1' };
-        if (!m.p2) return { r: 0, m: i, pKey: 'p2' };
-      }
-    }
-  }
-
   for (let m = 0; m < r0.length; m++) {
     if (!r0[m].p1) return { r:0, m, pKey:'p1' };
     if (!r0[m].p2) return { r:0, m, pKey:'p2' };
   }
   return null;
+}
+
+function shuffled(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function canPlacePlayerInSlot(player, slot) {
+  if (!player?.isSeed) return true;
+  if (!slot || slot.r !== 0) return true;
+  const r0 = S.bracket?.[0] || [];
+  const match = r0[slot.m];
+  if (!match) return true;
+
+  const other = slot.pKey === 'p1' ? match.p2 : match.p1;
+  if (other?.isSeed) return false;
+
+  const totalSeeds = (S.players || []).filter(p => p.isSeed).length;
+  const half = Math.ceil(r0.length / 2);
+  let leftSeeds = 0;
+  let rightSeeds = 0;
+  for (let i = 0; i < r0.length; i++) {
+    const m = r0[i];
+    const count = (m.p1?.isSeed ? 1 : 0) + (m.p2?.isSeed ? 1 : 0);
+    if (!count) continue;
+    if (i < half) leftSeeds += count;
+    else rightSeeds += count;
+  }
+
+  const targetEachSide = Math.ceil(totalSeeds / 2);
+  const placingLeft = slot.m < half;
+  if (placingLeft && leftSeeds >= targetEachSide && rightSeeds < targetEachSide) return false;
+  if (!placingLeft && rightSeeds >= targetEachSide && leftSeeds < targetEachSide) return false;
+
+  return true;
+}
+
+function pickCandidateForSlot(slot, undrawn) {
+  const pool = shuffled(undrawn);
+  for (const p of pool) {
+    if (canPlacePlayerInSlot(p, slot)) return p;
+  }
+  return pool[0] || null;
 }
 
 function syncRound1ByesToRound2() {
