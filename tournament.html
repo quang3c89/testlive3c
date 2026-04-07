@@ -480,17 +480,39 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
 }
 /* Match box */
 .mb {
-  background: var(--match-bg, #FFDF80);
-  border-radius: 8px;
-  border: 1.5px solid var(--match-border, rgba(120, 88, 12, 0.7));
+  background:
+    linear-gradient(160deg,
+      color-mix(in srgb, var(--primary-dark, #111827) 88%, #000 12%) 0%,
+      color-mix(in srgb, var(--primary-dark, #111827) 62%, #000 38%) 100%);
+  border-radius: 10px;
+  border: 1.5px solid color-mix(in srgb, var(--primary, #f0a500) 38%, transparent);
   display: flex;
   flex-direction: column;
-  transition: all 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
   overflow: hidden;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.25) inset;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.45),
+    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 18%, transparent) inset,
+    0 0 24px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 45%, transparent);
   position: relative;
 }
-.mb:hover { border-color: rgba(240,165,0,0.4); transform: scale(1.02); z-index: 5; box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(240,165,0,0.2); }
+.mb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%);
+  opacity: 0.6;
+}
+.mb:hover {
+  border-color: color-mix(in srgb, var(--primary, #f0a500) 62%, transparent);
+  transform: translateY(-1px) scale(1.015);
+  z-index: 5;
+  box-shadow:
+    0 16px 34px rgba(0,0,0,0.58),
+    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 30%, transparent) inset,
+    0 0 34px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 85%, transparent);
+}
 .mb.anim-enter { animation: matchEnter 0.5s cubic-bezier(0.34,1.56,0.64,1); }
 .mb-bye { min-height: 74px; }
 .mp-bye-merged { min-height: 74px; align-items: center; }
@@ -499,20 +521,26 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
   to { opacity:1; transform: none; }
 }
 .mb-bye {
-  border-color: var(--match-border, rgba(120, 88, 12, 0.7));
-  box-shadow: 0 3px 12px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.25) inset;
+  border-color: color-mix(in srgb, var(--primary, #f0a500) 38%, transparent);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.45),
+    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 18%, transparent) inset,
+    0 0 24px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 45%, transparent);
 }
 .mp-bye-merged {
   display:flex; align-items:center; justify-content:space-between;
   padding: 8px 10px;
-  background: var(--match-bg, #FFDF80);
+  background:
+    linear-gradient(155deg,
+      color-mix(in srgb, var(--primary-dark, #111827) 78%, #000 22%) 0%,
+      color-mix(in srgb, var(--primary-dark, #111827) 60%, #000 40%) 100%);
 }
 .bye-pass-badge {
   font-family: var(--font-mono);
   font-size: 8px;
   font-weight: 800;
-  color: var(--bracket-unit-color, #5b4a16);
-  border: 1px solid var(--match-border, rgba(120, 88, 12, 0.7));
+  color: color-mix(in srgb, var(--primary-light, #f8d77a) 80%, #fff 20%);
+  border: 1px solid color-mix(in srgb, var(--primary, #f0a500) 38%, transparent);
   border-radius: 999px;
   padding: 1px 6px;
 }
@@ -520,20 +548,38 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
 /* Player slot inside match */
 .mp {
   display: flex; align-items: center;
-  padding: 5px 8px 5px 10px; cursor: pointer; transition: background 0.15s;
+  padding: 5px 8px 5px 10px; cursor: pointer;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
   position: relative; overflow: hidden; gap: 4px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0));
 }
-.mp::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.2s; }
-.mp.p1-slot::before { background: var(--match-border, rgba(120, 88, 12, 0.7)); }
-.mp.p2-slot::before { background: var(--match-border, rgba(120, 88, 12, 0.7)); }
-.mp:first-child { border-bottom: 1.5px solid rgba(255, 241, 214, 0.9); }
-.mp:hover { background: rgba(255, 241, 214, 0.45); }
-.mp.winner { font-weight: 800; background: rgba(240,165,0,0.08); }
-.mp.winner::before { background: var(--accent) !important; }
-.mp.winner .mn { color: var(--accent); }
+.mp::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.5px; background: transparent; transition: background 0.2s; }
+.mp.p1-slot::before { background: color-mix(in srgb, var(--primary, #f0a500) 44%, transparent); }
+.mp.p2-slot::before { background: color-mix(in srgb, var(--primary, #f0a500) 44%, transparent); }
+.mp:first-child { border-bottom: 1px solid color-mix(in srgb, var(--primary-light, #f8d77a) 20%, transparent); }
+.mp:hover {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 42%, transparent) 0%,
+      rgba(255,255,255,0.02) 58%,
+      transparent 100%);
+}
+.mp.winner {
+  font-weight: 800;
+  background:
+    linear-gradient(108deg,
+      color-mix(in srgb, var(--primary-light, #f8d77a) 52%, transparent) 0%,
+      color-mix(in srgb, var(--primary, #f0a500) 42%, transparent) 48%,
+      color-mix(in srgb, var(--primary-dark, #111827) 70%, transparent) 100%);
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 85%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 28%, transparent) inset;
+}
+.mp.winner::before { background: var(--primary) !important; }
+.mp.winner .mn { color: color-mix(in srgb, var(--primary-light, #f8d77a) 84%, #fff 16%); }
 .mp.winner::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(to right, rgba(240,165,0,0.07), transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 65%, transparent), transparent 70%);
 }
 .mp.pending-slot {
   border-color: rgba(232,184,32,0.7) !important;
@@ -1328,6 +1374,33 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   border-color: var(--accent);
   color: var(--accent);
   background: rgba(240,165,0,0.12);
+}
+/* Nút cài đặt bracket: ẩn mặc định, hiện khi hover khu vực bracket tab */
+#bracket-style-toggle {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+#center-panel:hover #bracket-style-toggle,
+.bracket-tab-bar:hover #bracket-style-toggle,
+#bracket-color-tools.open ~ #bracket-style-toggle,
+#bracket-style-toggle:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+#bracket-color-tools.open,
+#bracket-color-tools:hover {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+#bracket-color-tools.open + #fs-draw-stage + .bracket-wrap,
+#center-panel:hover #bracket-color-tools {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 #fs-draw-stage { display: none; }
 .btab {
@@ -2632,14 +2705,16 @@ function applyBracketColorVars() {
   const primaryHex = c.bg || DEFAULTS.bracketColors.bg;
   const hsl = hexToHsl(primaryHex) || { h: 220, s: 35, l: 14 };
 
-  const lightL = Math.min(88, hsl.l + 22);
-  const darkL = Math.max(6, hsl.l - 16);
+  const baseS = Math.max(36, Math.min(88, hsl.s || 56));
+  const baseL = Math.max(38, Math.min(62, hsl.l || 48));
+  const lightL = Math.min(82, baseL + 18);
+  const darkL = Math.max(11, baseL - 30);
 
-  root.style.setProperty('--primary', hslToCss(hsl.h, Math.max(14, hsl.s), Math.max(10, hsl.l)));
-  root.style.setProperty('--primary-light', hslToCss(hsl.h, Math.max(18, hsl.s - 8), lightL, 0.36));
-  root.style.setProperty('--primary-dark', hslToCss(hsl.h, Math.max(16, hsl.s + 4), darkL));
-  root.style.setProperty('--primary-glow', hslToCss(hsl.h, Math.max(20, hsl.s), Math.min(74, hsl.l + 26), 0.34));
-  root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(16, hsl.s - 12), Math.min(90, hsl.l + 38), 0.55));
+  root.style.setProperty('--primary', hslToCss(hsl.h, baseS, baseL));
+  root.style.setProperty('--primary-light', hslToCss(hsl.h, Math.max(30, baseS - 8), lightL));
+  root.style.setProperty('--primary-dark', hslToCss(hsl.h, Math.max(34, baseS - 4), darkL));
+  root.style.setProperty('--primary-glow', hslToCss(hsl.h, Math.max(30, baseS - 6), Math.min(72, baseL + 12), 0.42));
+  root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(18, baseS - 20), Math.min(88, baseL + 30), 0.5));
 
   root.style.setProperty('--bracket-bg', primaryHex);
   root.style.setProperty('--match-bg', c.matchBg || DEFAULTS.bracketColors.matchBg);
@@ -2697,8 +2772,10 @@ function toggleBracketStyleTools(e) {
   if (!S.isAdmin) return;
   e?.stopPropagation?.();
   const tools = document.getElementById('bracket-color-tools');
+  const btn = document.getElementById('bracket-style-toggle');
   if (!tools) return;
-  tools.classList.toggle('open');
+  const isOpen = tools.classList.toggle('open');
+  if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
 function toggleBracketColorPicker(e, key) {
