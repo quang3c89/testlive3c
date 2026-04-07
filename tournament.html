@@ -45,7 +45,7 @@
   z-index: 100;
 }
 .tb-left-actions,.tb-right-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.tb-main-info{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden}
+.tb-main-info{display:none !important;}
 .tvi { display:flex; align-items:center; gap:4px; padding:0 8px; font-size:11px; white-space:nowrap; border-right:1px solid color-mix(in srgb,var(--border) 70%, transparent); color:var(--text); min-width:0; }
 .tvi:last-child{border-right:none}
 .tvi .tvi-icon { font-size: 10px; opacity: 0.7; flex-shrink: 0; }
@@ -321,25 +321,25 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   max-width:none;
 }
 .cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:7px; }
-.cti-meta { font-family: var(--font-mono); font-size: 10px; opacity: 0.82; right:10px; top:11px; }
-.cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
-.center-top-info:hover .cti-tools { opacity:.9; pointer-events:auto; }
-.cti-mini-btn {
-  width: 8px; height: 8px; border-radius: 2px; padding:0;
-  border: 1px solid rgba(255,255,255,0.22);
+.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; right:10px; top:11px; }
+.cti-title::before { content:'🏆 '; opacity:.9; }
+.cti-meta::before { content:'📍 '; opacity:.9; }
+.cti-tools { position:absolute; top:1px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+.center-top-info:hover .cti-tools { opacity:.95; pointer-events:auto; }
+.cti-mini-select {
+  width: 20px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.25);
   background: rgba(0,0,0,.35);
+  color: transparent;
+  font-size: 8px;
+  padding: 0;
   cursor: pointer;
 }
-.cti-sponsor { position: relative; padding: 5px 10px; min-height: 38px; }
-.sponsor-marquee { overflow: hidden; white-space: nowrap; }
-.sponsor-track { display: inline-flex; align-items: center; gap: 12px; min-width: 100%; animation: sponsorPingPong 10s ease-in-out infinite alternate; }
-.sponsor-item { width: 72px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
-.sponsor-item img { max-width: 100%; max-height: 100%; object-fit: contain; display:block; }
-.sponsor-empty { font-size: 9px; font-family: var(--font-mono); opacity: 0.4; letter-spacing: 1px; text-transform: uppercase; }
-.sponsor-upload-btn { position:absolute; right:8px; top:6px; width:12px; height:12px; border-radius:3px; border:1px solid var(--border); background:rgba(0,0,0,.38); color:var(--text); font-size:8px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .15s ease; }
-.center-top-info:hover .sponsor-upload-btn { opacity: .92; pointer-events:auto; }
+.cti-mini-select option { color: #111; background:#fff; font-size:11px; }
+.sponsor-upload-btn { width:12px; height:12px; border-radius:3px; border:1px solid var(--border); background:rgba(0,0,0,.38); color:var(--text); font-size:8px; cursor:pointer; }
 body.viewer-mode .sponsor-upload-btn, body.viewer-mode .cti-tools { display:none !important; }
-@keyframes sponsorPingPong { from { transform: translateX(0);} to { transform: translateX(-35%);} }
 .bracket-bg-layer {
   position: absolute;
   left: 0;
@@ -406,6 +406,19 @@ body.export-static .bracket-tool-zone {
   display: none !important;
 }
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; z-index: 2; }
+.sponsor-stage { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.sponsor-float {
+  position:absolute;
+  width:80px; height:80px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);
+  box-shadow:0 6px 18px rgba(0,0,0,0.32);
+  overflow:hidden;
+  pointer-events:auto;
+  cursor:move;
+}
+.sponsor-float img { width:100%; height:100%; object-fit:cover; display:block; }
 .bracket-tool-zone { display: none; }
 .bracket-color-tools {
   position: absolute;
@@ -1971,14 +1984,12 @@ body.fs-mode #bracket-style-toggle {
         <div class="cti-title" id="cti-title">Giải đấu</div>
         <div class="cti-meta" id="cti-meta">Địa điểm · Thời gian</div>
         <div class="cti-tools">
-          <button class="cti-mini-btn" type="button" title="Font chữ" onclick="openCtiFontTools(event)"></button>
-          <button class="cti-mini-btn" type="button" title="Màu chữ" onclick="openCtiColorTools(event)"></button>
+          <select class="cti-mini-select" id="cti-font-select" title="Font" onchange="setCtiFont(this.value)"></select>
+          <select class="cti-mini-select" id="cti-color-select" title="Màu" onchange="setCtiColor(this.value)"></select>
+          <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
+          <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
+          <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
         </div>
-      </div>
-      <div class="cti-sponsor" id="cti-sponsor">
-        <div class="sponsor-marquee" id="sponsor-marquee"></div>
-        <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
-        <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
       </div>
     </div>
     <div class="bracket-bg-layer" id="bracket-bg-layer">
@@ -2005,6 +2016,7 @@ body.fs-mode #bracket-style-toggle {
     <div id="fs-draw-stage"></div>
 
     <div class="bracket-wrap" id="bracket-container">
+      <div id="sponsor-stage" class="sponsor-stage"></div>
       <svg id="bracket-lines"></svg>
       <div class="bracket-cols" id="bracket-columns"></div>
     </div>
@@ -2206,6 +2218,7 @@ const DEFAULTS = {
     unitColor: '#5b4a16',
   },
   sponsorLogos: [],
+  sponsorPos: [],
   cti: {
     titleText: '',
     metaText: '',
@@ -2213,6 +2226,7 @@ const DEFAULTS = {
     metaX: 220, metaY: 8,
     titleFont: "'Be Vietnam Pro', sans-serif",
     metaFont: "'JetBrains Mono', monospace",
+    titleSize: 16,
     titleColor: '#ffffff',
     metaColor: '#c9d1d9',
     panelBg: 'rgba(18,22,30,0.75)'
@@ -2378,6 +2392,7 @@ function loadState() {
   if (!S.titleFont) S.titleFont = DEFAULTS.titleFont;
   S.bracketColors = { ...DEFAULTS.bracketColors, ...(S.bracketColors || {}) };
   if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [...DEFAULTS.sponsorLogos];
+  if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
   loadVideoFromDB();
 }
 
@@ -2916,6 +2931,7 @@ function renderAll() {
   renderBracket();
   drawWheel();
   renderTopInfo();
+  buildCtiToolOptions();
   renderSponsorMarquee();
 }
 
@@ -3140,6 +3156,9 @@ function renderTopInfo() {
 
   title.style.fontFamily = S.cti.titleFont;
   meta.style.fontFamily = S.cti.metaFont;
+  const baseSize = Number(S.cti.titleSize || 16);
+  title.style.fontSize = `${baseSize}px`;
+  meta.style.fontSize = `${Math.max(8, baseSize - 4)}px`;
   title.style.color = S.cti.titleColor;
   meta.style.color = S.cti.metaColor;
   if (box) box.style.background = S.cti.panelBg || '';
@@ -3191,65 +3210,161 @@ document.addEventListener('pointerup', () => {
   supaPushDebounced();
 });
 
-function openCtiFontTools(ev) {
-  ev?.stopPropagation?.();
+function buildCtiToolOptions() {
+  const fontSel = document.getElementById('cti-font-select');
+  const colorSel = document.getElementById('cti-color-select');
+  const sizeSel = document.getElementById('cti-size-select');
+  if (!fontSel || !colorSel || !sizeSel) return;
+
+  const fonts = [
+    { v: "'Be Vietnam Pro', sans-serif", t: 'BV' },
+    { v: "'Inter', sans-serif", t: 'IN' },
+    { v: "'Manrope', sans-serif", t: 'MN' },
+    { v: "'Sora', sans-serif", t: 'SR' },
+  ];
+  fontSel.innerHTML = fonts.map(f => `<option value="${f.v}">${f.t}</option>`).join('');
+
+  const colors = [
+    { v:'#ffffff', t:'W' }, { v:'#ffd447', t:'Y' }, { v:'#38bdf8', t:'B' },
+    { v:'#22c55e', t:'G' }, { v:'#f97316', t:'O' }, { v:'#f43f5e', t:'R' }
+  ];
+  colorSel.innerHTML = colors.map(c => `<option value="${c.v}">${c.t}</option>`).join('');
+
+  const sizes = [12,14,16,18,20,24];
+  sizeSel.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  ensureCtiState();
+  fontSel.value = S.cti.titleFont || DEFAULTS.cti.titleFont;
+  colorSel.value = S.cti.titleColor || DEFAULTS.cti.titleColor;
+  sizeSel.value = String(S.cti.titleSize || 16);
+}
+
+function setCtiFont(v) {
   if (!S.isAdmin) return;
   ensureCtiState();
-  const f = prompt('Font title (CSS font-family):', S.cti.titleFont || DEFAULTS.cti.titleFont);
-  if (f) S.cti.titleFont = f;
-  const mf = prompt('Font meta (CSS font-family):', S.cti.metaFont || DEFAULTS.cti.metaFont);
-  if (mf) S.cti.metaFont = mf;
+  S.cti.titleFont = v;
+  S.cti.metaFont = v;
   renderTopInfo();
   saveState();
   supaPushDebounced();
 }
 
-function openCtiColorTools(ev) {
-  ev?.stopPropagation?.();
+function setCtiColor(v) {
   if (!S.isAdmin) return;
   ensureCtiState();
-  const tc = prompt('Màu title (#hex):', S.cti.titleColor || DEFAULTS.cti.titleColor);
-  if (tc) S.cti.titleColor = tc;
-  const mc = prompt('Màu meta (#hex):', S.cti.metaColor || DEFAULTS.cti.metaColor);
-  if (mc) S.cti.metaColor = mc;
-  const bg = prompt('Nền center-top-info (rgba/...):', S.cti.panelBg || DEFAULTS.cti.panelBg);
-  if (bg) S.cti.panelBg = bg;
+  S.cti.titleColor = v;
+  S.cti.metaColor = v;
   renderTopInfo();
   saveState();
   supaPushDebounced();
 }
+
+function setCtiSize(v) {
+  if (!S.isAdmin) return;
+  ensureCtiState();
+  const sz = Number(v);
+  if (!Number.isFinite(sz)) return;
+  S.cti.titleSize = sz;
+  renderTopInfo();
+  saveState();
+  supaPushDebounced();
+}
+
+let sponsorDrag = null;
 
 function renderSponsorMarquee() {
-  const wrap = document.getElementById('sponsor-marquee');
-  if (!wrap) return;
+  const stage = document.getElementById('sponsor-stage');
+  if (!stage) return;
   const logos = Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [];
-  if (!logos.length) {
-    wrap.innerHTML = '<div class="sponsor-empty">SPONSOR STRIP · NO LOGO</div>';
-    return;
-  }
-  const items = logos.map(src => `<span class="sponsor-item"><img src="${src}" alt="sponsor"></span>`).join('');
-  wrap.innerHTML = `<div class="sponsor-track">${items}${items}</div>`;
+  stage.innerHTML = '';
+  logos.forEach((src, idx) => {
+    const item = document.createElement('div');
+    item.className = 'sponsor-float';
+    item.dataset.idx = String(idx);
+    const pos = S.sponsorPos?.[idx] || { x: 20 + (idx % 6) * 90, y: 20 + Math.floor(idx / 6) * 90 };
+    item.style.left = `${pos.x}px`;
+    item.style.top = `${pos.y}px`;
+    item.innerHTML = `<img src="${src}" alt="sponsor">`;
+    if (S.isAdmin) {
+      item.addEventListener('pointerdown', (ev) => {
+        const r = item.getBoundingClientRect();
+        sponsorDrag = { idx, dx: ev.clientX - r.left, dy: ev.clientY - r.top };
+        item.setPointerCapture?.(ev.pointerId);
+      });
+    }
+    stage.appendChild(item);
+  });
+}
+
+document.addEventListener('pointermove', (ev) => {
+  if (!sponsorDrag || !S.isAdmin) return;
+  const stage = document.getElementById('sponsor-stage');
+  if (!stage) return;
+  const item = stage.querySelector(`.sponsor-float[data-idx="${sponsorDrag.idx}"]`);
+  if (!item) return;
+  const b = stage.getBoundingClientRect();
+  let x = ev.clientX - b.left - sponsorDrag.dx;
+  let y = ev.clientY - b.top - sponsorDrag.dy;
+  x = Math.max(0, Math.min(x, b.width - 80));
+  y = Math.max(0, Math.min(y, b.height - 80));
+  item.style.left = `${x}px`;
+  item.style.top = `${y}px`;
+  if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
+  S.sponsorPos[sponsorDrag.idx] = { x, y };
+});
+
+document.addEventListener('pointerup', () => {
+  if (!sponsorDrag) return;
+  sponsorDrag = null;
+  saveState();
+  supaPushDebounced();
+});
+
+function resizeImage80(file) {
+  return new Promise((resolve) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = 80; c.height = 80;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 80, 80);
+        const scale = Math.max(80 / img.width, 80 / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        const x = (80 - w) / 2;
+        const y = (80 - h) / 2;
+        ctx.drawImage(img, x, y, w, h);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(null);
+      img.src = fr.result;
+    };
+    fr.onerror = () => resolve(null);
+    fr.readAsDataURL(file);
+  });
 }
 
 function handleSponsorUpload(e) {
   if (!S.isAdmin) return;
   const files = Array.from(e?.target?.files || []);
   if (!files.length) return;
-  const readers = files.map(file => new Promise((resolve) => {
-    const rd = new FileReader();
-    rd.onload = () => resolve(rd.result);
-    rd.onerror = () => resolve(null);
-    rd.readAsDataURL(file);
-  }));
-  Promise.all(readers).then((arr) => {
+  Promise.all(files.map(resizeImage80)).then((arr) => {
     const ok = arr.filter(Boolean);
     if (!ok.length) return;
     pushHistory();
-    S.sponsorLogos = [...(S.sponsorLogos || []), ...ok].slice(-40);
+    const cur = Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [];
+    S.sponsorLogos = [...cur, ...ok].slice(-60);
+    if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
+    for (let i = cur.length; i < S.sponsorLogos.length; i++) {
+      if (!S.sponsorPos[i]) S.sponsorPos[i] = { x: 20 + (i % 6) * 90, y: 20 + Math.floor(i / 6) * 90 };
+    }
     renderSponsorMarquee();
     saveState();
     supaPushDebounced();
-    showToast('✅ Đã cập nhật sponsor', 'success');
+    showToast('✅ Đã upload logo 80x80', 'success');
     if (e?.target) e.target.value = '';
   });
 }
@@ -5038,7 +5153,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
-  handleSponsorUpload, openCtiFontTools, openCtiColorTools,
+  handleSponsorUpload, setCtiFont, setCtiColor, setCtiSize,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
