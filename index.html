@@ -37,6 +37,7 @@
   <a class="nav-link" href="#contact">Liên hệ</a>
   <div class="nav-status offline" id="nav-status"><span class="status-dot" id="rt-dot"></span><span id="rt-label">OFFLINE</span></div>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
+  <a class="nav-login" href="admin/login.html?mode=register">Đăng kí</a>
   <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Mở menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer-overlay" id="nav-drawer-overlay"></div>
@@ -44,6 +45,7 @@
   <a class="nav-link" href="tournaments.html">Giải đấu</a>
   <a class="nav-link" href="#contact">Liên hệ</a>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
+  <a class="nav-login" href="admin/login.html?mode=register">Đăng kí</a>
 </aside>
 
 <section class="hero" id="home">
@@ -127,12 +129,12 @@
   <div class="contact-inner">
     <div class="section-label">Liên hệ</div>
     <h2 class="section-h2" style="margin-bottom:12px;">Kết nối với chúng tôi</h2>
-    <div class="contact-grid">
+    <div class="contact-grid" style="grid-template-columns:1fr;gap:8px;">
       <div>
-        <p class="contact-desc">Có câu hỏi về giải đấu hoặc cần hỗ trợ đăng ký? Liên hệ qua các kênh dưới đây để được phản hồi nhanh nhất.</p>
-        <div class="contact-cards" id="contact-cards"></div>
+        <p class="contact-desc" style="margin-bottom:8px;">Có câu hỏi về giải đấu hoặc cần hỗ trợ đăng ký? Liên hệ nhanh qua các kênh dưới đây.</p>
+        <div class="contact-cards" id="contact-cards" style="display:flex;flex-wrap:nowrap;gap:8px;"></div>
       </div>
-      <div class="contact-art">
+      <div class="contact-art" style="display:none;">
         <svg class="billiard-art" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="tableGrad" cx="50%" cy="45%" r="55%">
@@ -288,24 +290,18 @@ function renderTournaments(list) {
   grid.innerHTML = limited.map((t, i) => {
     const badgeClass = getBadgeClass(t.status);
     const badgeLabel = getStatusLabel(t.status);
-    const coverStyle = t.cover_url
-      ? `background-image:url(${t.cover_url});background-size:cover;background-position:center;`
-      : `background:linear-gradient(135deg,${getCardGradient(i)});`;
     const idEnc = encodeURIComponent(t.id);
     return `<a class="tourney-card fade-up" href="tournament.html?id=${idEnc}" style="animation-delay:${i*60}ms">
-      <div class="tc-cover" style="${coverStyle}">
-        <div class="tc-cover-overlay"></div>
-        <div class="tc-badge"><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
-      </div>
-      <div class="tc-body">
+      <div class="tc-body" style="padding-top:14px;">
         <div class="tc-name">${t.name}</div>
         <div class="tc-meta">
+          <div class="tc-row"><span class="ico">📌</span><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
           ${t.date_str ? `<div class="tc-row"><span class="ico">🕒</span>${t.date_str}</div>` : ''}
           ${t.location ? `<div class="tc-row"><span class="ico">📍</span>${t.location}</div>` : ''}
           ${t.format ? `<div class="tc-row"><span class="ico">⚔️</span>${t.format}</div>` : ''}
+          ${t.prize ? `<div class="tc-row"><span class="ico">🏆</span>${t.prize}</div>` : ''}
         </div>
         <div class="tc-footer">
-          <span class="tc-prize">${t.prize || '—'}</span>
           <span class="tc-open-btn">Xem chi tiết →</span>
         </div>
       </div>

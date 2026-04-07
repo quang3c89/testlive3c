@@ -32,6 +32,7 @@
   <a class="nav-link" href="index.html#contact">Liên hệ</a>
   <div class="nav-status offline" id="nav-status"><span class="status-dot" id="rt-dot"></span><span id="rt-label">OFFLINE</span></div>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
+  <a class="nav-login" href="admin/login.html?mode=register">Đăng kí</a>
   <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Mở menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer-overlay" id="nav-drawer-overlay"></div>
@@ -39,6 +40,7 @@
   <a class="nav-link active" href="tournaments.html" aria-current="page">Giải đấu</a>
   <a class="nav-link" href="index.html#contact">Liên hệ</a>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
+  <a class="nav-login" href="admin/login.html?mode=register">Đăng kí</a>
 </aside>
 
 <main class="tournaments-inner">
@@ -161,23 +163,13 @@ function render() {
       const badgeLabel = getStatusLabel(t.status);
       const idEnc = encodeURIComponent(t.id);
       const detailHref = `tournament.html?id=${idEnc}`;
-      const coverInner = t.cover_url
-        ? `<img class="tc-cover-img" src="${t.cover_url}" alt="" loading="lazy">`
-        : '';
-      const coverStyle = t.cover_url
-        ? ''
-        : `background:linear-gradient(135deg,${getCardGradient(i)});`;
       const adminBtn = admin
         ? `<a class="fi-btn sec" href="admin/edit-tournament.html?id=${idEnc}">Quản lý ⚙</a>`
         : '';
       return `<div class="tournament-card tc-list-card fade-up">
         <a class="tc-card-overlay-link" href="${detailHref}"><span class="sr-only">Xem chi tiết ${t.name}</span></a>
-        <div class="tc-cover" style="${coverStyle}">
-          ${coverInner}
-          <div class="tc-cover-overlay"></div>
-          <div class="tc-badge"><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
-        </div>
-        <div class="tc-body">
+        <div class="tc-body" style="padding-top:14px;">
+          <div class="tc-row"><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
           <div class="tc-name">${t.name}</div>
           <div class="tc-meta">
             ${t.date_str ? `<div class="tc-row"><span class="ico">📅</span>${t.date_str}</div>` : ''}

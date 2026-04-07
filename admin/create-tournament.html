@@ -42,7 +42,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <form id="create-form">
       <div class="field"><label for="name">Tên giải *</label><input id="name" required></div>
       <div class="row">
-        <div class="field"><label for="date_str">Ngày / giờ</label><input id="date_str"></div>
+        <div class="field"><label for="date_str">Ngày / giờ</label><input id="date_str" type="datetime-local"></div>
         <div class="field"><label for="location">Địa điểm</label><input id="location"></div>
       </div>
       <div class="row">
@@ -62,12 +62,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
       </div>
       <div class="row">
         <div class="field"><label for="prize">Giải thưởng</label><input id="prize"></div>
-        <div class="field">
-          <label for="cover_file">Ảnh cover</label>
-          <input id="cover_file" type="file" accept="image/png,image/jpeg,image/webp">
-          <input id="cover_url" type="hidden">
-          <small style="font-size:11px;opacity:.65;line-height:1.5;display:block;">Khuyến nghị: 1200×630 px (tỷ lệ 1.91:1). Định dạng: JPG/PNG/WEBP. Kích thước tối đa: 2MB.</small>
-        </div>
       </div>
       <div class="field"><label for="description">Mô tả</label><textarea id="description"></textarea></div>
 
@@ -88,33 +82,10 @@ requireAdmin();
 
 document.getElementById('logout-btn').addEventListener('click', () => logout());
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Không thể đọc file ảnh cover'));
-    reader.readAsDataURL(file);
-  });
-}
-
 document.getElementById('create-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   try {
-    const coverFile = document.getElementById('cover_file').files?.[0] || null;
-    let coverUrl = '';
-
-    if (coverFile) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(coverFile.type)) {
-        throw new Error('Ảnh cover chỉ hỗ trợ JPG/PNG/WEBP');
-      }
-      if (coverFile.size > 2 * 1024 * 1024) {
-        throw new Error('Ảnh cover vượt quá 2MB');
-      }
-      coverUrl = await readFileAsDataUrl(coverFile);
-    }
-
     const payload = {
       name: document.getElementById('name').value.trim(),
       date_str: document.getElementById('date_str').value.trim(),
@@ -123,7 +94,7 @@ document.getElementById('create-form').addEventListener('submit', async (e) => {
       content: document.getElementById('format').value,
       status: document.getElementById('status').value,
       prize: document.getElementById('prize').value.trim(),
-      cover_url: coverUrl,
+      cover_url: '',
       description: document.getElementById('description').value.trim(),
       bracket_size: 4,
       bracket_state: JSON.stringify([[{ p1:null,p2:null,s1:'',s2:'',winner:null },{ p1:null,p2:null,s1:'',s2:'',winner:null }],[{ p1:null,p2:null,s1:'',s2:'',winner:null }]]),
@@ -138,7 +109,7 @@ document.getElementById('create-form').addEventListener('submit', async (e) => {
         'tournaments',
         'GET',
         null,
-        `name=eq.${encodeURIComponent(payload.name)}&order=created_at.desc&limit=1`
+        `select=id,name,created_at&name=eq.${encodeURIComponent(payload.name)}&order=created_at.desc&limit=1`
       );
       id = fallbackRows?.[0]?.id || null;
     }
