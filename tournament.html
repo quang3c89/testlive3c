@@ -2030,7 +2030,7 @@ body.fs-mode #bracket-style-toggle {
         <button class="cb" id="draw-mode-btn" title="Tùy Chỉnh Quay" onclick="toggleDrawModeMenu(event)">⚙</button>
         <input type="file" id="import-excel" accept=".xlsx,.xls" style="display:none" onchange="handleExcel(event)">
       </div>
-      <div id="draw-mode-menu" style="display:none;position:absolute;z-index:60;background:rgba(8,12,20,.95);border:1px solid var(--border);border-radius:8px;padding:4px;">
+      <div id="draw-mode-menu" style="display:none;position:fixed;z-index:999;background:rgba(8,12,20,.95);border:1px solid var(--border);border-radius:8px;padding:4px;">
         <button class="cb" style="width:auto;min-width:72px;height:22px;font-size:10px;" onclick="setDrawMode('one')">Bốc từng người</button>
         <button class="cb" style="width:auto;min-width:72px;height:22px;font-size:10px;margin-left:4px;" onclick="setDrawMode('fast')">Bốc nhanh</button>
       </div>
@@ -3802,29 +3802,68 @@ function stopSpinSound() {
 }
 
 function startAutoSpin() {
+  autoSpinEnabled = true;
+  autoSpinStopRequested = false;
+
   if (S.drawMode === 'fast') {
-    autoSpinEnabled = true;
-    autoSpinStopRequested = false;
-  } else {
-    autoSpinEnabled = true;
-    autoSpinStopRequested = false;
+    fastDrawAll();
+    return;
   }
+
   spinWheel();
+}
+
+function fastDrawAll() {
+  if (!S.isAdmin) return;
+  if (S.isSpinning) return;
+
+  const step = () => {
+    if (autoSpinStopRequested) {
+      autoSpinEnabled = false;
+      resetWheel();
+      return;
+    }
+
+    const undrawn = getUndrawn();
+    if (!undrawn.length) {
+      autoSpinEnabled = false;
+      resetWheel();
+      showToast('🏁 Đã bốc hết!');
+      return;
+    }
+
+    const seeded = undrawn.filter(p => p.isSeed);
+    const pool = seeded.length ? seeded : undrawn;
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+    const slot = findNextSlot(picked);
+    if (!slot) {
+      autoSpinEnabled = false;
+      resetWheel();
+      showToast('🏆 Bracket đã đầy!');
+      return;
+    }
+
+    commitPlayer(picked, slot);
+    S.wheelRotation = (S.wheelRotation + 52 + Math.random() * 66) % 360;
+    drawWheel(S.wheelRotation);
+
+    setTimeout(step, 55);
+  };
+
+  step();
 }
 
 function toggleDrawModeMenu(e) {
   e?.stopPropagation?.();
   const menu = document.getElementById('draw-mode-menu');
   const btn = document.getElementById('draw-mode-btn');
-  const row = document.getElementById('draw-controls-row');
-  if (!menu || !btn || !row) return;
+  if (!menu || !btn) return;
 
   const next = menu.style.display === 'none' || !menu.style.display;
   if (next) {
     const br = btn.getBoundingClientRect();
-    const rr = row.getBoundingClientRect();
-    menu.style.left = `${Math.max(0, br.left - rr.left - 24)}px`;
-    menu.style.top = `${rr.height + 6}px`;
+    menu.style.left = `${Math.round(br.left + br.width + 6)}px`;
+    menu.style.top = `${Math.round(br.top + (br.height - 22) / 2)}px`;
     menu.style.display = 'block';
   } else {
     menu.style.display = 'none';
