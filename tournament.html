@@ -197,7 +197,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 
 /* ============ CONTROLS ============ */
-.ctrl-row { display: flex; justify-content: space-around; padding: 2px 0; }
+.ctrl-row { display: flex; justify-content: space-between; padding: 2px 0; gap: 6px; }
 .cb {
   width: 25px; height: 25px; border-radius: 7px; border: 1px solid var(--border);
   background: color-mix(in srgb, var(--card) 88%, var(--accent, #f0a500) 12%);
@@ -2008,19 +2008,17 @@ body.fs-mode #bracket-style-toggle {
         <button id="stop-auto-spin" class="stop-spin-btn" onclick="stopAutoSpin()" title="Dừng auto spin">⏹</button>
       </div>
 
-      <div class="ctrl-row">
+      <div class="ctrl-row" id="draw-controls-row">
         <button class="cb" title="Thêm cơ thủ" onclick="openModal('add-modal')">➕</button>
         <button class="cb" title="Cài số bracket" onclick="openModal('count-modal')">🔢</button>
         <button class="cb" title="Import Excel" onclick="document.getElementById('import-excel').click()">📥</button>
         <button class="cb" title="Tải template" onclick="downloadTemplate()">📄</button>
+        <button class="cb" id="draw-mode-btn" title="Tùy Chỉnh Quay" onclick="toggleDrawModeMenu(event)">⚙</button>
         <input type="file" id="import-excel" accept=".xlsx,.xls" style="display:none" onchange="handleExcel(event)">
       </div>
-      <div class="ctrl-row" style="justify-content:center;gap:6px;padding-top:4px;">
-        <button class="cb" id="draw-mode-btn" title="Tùy Chỉnh Quay" onclick="toggleDrawModeMenu(event)">⚙</button>
-        <div id="draw-mode-menu" style="display:none;position:absolute;z-index:40;background:rgba(8,12,20,.95);border:1px solid var(--border);border-radius:8px;padding:4px;transform:translateY(30px);">
-          <button class="cb" style="width:auto;min-width:64px;height:22px;font-size:10px;" onclick="setDrawMode('one')">Bốc từng người</button>
-          <button class="cb" style="width:auto;min-width:64px;height:22px;font-size:10px;margin-left:4px;" onclick="setDrawMode('fast')">Bốc nhanh</button>
-        </div>
+      <div id="draw-mode-menu" style="display:none;position:absolute;z-index:60;background:rgba(8,12,20,.95);border:1px solid var(--border);border-radius:8px;padding:4px;">
+        <button class="cb" style="width:auto;min-width:72px;height:22px;font-size:10px;" onclick="setDrawMode('one')">Bốc từng người</button>
+        <button class="cb" style="width:auto;min-width:72px;height:22px;font-size:10px;margin-left:4px;" onclick="setDrawMode('fast')">Bốc nhanh</button>
       </div>
     </div>
 
@@ -3008,10 +3006,15 @@ function toggleBracketColorPicker(e, key) {
 document.addEventListener('click', (e) => {
   const tools = document.getElementById('bracket-color-tools');
   const toggle = document.getElementById('bracket-style-toggle');
-  if (!tools) return;
-  if (!tools.contains(e.target) && !(toggle && toggle.contains(e.target))) {
+  if (tools && !tools.contains(e.target) && !(toggle && toggle.contains(e.target))) {
     tools.classList.remove('open');
     document.querySelectorAll('.bct-item').forEach(item => item.classList.remove('open'));
+  }
+
+  const drawMenu = document.getElementById('draw-mode-menu');
+  const drawBtn = document.getElementById('draw-mode-btn');
+  if (drawMenu && drawBtn && !drawMenu.contains(e.target) && !drawBtn.contains(e.target)) {
+    drawMenu.style.display = 'none';
   }
 });
 
@@ -3798,15 +3801,30 @@ function startAutoSpin() {
 function toggleDrawModeMenu(e) {
   e?.stopPropagation?.();
   const menu = document.getElementById('draw-mode-menu');
-  if (!menu) return;
-  menu.style.display = menu.style.display === 'none' || !menu.style.display ? 'block' : 'none';
+  const btn = document.getElementById('draw-mode-btn');
+  const row = document.getElementById('draw-controls-row');
+  if (!menu || !btn || !row) return;
+
+  const next = menu.style.display === 'none' || !menu.style.display;
+  if (next) {
+    const br = btn.getBoundingClientRect();
+    const rr = row.getBoundingClientRect();
+    menu.style.left = `${Math.max(0, br.left - rr.left - 24)}px`;
+    menu.style.top = `${rr.height + 6}px`;
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
 }
 
 function setDrawMode(mode) {
   if (!S.isAdmin) return;
   S.drawMode = mode === 'fast' ? 'fast' : 'one';
   const btn = document.getElementById('draw-mode-btn');
-  if (btn) btn.style.borderColor = 'var(--accent)';
+  if (btn) {
+    btn.style.borderColor = 'var(--accent)';
+    btn.title = S.drawMode === 'fast' ? 'Tùy Chỉnh Quay: Bốc nhanh' : 'Tùy Chỉnh Quay: Bốc từng người';
+  }
   const menu = document.getElementById('draw-mode-menu');
   if (menu) menu.style.display = 'none';
   saveState();
@@ -3815,6 +3833,8 @@ function setDrawMode(mode) {
 function stopAutoSpin() {
   autoSpinStopRequested = true;
   autoSpinEnabled = false;
+  const menu = document.getElementById('draw-mode-menu');
+  if (menu) menu.style.display = 'none';
   stopSpinSound();
 }
 
