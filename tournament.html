@@ -273,9 +273,9 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   scroll-behavior: smooth;
 }
 .pc {
-  width: 100%;
-  min-height: 70px;
-  padding: 6px 8px;
+  width: 175px;
+  height: 40px;
+  padding: 4px 7px;
   border-radius: 5px;
   background: var(--card); position: relative; transition: all 0.15s;
   border: 1px solid var(--border); border-left: 2px solid var(--accent);
@@ -313,7 +313,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 .pk {
   display: block;
   font-size: 8px;
-  color: #ffd447;
+  color: var(--unit-color);
   font-style: italic;
   line-height: 1.25;
   margin-top: 3px;
@@ -399,18 +399,11 @@ body.export-static .bracket-tool-zone {
   display: none !important;
 }
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; z-index: 2; }
-.bracket-tool-zone {
-  position: absolute;
-  top: 34px;
-  right: 0;
-  width: 110px;
-  height: 70px;
-  z-index: 9;
-}
+.bracket-tool-zone { display: none; }
 .bracket-color-tools {
   position: absolute;
-  top: 44px;
-  right: 10px;
+  top: 36px;
+  right: 44px;
   z-index: 24;
   display: flex;
   gap: 3px;
@@ -419,14 +412,14 @@ body.export-static .bracket-tool-zone {
   pointer-events: none;
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
-.bracket-tool-zone:hover + .bracket-color-tools,
+.bracket-color-tools.open,
 .bracket-color-tools:hover {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
-body.viewer-mode .bracket-tool-zone,
-body.viewer-mode .bracket-color-tools { display: none !important; }
+body.viewer-mode .bracket-color-tools,
+body.viewer-mode #bracket-style-toggle { display: none !important; }
 .bct-item { position: relative; }
 .bct-btn {
   width: 18px; height: 18px;
@@ -531,8 +524,8 @@ body.viewer-mode .bracket-color-tools { display: none !important; }
   position: relative; overflow: hidden; gap: 4px;
 }
 .mp::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background 0.2s; }
-.mp.p1-slot::before { background: #3b82f6; }
-.mp.p2-slot::before { background: #ef4444; }
+.mp.p1-slot::before { background: var(--match-border, rgba(120, 88, 12, 0.7)); }
+.mp.p2-slot::before { background: var(--match-border, rgba(120, 88, 12, 0.7)); }
 .mp:first-child { border-bottom: 1.5px solid rgba(255, 241, 214, 0.9); }
 .mp:hover { background: rgba(255, 241, 214, 0.45); }
 .mp.winner { font-weight: 800; background: rgba(240,165,0,0.08); }
@@ -1214,7 +1207,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   }
   .pk {
     font-size: 9px !important;
-    color: #ffd447 !important;
+    color: var(--unit-color) !important;
     margin-top: 4px;
     margin-left: 26px;
     max-width: calc(100% - 26px);
@@ -1893,6 +1886,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
       <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')">🎯 Bracket</button>
       <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')">⚔️ Lịch Thi Đấu</button>
       <span class="bracket-tab-spacer"></span>
+      <button class="bracket-full-btn" id="bracket-style-toggle" onclick="toggleBracketStyleTools(event)" title="Tùy chỉnh bracket">⚙</button>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
@@ -2699,9 +2693,19 @@ function setBracketColor(key, value) {
   supaPushDebounced();
 }
 
+function toggleBracketStyleTools(e) {
+  if (!S.isAdmin) return;
+  e?.stopPropagation?.();
+  const tools = document.getElementById('bracket-color-tools');
+  if (!tools) return;
+  tools.classList.toggle('open');
+}
+
 function toggleBracketColorPicker(e, key) {
   if (!S.isAdmin) return;
   e?.stopPropagation?.();
+  const tools = document.getElementById('bracket-color-tools');
+  if (tools) tools.classList.add('open');
   document.querySelectorAll('.bct-item').forEach(item => item.classList.remove('open'));
   const wrap = document.querySelector(`.bct-item[data-k="${key}"]`);
   if (!wrap) return;
@@ -2710,7 +2714,6 @@ function toggleBracketColorPicker(e, key) {
   const picker = wrap.querySelector('.bct-picker');
   if (!picker) return;
 
-  // Open native color dialog immediately for faster UX
   if (typeof picker.showPicker === 'function') {
     picker.showPicker();
   } else {
@@ -2720,8 +2723,10 @@ function toggleBracketColorPicker(e, key) {
 
 document.addEventListener('click', (e) => {
   const tools = document.getElementById('bracket-color-tools');
+  const toggle = document.getElementById('bracket-style-toggle');
   if (!tools) return;
-  if (!tools.contains(e.target)) {
+  if (!tools.contains(e.target) && !(toggle && toggle.contains(e.target))) {
+    tools.classList.remove('open');
     document.querySelectorAll('.bct-item').forEach(item => item.classList.remove('open'));
   }
 });
