@@ -53,7 +53,7 @@
 body.admin-mode .tvi [contenteditable] { cursor:text; }
 #tb-v0{font-size:13px;font-weight:800;font-family:var(--title-font)}
 .tb-sync-status { display:flex; align-items:center; gap:4px; font-size:9px; font-family:var(--font-mono); opacity:.6; padding:0 6px; }
-#theme-dots { display:none; position:absolute; right:0; top:30px; gap:6px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(8,12,20,.95); z-index:120; }
+#theme-dots { display:none; position:absolute; right:0; top:0; gap:6px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(8,12,20,.95); z-index:120; }
 .tourney-bar.theme-open #theme-dots { display:flex; }
 .t-dot { width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.15); cursor:pointer; transition:transform .15s, box-shadow .15s; }
 .t-dot:hover { transform:scale(1.2); }
@@ -156,11 +156,12 @@ body.viewer-mode .tb-right-actions, body.viewer-mode .sponsor-upload-btn { displ
 .wheel-wrap {
   margin: 0 auto; width: 100%; aspect-ratio: 1; position: relative;
   padding: 6px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent, #f0a500) 12%, transparent) 0%, transparent 70%);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent, #f0a500) 22%, transparent);
 }
 .wheel-inner {
   width: 100%; height: 100%; border-radius: 50%; overflow: hidden;
-  box-shadow: 0 0 0 2px var(--border), 0 0 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  box-shadow: 0 0 0 2px var(--border), 0 0 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset, 0 0 18px color-mix(in srgb, var(--accent, #f0a500) 30%, transparent);
 }
 #wheel-canvas { width: 100%; height: 100%; display: block; }
 .spin-btn {
@@ -318,11 +319,13 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   position:absolute;
   cursor:move;
   user-select:none;
+  touch-action:none;
   white-space: nowrap;
   max-width:none;
+  z-index: 4;
 }
 .cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:10px; }
-.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; right:10px; top:14px; }
+.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; left:220px; right:auto; top:14px; }
 .cti-title::before { content:'🏆 '; opacity:.9; }
 .cti-meta::before { content:'📍 '; opacity:.9; }
 .cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
@@ -2963,8 +2966,8 @@ function toggleThemeDots() {
     const r = btn.getBoundingClientRect();
     const bar = strip.getBoundingClientRect();
     dots.style.right = 'auto';
-    dots.style.left = `${Math.max(8, r.left - bar.left - 18)}px`;
-    dots.style.top = `${Math.max(26, r.bottom - bar.top + 4)}px`;
+    dots.style.left = `${Math.max(8, r.left - bar.left + r.width + 6)}px`;
+    dots.style.top = `${Math.max(4, r.top - bar.top + (r.height - 20) / 2)}px`;
   }
 }
 
@@ -3208,12 +3211,12 @@ function renderTopInfo() {
 
 document.addEventListener('pointermove', (ev) => {
   if (!ctiDragState || !S.isAdmin) return;
-  const top = document.getElementById('cti-top');
+  const box = document.getElementById('center-top-info');
   const title = document.getElementById('cti-title');
   const meta = document.getElementById('cti-meta');
-  if (!top || !title || !meta) return;
+  if (!box || !title || !meta) return;
   const target = ctiDragState.type === 'title' ? title : meta;
-  const b = top.getBoundingClientRect();
+  const b = box.getBoundingClientRect();
   let nx = ev.clientX - b.left - ctiDragState.offsetX;
   let ny = ev.clientY - b.top - ctiDragState.offsetY;
   nx = Math.max(0, Math.min(nx, b.width - target.offsetWidth));
@@ -3394,27 +3397,10 @@ document.addEventListener('pointerup', () => {
   supaPushDebounced();
 });
 
-function resizeImage80(file) {
+function readImageData(file) {
   return new Promise((resolve) => {
     const fr = new FileReader();
-    fr.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        c.width = 80; c.height = 80;
-        const ctx = c.getContext('2d');
-        ctx.clearRect(0, 0, 80, 80);
-        const scale = Math.min(80 / img.width, 80 / img.height);
-        const w = img.width * scale;
-        const h = img.height * scale;
-        const x = (80 - w) / 2;
-        const y = (80 - h) / 2;
-        ctx.drawImage(img, x, y, w, h);
-        resolve(c.toDataURL('image/png'));
-      };
-      img.onerror = () => resolve(null);
-      img.src = fr.result;
-    };
+    fr.onload = () => resolve(fr.result);
     fr.onerror = () => resolve(null);
     fr.readAsDataURL(file);
   });
@@ -3436,7 +3422,7 @@ function handleSponsorUpload(e) {
   if (!S.isAdmin) return;
   const files = Array.from(e?.target?.files || []);
   if (!files.length) return;
-  Promise.all(files.map(resizeImage80)).then((arr) => {
+  Promise.all(files.map(readImageData)).then((arr) => {
     const ok = arr.filter(Boolean);
     if (!ok.length) return;
     pushHistory();
