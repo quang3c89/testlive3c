@@ -2712,6 +2712,10 @@ function applyBracketColorVars() {
   const primarySoftL = Math.min(97, baseL + (isLightMode ? 30 : 22));
   const primaryDarkL = Math.max(8, baseL - (isLightMode ? 18 : 30));
 
+  const matchTint = c.matchBg || DEFAULTS.bracketColors.matchBg;
+  const matchEdge = c.matchBorder || DEFAULTS.bracketColors.matchBorder;
+  const customLine = c.line || DEFAULTS.bracketColors.line;
+
   const primary = hslToCss(hsl.h, baseS, baseL);
   const primaryLight = hslToCss(hsl.h, Math.max(24, baseS - 8), primaryLightL);
   const primarySoft = hslToCss(hsl.h, Math.max(14, baseS - 18), primarySoftL);
@@ -2726,35 +2730,33 @@ function applyBracketColorVars() {
   root.style.setProperty('--surface-mode', isLightMode ? 'light' : 'dark');
 
   if (isLightMode) {
-    root.style.setProperty('--surface-gradient', `linear-gradient(156deg, ${hslToCss(hsl.h, Math.max(16, baseS - 20), Math.min(98, primarySoftL + 2))} 0%, ${hslToCss(hsl.h, Math.max(14, baseS - 22), Math.min(99, primarySoftL + 6))} 100%)`);
-    root.style.setProperty('--surface-border', hslToCss(hsl.h, Math.max(20, baseS - 14), Math.max(42, baseL - 8), 0.32));
-    root.style.setProperty('--surface-border-strong', hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(38, baseL - 14), 0.5));
-    root.style.setProperty('--surface-border-hover', hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(34, baseL - 18), 0.62));
+    root.style.setProperty('--surface-gradient', `linear-gradient(156deg, ${hslToCss(hsl.h, Math.max(16, baseS - 20), Math.min(98, primarySoftL + 2))} 0%, color-mix(in srgb, ${hslToCss(hsl.h, Math.max(14, baseS - 22), Math.min(99, primarySoftL + 6))} 78%, ${matchTint} 22%) 100%)`);
+    root.style.setProperty('--surface-border', `color-mix(in srgb, ${matchEdge} 34%, ${hslToCss(hsl.h, Math.max(20, baseS - 14), Math.max(42, baseL - 8), 0.32)} 66%)`);
+    root.style.setProperty('--surface-border-strong', `color-mix(in srgb, ${matchEdge} 46%, ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(38, baseL - 14), 0.5)} 54%)`);
+    root.style.setProperty('--surface-border-hover', `color-mix(in srgb, ${matchEdge} 58%, ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(34, baseL - 18), 0.62)} 42%)`);
     root.style.setProperty('--surface-shadow', `0 8px 18px rgba(148,163,184,0.24), 0 0 0 1px rgba(255,255,255,0.8) inset, 0 0 14px ${hslToCss(hsl.h, Math.max(18, baseS - 16), Math.min(86, baseL + 18), 0.18)}`);
     root.style.setProperty('--surface-shadow-hover', `0 12px 24px rgba(148,163,184,0.3), 0 0 0 1px rgba(255,255,255,0.92) inset, 0 0 18px ${hslToCss(hsl.h, Math.max(18, baseS - 14), Math.min(86, baseL + 20), 0.24)}`);
     root.style.setProperty('--surface-overlay', 'linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.08) 45%, transparent 100%)');
-    root.style.setProperty('--line-color', hslToCss(hsl.h, Math.max(22, baseS - 14), Math.max(34, baseL - 20), 0.9));
+    root.style.setProperty('--line-color-auto', hslToCss(hsl.h, Math.max(22, baseS - 14), Math.max(34, baseL - 20), 0.9));
     root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(14, baseS - 22), Math.min(84, baseL + 24), 0.22));
   } else {
-    root.style.setProperty('--surface-gradient', `linear-gradient(160deg, ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(10, primaryDarkL + 6))} 0%, ${hslToCss(hsl.h, Math.max(24, baseS - 8), Math.max(7, primaryDarkL - 2))} 100%)`);
-    root.style.setProperty('--surface-border', hslToCss(hsl.h, Math.max(28, baseS - 4), Math.min(68, baseL + 6), 0.28));
-    root.style.setProperty('--surface-border-strong', hslToCss(hsl.h, Math.max(28, baseS - 2), Math.min(72, baseL + 10), 0.46));
-    root.style.setProperty('--surface-border-hover', hslToCss(hsl.h, Math.max(28, baseS), Math.min(76, baseL + 14), 0.62));
+    root.style.setProperty('--surface-gradient', `linear-gradient(160deg, color-mix(in srgb, ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(10, primaryDarkL + 6))} 76%, ${matchTint} 24%) 0%, ${hslToCss(hsl.h, Math.max(24, baseS - 8), Math.max(7, primaryDarkL - 2))} 100%)`);
+    root.style.setProperty('--surface-border', `color-mix(in srgb, ${matchEdge} 40%, ${hslToCss(hsl.h, Math.max(28, baseS - 4), Math.min(68, baseL + 6), 0.28)} 60%)`);
+    root.style.setProperty('--surface-border-strong', `color-mix(in srgb, ${matchEdge} 54%, ${hslToCss(hsl.h, Math.max(28, baseS - 2), Math.min(72, baseL + 10), 0.46)} 46%)`);
+    root.style.setProperty('--surface-border-hover', `color-mix(in srgb, ${matchEdge} 64%, ${hslToCss(hsl.h, Math.max(28, baseS), Math.min(76, baseL + 14), 0.62)} 36%)`);
     root.style.setProperty('--surface-shadow', `0 12px 28px rgba(0,0,0,0.45), 0 0 0 1px ${hslToCss(hsl.h, Math.max(22, baseS - 12), Math.min(86, baseL + 20), 0.18)} inset, 0 0 24px ${primaryGlow}`);
     root.style.setProperty('--surface-shadow-hover', `0 16px 34px rgba(0,0,0,0.58), 0 0 0 1px ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.min(90, baseL + 24), 0.28)} inset, 0 0 34px ${hslToCss(hsl.h, Math.max(26, baseS - 6), Math.min(90, baseL + 20), 0.48)}`);
     root.style.setProperty('--surface-overlay', 'linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%)');
-    root.style.setProperty('--line-color', hslToCss(hsl.h, Math.max(20, baseS - 10), Math.min(88, baseL + 32), 0.92));
+    root.style.setProperty('--line-color-auto', hslToCss(hsl.h, Math.max(20, baseS - 10), Math.min(88, baseL + 32), 0.92));
     root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(18, baseS - 20), Math.min(88, baseL + 30), 0.5));
   }
-
-  const matchTint = c.matchBg || DEFAULTS.bracketColors.matchBg;
-  const matchEdge = c.matchBorder || DEFAULTS.bracketColors.matchBorder;
 
   root.style.setProperty('--bracket-bg', primaryHex);
   root.style.setProperty('--match-bg', matchTint);
   root.style.setProperty('--match-border', matchEdge);
   root.style.setProperty('--match-tint', matchTint);
   root.style.setProperty('--match-edge', matchEdge);
+  root.style.setProperty('--line-color', customLine);
   root.style.setProperty('--bracket-name-color', c.nameColor || DEFAULTS.bracketColors.nameColor);
   root.style.setProperty('--bracket-unit-color', c.unitColor || DEFAULTS.bracketColors.unitColor || '#5b4a16');
 
