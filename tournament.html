@@ -354,6 +354,20 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   cursor: pointer;
 }
 .cti-mini-select option { color: #111; background:#fff; font-size:11px; }
+.cti-mini-color {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.cti-mini-color::-webkit-color-swatch-wrapper { padding: 0; }
+.cti-mini-color::-webkit-color-swatch { border: 0; border-radius: 1px; }
 .sponsor-upload-btn { width:12px; height:12px; border-radius:3px; border:1px solid var(--border); background:rgba(0,0,0,.38); color:var(--text); font-size:8px; cursor:pointer; }
 body.viewer-mode .sponsor-upload-btn, body.viewer-mode .cti-tools { display:none !important; }
 .bracket-bg-layer {
