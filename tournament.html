@@ -53,7 +53,7 @@
 body.admin-mode .tvi [contenteditable] { cursor:text; }
 #tb-v0{font-size:13px;font-weight:800;font-family:var(--title-font)}
 .tb-sync-status { display:flex; align-items:center; gap:4px; font-size:9px; font-family:var(--font-mono); opacity:.6; padding:0 6px; }
-#theme-dots { display:none; position:absolute; right:92px; top:34px; gap:6px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(8,12,20,.95); }
+#theme-dots { display:none; position:absolute; right:0; top:30px; gap:6px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(8,12,20,.95); z-index:120; }
 .tourney-bar.theme-open #theme-dots { display:flex; }
 .t-dot { width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.15); cursor:pointer; transition:transform .15s, box-shadow .15s; }
 .t-dot:hover { transform:scale(1.2); }
@@ -314,7 +314,6 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   overflow: hidden;
   min-height: 84px;
 }
-.cti-top { position:relative; height:42px; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
 .cti-title, .cti-meta {
   position:absolute;
   cursor:move;
@@ -322,11 +321,11 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   white-space: nowrap;
   max-width:none;
 }
-.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:7px; }
-.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; right:10px; top:11px; }
+.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:10px; }
+.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; right:10px; top:14px; }
 .cti-title::before { content:'🏆 '; opacity:.9; }
 .cti-meta::before { content:'📍 '; opacity:.9; }
-.cti-tools { position:absolute; top:1px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+.cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
 .center-top-info:hover .cti-tools { opacity:.95; pointer-events:auto; }
 .cti-mini-select {
   width: 20px;
@@ -411,16 +410,30 @@ body.export-static .bracket-tool-zone {
 .sponsor-stage { position:absolute; inset:0; z-index:3; pointer-events:none; }
 .sponsor-float {
   position:absolute;
-  width:80px; height:80px;
+  width:120px; height:120px;
   border-radius:8px;
-  border:1px solid rgba(255,255,255,0.2);
-  background:rgba(255,255,255,0.06);
-  box-shadow:0 6px 18px rgba(0,0,0,0.32);
-  overflow:hidden;
+  border:0;
+  background:transparent;
+  box-shadow:0 6px 18px rgba(0,0,0,0.24);
+  overflow:visible;
   pointer-events:auto;
   cursor:move;
 }
-.sponsor-float img { width:100%; height:100%; object-fit:cover; display:block; }
+.sponsor-float img { width:100%; height:100%; object-fit:contain; display:block; pointer-events:none; }
+.sponsor-del {
+  position:absolute; right:-6px; top:-6px; width:10px; height:10px;
+  border-radius:50%; border:1px solid rgba(255,255,255,.3);
+  background:rgba(239,68,68,.85); color:#fff; font-size:8px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  opacity:0; transition:opacity .12s ease;
+}
+.sponsor-resize {
+  position:absolute; right:-4px; bottom:-4px; width:8px; height:8px;
+  border:1px solid rgba(255,255,255,.35); background:rgba(0,0,0,.55); cursor:nwse-resize;
+  opacity:0;
+}
+.sponsor-float:hover .sponsor-del,
+.sponsor-float:hover .sponsor-resize { opacity:1; }
 .bracket-tool-zone { display: none; }
 .bracket-color-tools {
   position: absolute;
@@ -1982,17 +1995,15 @@ body.fs-mode #bracket-style-toggle {
   <!-- CENTER: BRACKET -->
   <section class="center" id="center-panel">
     <div class="center-top-info" id="center-top-info">
-      <div class="cti-top" id="cti-top">
-        <div class="cti-title" id="cti-title">Giải đấu</div>
-        <div class="cti-meta" id="cti-meta">Địa điểm · Thời gian</div>
-        <div class="cti-tools">
-          <select class="cti-mini-select" id="cti-font-select" title="Font" onchange="setCtiFont(this.value)"></select>
-          <select class="cti-mini-select" id="cti-color-select" title="Màu" onchange="setCtiColor(this.value)"></select>
-          <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
-          <select class="cti-mini-select" id="cti-bg-select" title="Nền" onchange="setCtiBg(this.value)"></select>
-          <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
-          <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
-        </div>
+      <div class="cti-title" id="cti-title">Giải đấu</div>
+      <div class="cti-meta" id="cti-meta">Địa điểm · Thời gian</div>
+      <div class="cti-tools">
+        <select class="cti-mini-select" id="cti-font-select" title="Font" onchange="setCtiFont(this.value)"></select>
+        <select class="cti-mini-select" id="cti-color-select" title="Màu" onchange="setCtiColor(this.value)"></select>
+        <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
+        <select class="cti-mini-select" id="cti-bg-select" title="Nền" onchange="setCtiBg(this.value)"></select>
+        <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
+        <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
       </div>
     </div>
     <div class="bracket-bg-layer" id="bracket-bg-layer">
@@ -2943,8 +2954,18 @@ function renderAll() {
    ================================================================ */
 function toggleThemeDots() {
   const strip = document.getElementById('tourney-bar');
-  if (!strip) return;
-  strip.classList.toggle('theme-open');
+  const btn = document.getElementById('theme-toggle-btn');
+  const dots = document.getElementById('theme-dots');
+  if (!strip || !btn || !dots) return;
+  const next = !strip.classList.contains('theme-open');
+  strip.classList.toggle('theme-open', next);
+  if (next) {
+    const r = btn.getBoundingClientRect();
+    const bar = strip.getBoundingClientRect();
+    dots.style.right = 'auto';
+    dots.style.left = `${Math.max(8, r.left - bar.left - 18)}px`;
+    dots.style.top = `${Math.max(26, r.bottom - bar.top + 4)}px`;
+  }
 }
 
 function closeThemeDots() {
@@ -3140,11 +3161,10 @@ function ensureCtiState() {
 
 function renderTopInfo() {
   ensureCtiState();
-  const top = document.getElementById('cti-top');
   const box = document.getElementById('center-top-info');
   const title = document.getElementById('cti-title');
   const meta = document.getElementById('cti-meta');
-  if (!title || !meta) return;
+  if (!title || !meta || !box) return;
 
   title.textContent = S.cti.titleText || S.tbVals?.[0] || 'Giải đấu';
   const loc = S.tbVals?.[2] || 'Địa điểm';
@@ -3166,10 +3186,10 @@ function renderTopInfo() {
   meta.style.color = S.cti.metaColor;
   if (box) box.style.background = S.cti.panelBg || '';
 
-  if (top && !top.dataset.dragWired) {
+  if (!box.dataset.dragWired) {
     const startDrag = (type, ev) => {
       if (!S.isAdmin) return;
-      const tRect = top.getBoundingClientRect();
+      const tRect = box.getBoundingClientRect();
       const target = type === 'title' ? title : meta;
       const o = target.getBoundingClientRect();
       ctiDragState = {
@@ -3182,7 +3202,7 @@ function renderTopInfo() {
     };
     title.addEventListener('pointerdown', (ev) => startDrag('title', ev));
     meta.addEventListener('pointerdown', (ev) => startDrag('meta', ev));
-    top.dataset.dragWired = '1';
+    box.dataset.dragWired = '1';
   }
 }
 
@@ -3295,6 +3315,7 @@ function setCtiBg(v) {
 }
 
 let sponsorDrag = null;
+let sponsorResize = null;
 
 function renderSponsorMarquee() {
   const stage = document.getElementById('sponsor-stage');
@@ -3305,12 +3326,20 @@ function renderSponsorMarquee() {
     const item = document.createElement('div');
     item.className = 'sponsor-float';
     item.dataset.idx = String(idx);
-    const pos = S.sponsorPos?.[idx] || { x: 20 + (idx % 6) * 90, y: 20 + Math.floor(idx / 6) * 90 };
+    const pos = S.sponsorPos?.[idx] || { x: 20 + (idx % 6) * 90, y: 20 + Math.floor(idx / 6) * 90, w: 120, h: 120 };
     item.style.left = `${pos.x}px`;
     item.style.top = `${pos.y}px`;
-    item.innerHTML = `<img src="${src}" alt="sponsor">`;
+    item.style.width = `${Math.max(40, pos.w || 120)}px`;
+    item.style.height = `${Math.max(40, pos.h || 120)}px`;
+    item.innerHTML = `<img src="${src}" alt="sponsor">${S.isAdmin ? '<button class="sponsor-del" title="Xóa" onclick="removeSponsorLogo(event,' + idx + ')">×</button><span class="sponsor-resize" data-rs="1"></span>' : ''}`;
     if (S.isAdmin) {
       item.addEventListener('pointerdown', (ev) => {
+        if ((ev.target).matches('.sponsor-del')) return;
+        if ((ev.target).matches('.sponsor-resize')) {
+          sponsorResize = { idx, sx: ev.clientX, sy: ev.clientY, w: item.offsetWidth, h: item.offsetHeight };
+          ev.preventDefault();
+          return;
+        }
         const r = item.getBoundingClientRect();
         sponsorDrag = { idx, dx: ev.clientX - r.left, dy: ev.clientY - r.top };
         item.setPointerCapture?.(ev.pointerId);
@@ -3321,25 +3350,46 @@ function renderSponsorMarquee() {
 }
 
 document.addEventListener('pointermove', (ev) => {
-  if (!sponsorDrag || !S.isAdmin) return;
+  if (!S.isAdmin) return;
   const stage = document.getElementById('sponsor-stage');
   if (!stage) return;
-  const item = stage.querySelector(`.sponsor-float[data-idx="${sponsorDrag.idx}"]`);
-  if (!item) return;
   const b = stage.getBoundingClientRect();
-  let x = ev.clientX - b.left - sponsorDrag.dx;
-  let y = ev.clientY - b.top - sponsorDrag.dy;
-  x = Math.max(0, Math.min(x, b.width - 80));
-  y = Math.max(0, Math.min(y, b.height - 80));
-  item.style.left = `${x}px`;
-  item.style.top = `${y}px`;
-  if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
-  S.sponsorPos[sponsorDrag.idx] = { x, y };
+
+  if (sponsorDrag) {
+    const item = stage.querySelector(`.sponsor-float[data-idx="${sponsorDrag.idx}"]`);
+    if (!item) return;
+    let x = ev.clientX - b.left - sponsorDrag.dx;
+    let y = ev.clientY - b.top - sponsorDrag.dy;
+    const w = item.offsetWidth;
+    const h = item.offsetHeight;
+    x = Math.max(0, Math.min(x, b.width - w));
+    y = Math.max(0, Math.min(y, b.height - h));
+    item.style.left = `${x}px`;
+    item.style.top = `${y}px`;
+    if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
+    const prev = S.sponsorPos[sponsorDrag.idx] || {};
+    S.sponsorPos[sponsorDrag.idx] = { ...prev, x, y, w: w, h: h };
+  }
+
+  if (sponsorResize) {
+    const item = stage.querySelector(`.sponsor-float[data-idx="${sponsorResize.idx}"]`);
+    if (!item) return;
+    let nw = sponsorResize.w + (ev.clientX - sponsorResize.sx);
+    let nh = sponsorResize.h + (ev.clientY - sponsorResize.sy);
+    nw = Math.max(40, Math.min(nw, b.width));
+    nh = Math.max(40, Math.min(nh, b.height));
+    item.style.width = `${nw}px`;
+    item.style.height = `${nh}px`;
+    if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
+    const prev = S.sponsorPos[sponsorResize.idx] || {};
+    S.sponsorPos[sponsorResize.idx] = { ...prev, w: nw, h: nh };
+  }
 });
 
 document.addEventListener('pointerup', () => {
-  if (!sponsorDrag) return;
+  if (!sponsorDrag && !sponsorResize) return;
   sponsorDrag = null;
+  sponsorResize = null;
   saveState();
   supaPushDebounced();
 });
@@ -3368,6 +3418,18 @@ function resizeImage80(file) {
     fr.onerror = () => resolve(null);
     fr.readAsDataURL(file);
   });
+}
+
+function removeSponsorLogo(ev, idx) {
+  ev?.stopPropagation?.();
+  if (!S.isAdmin) return;
+  if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [];
+  if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
+  S.sponsorLogos.splice(idx, 1);
+  S.sponsorPos.splice(idx, 1);
+  renderSponsorMarquee();
+  saveState();
+  supaPushDebounced();
 }
 
 function handleSponsorUpload(e) {
@@ -5176,7 +5238,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
-  handleSponsorUpload, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
+  handleSponsorUpload, removeSponsorLogo, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
