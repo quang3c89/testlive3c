@@ -276,8 +276,8 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 .pc.drawn .pn { text-decoration: line-through; }
 .pc .pr-row { display: flex; align-items: center; gap: 6px; padding-right: 10px; min-width: 0; }
-.pn { font-weight: 700; font-size: 10px; color: var(--list-contrast, color-mix(in srgb, var(--accent, #f0a500) 72%, #fff 28%)); flex: 0 0 10px; width: 10px; line-height: 1; text-align: left; }
-.pr { font-size: 10px; color: var(--name-color); font-style: normal; line-height: 1.2; flex: 0 0 80px; width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.pn { font-weight: 700; font-size: 10px; color: var(--list-contrast, color-mix(in srgb, var(--accent, #f0a500) 72%, #fff 28%)); flex: 0 0 20px; width: 20px; line-height: 1; text-align: left; }
+.pr { font-size: 10px; color: var(--name-color); font-style: normal; line-height: 1.2; flex: 0 0 82px; width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; height: 15px; }
 .pu {
   font-size: 8px;
   color: var(--list-contrast, var(--rank-color));
@@ -291,6 +291,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   font-family: var(--font-mono);
   flex: 0 0 15px;
   width: 15px;
+  height: 10px;
   text-align: right;
 }
 .pk {
@@ -300,10 +301,11 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   font-style: italic;
   line-height: 1.2;
   margin-top: 3px;
-  margin-left: 10px;
+  margin-left: 20px;
   padding-left: 0;
   width: 100px;
   max-width: 100px;
+  height: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -328,7 +330,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   box-shadow: 0 8px 20px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset;
   margin-bottom: 8px;
   overflow: hidden;
-  min-height: 56px;
+  min-height: 45px;
 }
 .cti-title, .cti-meta {
   position:absolute;
@@ -1717,6 +1719,10 @@ body.fs-mode #bracket-style-toggle {
   display: block;
   width: 100%;
   background: transparent !important;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.25;
 }
 
 .sched-center-pack {
@@ -1873,17 +1879,17 @@ body.fs-mode #bracket-style-toggle {
   .sched-match-num { font-size: 9px; letter-spacing: 1px; }
   .sched-match-status { font-size: 7px; }
   .sched-match-body {
-    grid-template-columns: minmax(48px, 0.7fr) minmax(84px, 1.2fr) auto minmax(84px, 1.2fr) minmax(48px, 0.7fr);
+    grid-template-columns: minmax(42px, 0.6fr) minmax(106px, 1.6fr) auto minmax(106px, 1.6fr) minmax(42px, 0.6fr);
     column-gap: 4px;
-    padding: 3px 5px;
+    padding: 4px 5px;
   }
-  .sched-name { font-size: 12px; }
+  .sched-name { font-size: 12px; white-space: normal; overflow: visible; text-overflow: clip; }
   .sched-name.name-sm { font-size: 11px; }
   .sched-name.name-xs { font-size: 10px; }
-  .sched-side-unit { font-size: 8px; }
-  .sched-center-pack { gap: 2px; min-width: 56px; }
-  .sched-vs-col { width: 32px; }
-  .sched-center-logo { width: 30px; height: 30px; }
+  .sched-side-unit { font-size: 8px; white-space: nowrap; }
+  .sched-center-pack { gap: 2px; min-width: 48px; }
+  .sched-vs-col { width: 28px; }
+  .sched-center-logo { width: 26px; height: 26px; }
   .tournament-bc-nav { display: none; }
   .tournament-bc-mobile { display: inline-flex !important; }
 }
