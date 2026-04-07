@@ -310,20 +310,36 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   box-shadow: 0 8px 20px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset;
   margin-bottom: 8px;
   overflow: hidden;
+  min-height: 84px;
 }
-.cti-top { display:flex; align-items:center; justify-content:space-between; gap:10px; padding: 6px 10px; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
-.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.cti-meta { font-family: var(--font-mono); font-size: 10px; opacity: 0.75; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cti-top { position:relative; height:42px; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
+.cti-title, .cti-meta {
+  position:absolute;
+  cursor:move;
+  user-select:none;
+  white-space: nowrap;
+  max-width:none;
+}
+.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:7px; }
+.cti-meta { font-family: var(--font-mono); font-size: 10px; opacity: 0.82; right:10px; top:11px; }
+.cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+.center-top-info:hover .cti-tools { opacity:.9; pointer-events:auto; }
+.cti-mini-btn {
+  width: 8px; height: 8px; border-radius: 2px; padding:0;
+  border: 1px solid rgba(255,255,255,0.22);
+  background: rgba(0,0,0,.35);
+  cursor: pointer;
+}
 .cti-sponsor { position: relative; padding: 5px 10px; min-height: 38px; }
 .sponsor-marquee { overflow: hidden; white-space: nowrap; }
-.sponsor-track { display: inline-flex; align-items: center; gap: 12px; min-width: 100%; animation: sponsorScroll 26s linear infinite; }
+.sponsor-track { display: inline-flex; align-items: center; gap: 12px; min-width: 100%; animation: sponsorPingPong 10s ease-in-out infinite alternate; }
 .sponsor-item { width: 72px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
 .sponsor-item img { max-width: 100%; max-height: 100%; object-fit: contain; display:block; }
 .sponsor-empty { font-size: 9px; font-family: var(--font-mono); opacity: 0.4; letter-spacing: 1px; text-transform: uppercase; }
-.sponsor-upload-btn { position:absolute; right:8px; top:6px; width:20px; height:20px; border-radius:6px; border:1px solid var(--border); background:rgba(0,0,0,.38); color:var(--text); font-size:11px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+.sponsor-upload-btn { position:absolute; right:8px; top:6px; width:12px; height:12px; border-radius:3px; border:1px solid var(--border); background:rgba(0,0,0,.38); color:var(--text); font-size:8px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .15s ease; }
 .center-top-info:hover .sponsor-upload-btn { opacity: .92; pointer-events:auto; }
-body.viewer-mode .sponsor-upload-btn { display:none !important; }
-@keyframes sponsorScroll { from { transform: translateX(0);} to { transform: translateX(-50%);} }
+body.viewer-mode .sponsor-upload-btn, body.viewer-mode .cti-tools { display:none !important; }
+@keyframes sponsorPingPong { from { transform: translateX(0);} to { transform: translateX(-35%);} }
 .bracket-bg-layer {
   position: absolute;
   left: 0;
@@ -1319,16 +1335,23 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .bracket-tab-bar {
   display: none;
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 88px; left: 10px; right: 10px;
   z-index: 10;
-  padding: 8px 12px 0;
-  gap: 4px;
-  align-items: flex-end;
+  padding: 0;
+  gap: 2px;
+  align-items: center;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.center-top-info:hover + .bracket-bg-layer + .bracket-tab-bar,
+.bracket-tab-bar:hover,
+.bracket-tab-bar:focus-within {
+  opacity: 1;
+  pointer-events: all;
 }
 .bracket-tab-bar.visible {
   display: flex;
-  pointer-events: all;
 }
 .bracket-tab-spacer { flex: 1; }
 .bracket-full-btn {
@@ -1377,28 +1400,29 @@ body.fs-mode #bracket-style-toggle {
 }
 #fs-draw-stage { display: none; }
 .btab {
-  padding: 5px 14px 6px;
-  border-radius: 8px 8px 0 0;
-  border: 1px solid var(--border);
-  border-bottom: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   background: rgba(255,255,255,0.03);
   color: var(--text);
-  font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.15s;
-  opacity: 0.5;
-  text-transform: uppercase;
+  opacity: 0.32;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.btab:hover { opacity: 0.8; background: rgba(255,255,255,0.06); }
+.btab:hover { opacity: 0.9; background: rgba(255,255,255,0.09); }
 .btab.active {
   opacity: 1;
   background: var(--card);
   border-color: var(--accent);
   color: var(--accent);
-  box-shadow: 0 -2px 10px rgba(240,165,0,0.15);
+  box-shadow: 0 0 8px rgba(240,165,0,0.16);
 }
 
 /* ============ SCHEDULE PANEL ============ */
@@ -1943,9 +1967,13 @@ body.fs-mode #bracket-style-toggle {
   <!-- CENTER: BRACKET -->
   <section class="center" id="center-panel">
     <div class="center-top-info" id="center-top-info">
-      <div class="cti-top">
+      <div class="cti-top" id="cti-top">
         <div class="cti-title" id="cti-title">Giải đấu</div>
         <div class="cti-meta" id="cti-meta">Địa điểm · Thời gian</div>
+        <div class="cti-tools">
+          <button class="cti-mini-btn" type="button" title="Font chữ" onclick="openCtiFontTools(event)"></button>
+          <button class="cti-mini-btn" type="button" title="Màu chữ" onclick="openCtiColorTools(event)"></button>
+        </div>
       </div>
       <div class="cti-sponsor" id="cti-sponsor">
         <div class="sponsor-marquee" id="sponsor-marquee"></div>
@@ -1959,8 +1987,8 @@ body.fs-mode #bracket-style-toggle {
     </div>
     <!-- Tab bar (chỉ hiện sau bốc thăm) -->
     <div class="bracket-tab-bar" id="bracket-tab-bar">
-      <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')">🎯 Bracket</button>
-      <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')">⚔️ Lịch Thi Đấu</button>
+      <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')" title="Bracket">▦</button>
+      <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')" title="Lịch thi đấu">☰</button>
       <span class="bracket-tab-spacer"></span>
       <button class="bracket-full-btn" id="bracket-style-toggle" onclick="toggleBracketStyleTools(event)" title="Tùy chỉnh bracket">⚙</button>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
@@ -2177,7 +2205,18 @@ const DEFAULTS = {
     nameColor: '#1f2937',
     unitColor: '#5b4a16',
   },
-  sponsorLogos: []
+  sponsorLogos: [],
+  cti: {
+    titleText: '',
+    metaText: '',
+    titleX: 8, titleY: 4,
+    metaX: 220, metaY: 8,
+    titleFont: "'Be Vietnam Pro', sans-serif",
+    metaFont: "'JetBrains Mono', monospace",
+    titleColor: '#ffffff',
+    metaColor: '#c9d1d9',
+    panelBg: 'rgba(18,22,30,0.75)'
+  }
 };
 
 const genBracket = generateBracket;
@@ -2192,6 +2231,7 @@ let S = {
   titleFont: DEFAULTS.titleFont,
   bracketColors: { ...DEFAULTS.bracketColors },
   sponsorLogos: [...DEFAULTS.sponsorLogos],
+  cti: { ...DEFAULTS.cti },
   supaUrl: '', supaKey: '',
   isAdmin: false
 };
@@ -3072,15 +3112,111 @@ function setupTopBar() {
   renderTopInfo();
 }
 
+let ctiDragState = null;
+
+function ensureCtiState() {
+  if (!S.cti) S.cti = { ...DEFAULTS.cti };
+  S.cti = { ...DEFAULTS.cti, ...S.cti };
+}
+
 function renderTopInfo() {
+  ensureCtiState();
+  const top = document.getElementById('cti-top');
+  const box = document.getElementById('center-top-info');
   const title = document.getElementById('cti-title');
   const meta = document.getElementById('cti-meta');
-  if (title) title.textContent = S.tbVals?.[0] || 'Giải đấu';
-  if (meta) {
-    const loc = S.tbVals?.[2] || 'Địa điểm';
-    const time = S.tbVals?.[1] || 'Thời gian';
-    meta.textContent = `${loc} · ${time}`;
+  if (!title || !meta) return;
+
+  title.textContent = S.cti.titleText || S.tbVals?.[0] || 'Giải đấu';
+  const loc = S.tbVals?.[2] || 'Địa điểm';
+  const time = S.tbVals?.[1] || 'Thời gian';
+  meta.textContent = S.cti.metaText || `${loc} · ${time}`;
+
+  title.style.left = `${S.cti.titleX}px`;
+  title.style.top = `${S.cti.titleY}px`;
+  meta.style.left = `${S.cti.metaX}px`;
+  meta.style.top = `${S.cti.metaY}px`;
+  meta.style.right = 'auto';
+
+  title.style.fontFamily = S.cti.titleFont;
+  meta.style.fontFamily = S.cti.metaFont;
+  title.style.color = S.cti.titleColor;
+  meta.style.color = S.cti.metaColor;
+  if (box) box.style.background = S.cti.panelBg || '';
+
+  if (top && !top.dataset.dragWired) {
+    const startDrag = (type, ev) => {
+      if (!S.isAdmin) return;
+      const tRect = top.getBoundingClientRect();
+      const target = type === 'title' ? title : meta;
+      const o = target.getBoundingClientRect();
+      ctiDragState = {
+        type,
+        offsetX: ev.clientX - o.left,
+        offsetY: ev.clientY - o.top,
+        bounds: tRect
+      };
+      ev.preventDefault();
+    };
+    title.addEventListener('pointerdown', (ev) => startDrag('title', ev));
+    meta.addEventListener('pointerdown', (ev) => startDrag('meta', ev));
+    top.dataset.dragWired = '1';
   }
+}
+
+document.addEventListener('pointermove', (ev) => {
+  if (!ctiDragState || !S.isAdmin) return;
+  const top = document.getElementById('cti-top');
+  const title = document.getElementById('cti-title');
+  const meta = document.getElementById('cti-meta');
+  if (!top || !title || !meta) return;
+  const target = ctiDragState.type === 'title' ? title : meta;
+  const b = top.getBoundingClientRect();
+  let nx = ev.clientX - b.left - ctiDragState.offsetX;
+  let ny = ev.clientY - b.top - ctiDragState.offsetY;
+  nx = Math.max(0, Math.min(nx, b.width - target.offsetWidth));
+  ny = Math.max(0, Math.min(ny, b.height - target.offsetHeight));
+  if (ctiDragState.type === 'title') {
+    S.cti.titleX = nx; S.cti.titleY = ny;
+  } else {
+    S.cti.metaX = nx; S.cti.metaY = ny;
+  }
+  renderTopInfo();
+});
+
+document.addEventListener('pointerup', () => {
+  if (!ctiDragState) return;
+  ctiDragState = null;
+  saveState();
+  supaPushDebounced();
+});
+
+function openCtiFontTools(ev) {
+  ev?.stopPropagation?.();
+  if (!S.isAdmin) return;
+  ensureCtiState();
+  const f = prompt('Font title (CSS font-family):', S.cti.titleFont || DEFAULTS.cti.titleFont);
+  if (f) S.cti.titleFont = f;
+  const mf = prompt('Font meta (CSS font-family):', S.cti.metaFont || DEFAULTS.cti.metaFont);
+  if (mf) S.cti.metaFont = mf;
+  renderTopInfo();
+  saveState();
+  supaPushDebounced();
+}
+
+function openCtiColorTools(ev) {
+  ev?.stopPropagation?.();
+  if (!S.isAdmin) return;
+  ensureCtiState();
+  const tc = prompt('Màu title (#hex):', S.cti.titleColor || DEFAULTS.cti.titleColor);
+  if (tc) S.cti.titleColor = tc;
+  const mc = prompt('Màu meta (#hex):', S.cti.metaColor || DEFAULTS.cti.metaColor);
+  if (mc) S.cti.metaColor = mc;
+  const bg = prompt('Nền center-top-info (rgba/...):', S.cti.panelBg || DEFAULTS.cti.panelBg);
+  if (bg) S.cti.panelBg = bg;
+  renderTopInfo();
+  saveState();
+  supaPushDebounced();
 }
 
 function renderSponsorMarquee() {
@@ -4902,7 +5038,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
-  handleSponsorUpload,
+  handleSponsorUpload, openCtiFontTools, openCtiColorTools,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
