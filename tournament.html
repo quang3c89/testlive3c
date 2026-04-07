@@ -482,10 +482,10 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
 .mb {
   background:
     linear-gradient(160deg,
-      color-mix(in srgb, var(--primary-dark, #111827) 88%, #000 12%) 0%,
-      color-mix(in srgb, var(--primary-dark, #111827) 62%, #000 38%) 100%);
+      color-mix(in srgb, var(--primary-dark, #111827) 76%, var(--match-tint, #ffdf80) 24%) 0%,
+      color-mix(in srgb, var(--primary-dark, #111827) 84%, #000 16%) 100%);
   border-radius: 10px;
-  border: 1.5px solid color-mix(in srgb, var(--primary, #f0a500) 38%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--match-edge, var(--primary, #f0a500)) 42%, transparent);
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
@@ -505,7 +505,7 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
   opacity: 0.6;
 }
 .mb:hover {
-  border-color: color-mix(in srgb, var(--primary, #f0a500) 62%, transparent);
+  border-color: color-mix(in srgb, var(--match-edge, var(--primary, #f0a500)) 64%, transparent);
   transform: translateY(-1px) scale(1.015);
   z-index: 5;
   box-shadow:
@@ -521,7 +521,7 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
   to { opacity:1; transform: none; }
 }
 .mb-bye {
-  border-color: color-mix(in srgb, var(--primary, #f0a500) 38%, transparent);
+  border-color: color-mix(in srgb, var(--match-edge, var(--primary, #f0a500)) 42%, transparent);
   box-shadow:
     0 12px 28px rgba(0,0,0,0.45),
     0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 18%, transparent) inset,
@@ -1375,29 +1375,21 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   color: var(--accent);
   background: rgba(240,165,0,0.12);
 }
-/* Nút cài đặt bracket: ẩn mặc định, hiện khi hover khu vực bracket tab */
+/* Nút cài đặt bracket: chỉ hiện khi rê sát đúng nút */
 #bracket-style-toggle {
   opacity: 0;
-  pointer-events: none;
-  transform: translateY(-2px);
+  pointer-events: auto;
+  transform: translateY(-2px) scale(0.96);
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
-#center-panel:hover #bracket-style-toggle,
-.bracket-tab-bar:hover #bracket-style-toggle,
-#bracket-color-tools.open ~ #bracket-style-toggle,
-#bracket-style-toggle:focus-visible {
+#bracket-style-toggle:hover,
+#bracket-style-toggle:focus-visible,
+#bracket-color-tools.open ~ #bracket-style-toggle {
   opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 #bracket-color-tools.open,
 #bracket-color-tools:hover {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-#bracket-color-tools.open + #fs-draw-stage + .bracket-wrap,
-#center-panel:hover #bracket-color-tools {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
@@ -2716,9 +2708,14 @@ function applyBracketColorVars() {
   root.style.setProperty('--primary-glow', hslToCss(hsl.h, Math.max(30, baseS - 6), Math.min(72, baseL + 12), 0.42));
   root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(18, baseS - 20), Math.min(88, baseL + 30), 0.5));
 
+  const matchTint = c.matchBg || DEFAULTS.bracketColors.matchBg;
+  const matchEdge = c.matchBorder || DEFAULTS.bracketColors.matchBorder;
+
   root.style.setProperty('--bracket-bg', primaryHex);
-  root.style.setProperty('--match-bg', c.matchBg || DEFAULTS.bracketColors.matchBg);
-  root.style.setProperty('--match-border', c.matchBorder || DEFAULTS.bracketColors.matchBorder);
+  root.style.setProperty('--match-bg', matchTint);
+  root.style.setProperty('--match-border', matchEdge);
+  root.style.setProperty('--match-tint', matchTint);
+  root.style.setProperty('--match-edge', matchEdge);
   root.style.setProperty('--line-color', c.line || DEFAULTS.bracketColors.line);
   root.style.setProperty('--bracket-name-color', c.nameColor || DEFAULTS.bracketColors.nameColor);
   root.style.setProperty('--bracket-unit-color', c.unitColor || DEFAULTS.bracketColors.unitColor || '#5b4a16');
@@ -4248,6 +4245,8 @@ document.addEventListener('fullscreenchange', () => {
   const miniWheel = document.getElementById('fs-mini-wheel');
   const center = document.getElementById('center-panel');
   const toolZone = document.getElementById('bracket-tool-zone');
+  const tools = document.getElementById('bracket-color-tools');
+  const styleBtn = document.getElementById('bracket-style-toggle');
 
   if (popup && !popupOriginalParent) popupOriginalParent = popup.parentElement;
   if (miniWheel && !miniWheelOriginalParent) miniWheelOriginalParent = miniWheel.parentElement;
@@ -4273,9 +4272,12 @@ document.addEventListener('fullscreenchange', () => {
   if (targetFullscreenRoot && center && targetFullscreenRoot === center) {
     document.body.classList.add('fs-mode');
     if (toolZone) toolZone.style.display = 'block';
+    if (tools) tools.classList.remove('open');
+    if (styleBtn) styleBtn.style.opacity = '0';
   } else {
     document.body.classList.remove('fs-mode');
     if (toolZone) toolZone.style.display = '';
+    if (styleBtn) styleBtn.style.opacity = '';
   }
 
   syncFullscreenMiniWheel();
