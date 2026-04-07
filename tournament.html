@@ -343,13 +343,13 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 .cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
 .center-top-info:hover .cti-tools { opacity:.95; pointer-events:auto; }
 .cti-mini-select {
-  width: 20px;
-  height: 12px;
-  border-radius: 3px;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
   border: 1px solid rgba(255,255,255,0.25);
   background: rgba(0,0,0,.35);
   color: transparent;
-  font-size: 8px;
+  font-size: 7px;
   padding: 0;
   cursor: pointer;
 }
@@ -727,13 +727,13 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .ot-row .ot-rank {
   font-size: 13px;
   text-align: center;
-  color: #ffd447;
+  color: var(--list-contrast, #ffd447);
   font-weight: 900;
   font-family: var(--font-mono);
 }
 .ot-row .ot-name {
   font-weight: 800;
-  color: var(--name-color);
+  color: var(--list-contrast, var(--name-color));
   overflow: visible;
   text-overflow: clip;
   white-space: nowrap;
@@ -741,7 +741,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   line-height: 1.2;
 }
 .ot-row .ot-unit {
-  color: var(--unit-color);
+  color: var(--list-contrast, var(--unit-color));
   font-style: italic;
   overflow: visible;
   text-overflow: clip;
