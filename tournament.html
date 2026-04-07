@@ -304,6 +304,8 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 .center-top-info {
   position: relative;
   z-index: 8;
+  width: 100%;
+  box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   border-radius: 10px;
   background: linear-gradient(160deg, color-mix(in srgb, var(--card) 90%, #fff 10%), color-mix(in srgb, var(--card) 82%, #000 18%));
@@ -1987,6 +1989,7 @@ body.fs-mode #bracket-style-toggle {
           <select class="cti-mini-select" id="cti-font-select" title="Font" onchange="setCtiFont(this.value)"></select>
           <select class="cti-mini-select" id="cti-color-select" title="Màu" onchange="setCtiColor(this.value)"></select>
           <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
+          <select class="cti-mini-select" id="cti-bg-select" title="Nền" onchange="setCtiBg(this.value)"></select>
           <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
           <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
         </div>
@@ -3214,7 +3217,8 @@ function buildCtiToolOptions() {
   const fontSel = document.getElementById('cti-font-select');
   const colorSel = document.getElementById('cti-color-select');
   const sizeSel = document.getElementById('cti-size-select');
-  if (!fontSel || !colorSel || !sizeSel) return;
+  const bgSel = document.getElementById('cti-bg-select');
+  if (!fontSel || !colorSel || !sizeSel || !bgSel) return;
 
   const fonts = [
     { v: "'Be Vietnam Pro', sans-serif", t: 'BV' },
@@ -3233,10 +3237,21 @@ function buildCtiToolOptions() {
   const sizes = [12,14,16,18,20,24];
   sizeSel.innerHTML = sizes.map(s => `<option value="${s}">${s}</option>`).join('');
 
+  const bgs = [
+    { v:'rgba(18,22,30,0.75)', t:'D' },
+    { v:'rgba(255,255,255,0.86)', t:'L' },
+    { v:'rgba(15,23,42,0.84)', t:'N' },
+    { v:'rgba(34,197,94,0.18)', t:'G' },
+    { v:'rgba(59,130,246,0.18)', t:'B' },
+    { v:'rgba(244,63,94,0.18)', t:'R' }
+  ];
+  bgSel.innerHTML = bgs.map(b => `<option value="${b.v}">${b.t}</option>`).join('');
+
   ensureCtiState();
   fontSel.value = S.cti.titleFont || DEFAULTS.cti.titleFont;
   colorSel.value = S.cti.titleColor || DEFAULTS.cti.titleColor;
   sizeSel.value = String(S.cti.titleSize || 16);
+  bgSel.value = S.cti.panelBg || DEFAULTS.cti.panelBg;
 }
 
 function setCtiFont(v) {
@@ -3265,6 +3280,15 @@ function setCtiSize(v) {
   const sz = Number(v);
   if (!Number.isFinite(sz)) return;
   S.cti.titleSize = sz;
+  renderTopInfo();
+  saveState();
+  supaPushDebounced();
+}
+
+function setCtiBg(v) {
+  if (!S.isAdmin) return;
+  ensureCtiState();
+  S.cti.panelBg = v;
   renderTopInfo();
   saveState();
   supaPushDebounced();
@@ -3329,9 +3353,8 @@ function resizeImage80(file) {
         const c = document.createElement('canvas');
         c.width = 80; c.height = 80;
         const ctx = c.getContext('2d');
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, 80, 80);
-        const scale = Math.max(80 / img.width, 80 / img.height);
+        ctx.clearRect(0, 0, 80, 80);
+        const scale = Math.min(80 / img.width, 80 / img.height);
         const w = img.width * scale;
         const h = img.height * scale;
         const x = (80 - w) / 2;
@@ -5153,7 +5176,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
-  handleSponsorUpload, setCtiFont, setCtiColor, setCtiSize,
+  handleSponsorUpload, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
