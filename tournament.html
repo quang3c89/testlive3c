@@ -32,94 +32,35 @@
 #loading-screen .loading-logo .br { color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.35); }
 #loading-screen .loading-logo .bw { color: #ffd447; text-shadow: 0 0 20px rgba(255,212,71,0.35); }
 
-/* ============ THEME STRIP ============ */
-.theme-strip {
-  display: flex; gap: 5px; padding: 5px 14px;
-  background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
-  flex-shrink: 0; align-items: center; z-index: 100; height: 36px;
-  backdrop-filter: blur(8px); position: relative;
-}
-#theme-dots {
-  display: none;
-  position: absolute;
-  right: 78px;
-  top: 6px;
-  gap: 6px;
-  align-items: center;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgba(8,12,20,0.95);
-}
-.theme-strip.theme-open #theme-dots { display: flex; }
-.t-dot {
-  width: 18px; height: 18px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.15);
-  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; flex-shrink: 0;
-}
-.t-dot:hover { transform: scale(1.25); }
-.t-dot.active {
-  border-color: var(--accent); transform: scale(1.25);
-  box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--glow);
-}
-/* Show theme strip only in admin mode */
-body.viewer-mode .theme-strip { display: none; }
-.strip-spacer { flex: 1; }
-.gear-btn {
-  width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
-  background: var(--card); font-size: 11px; cursor: pointer; color: var(--text);
-  transition: all 0.15s; display: flex; align-items: center; justify-content: center;
-}
-.gear-btn:hover { background: rgba(255,255,255,0.08); border-color: var(--accent); transform: scale(1.05); }
-
-/* ============ TOURNEY BAR ============ */
+/* ============ TOP BROADCAST BAR (merged) ============ */
 .tourney-bar {
-  display: flex; flex-wrap: nowrap; gap: 0; padding: 0;
-  background: var(--tb-bg); font-family: var(--tb-font);
-  flex-shrink: 0; align-items: stretch; overflow: hidden;
-  border-bottom: 1px solid var(--border); height: 38px;
-  position: relative;
-}
-.tvi {
   display: flex; align-items: center; gap: 6px;
-  padding: 0 14px; font-size: 12px; white-space: nowrap;
-  border-right: 1px solid var(--border); position: relative;
-  transition: background 0.15s; color: var(--text);
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--tb-bg, #0d1117) 90%, #000 10%);
+  font-family: var(--tb-font);
+  border-bottom: 1px solid var(--border);
+  min-height: 34px;
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 100;
 }
-.tvi:hover { background: rgba(255,255,255,0.03); }
-.tvi .tvi-icon { font-size: 11px; opacity: 0.6; flex-shrink: 0; }
-.tvi [contenteditable] {
-  background: none; border: none; outline: none; color: var(--text);
-  font: inherit; cursor: default; min-width: 40px; white-space: nowrap;
-  caret-color: var(--accent);
-}
-body.admin-mode .tvi [contenteditable] { cursor: text; }
-.tvi:first-child [contenteditable] {
-  font-size: 14px; font-weight: 800; letter-spacing: -0.3px;
-  font-family: var(--title-font);
-}
-.tvi:nth-child(2) [contenteditable] { font-size: 11px; opacity: 0.75; }
-.tvi:nth-child(3) [contenteditable] { font-size: 11px; }
-.tvi:nth-child(4) [contenteditable] { font-weight: 700; text-transform: uppercase; color: var(--accent); font-size: 11px; }
-.tvi:nth-child(5) [contenteditable] { font-weight: 800; font-size: 13px; color: var(--accent); font-family: var(--font-display); }
-.tb-actions {
-  margin-left: auto; display: flex; gap: 6px; align-items: center; padding: 0 10px; flex-shrink: 0;
-}
-/* Only show admin toolbar actions in admin mode */
-body.viewer-mode .tb-actions { display: none; }
-.tb-actions input[type="color"] {
-  width: 20px; height: 20px; border: 1px solid var(--border);
-  border-radius: 4px; cursor: pointer; background: transparent;
-}
-.tb-actions select {
-  background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border);
-  padding: 2px 6px; border-radius: 5px; outline: none; font-size: 10px;
-}
-.tb-sync-status {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 9px; font-family: var(--font-mono); opacity: 0.5; padding: 0 8px;
-  border-right: 1px solid var(--border); color: var(--text);
-}
+.tb-left-actions,.tb-right-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.tb-main-info{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden}
+.tvi { display:flex; align-items:center; gap:4px; padding:0 8px; font-size:11px; white-space:nowrap; border-right:1px solid color-mix(in srgb,var(--border) 70%, transparent); color:var(--text); min-width:0; }
+.tvi:last-child{border-right:none}
+.tvi .tvi-icon { font-size: 10px; opacity: 0.7; flex-shrink: 0; }
+.tvi [contenteditable] { background:none; border:none; outline:none; color:var(--text); font:inherit; cursor:default; min-width:20px; overflow:hidden; text-overflow:ellipsis; }
+body.admin-mode .tvi [contenteditable] { cursor:text; }
+#tb-v0{font-size:13px;font-weight:800;font-family:var(--title-font)}
+.tb-sync-status { display:flex; align-items:center; gap:4px; font-size:9px; font-family:var(--font-mono); opacity:.6; padding:0 6px; }
+#theme-dots { display:none; position:absolute; right:92px; top:34px; gap:6px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(8,12,20,.95); }
+.tourney-bar.theme-open #theme-dots { display:flex; }
+.t-dot { width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.15); cursor:pointer; transition:transform .15s, box-shadow .15s; }
+.t-dot:hover { transform:scale(1.2); }
+.t-dot.active { border-color:var(--accent); transform:scale(1.2); box-shadow:0 0 0 2px var(--accent),0 0 10px var(--glow); }
+.gear-btn { width:22px; height:22px; border-radius:6px; border:1px solid var(--border); background:var(--card); font-size:10px; cursor:pointer; color:var(--text); transition:all .15s; display:flex; align-items:center; justify-content:center; }
+.gear-btn:hover { background:rgba(255,255,255,.08); border-color:var(--accent); }
+body.viewer-mode #undo-btn,body.viewer-mode #redo-btn,body.viewer-mode #theme-toggle-btn,body.viewer-mode .tb-actions,body.viewer-mode .admin-only{display:none !important}
 
 /* ============ MAIN LAYOUT ============ */
 .main { display: flex; flex: 1; overflow: hidden; }
@@ -135,17 +76,17 @@ body.left-collapsed .center.schedule-active #schedule-panel { left: 0; right: 0;
 .left {
   flex: 0 0 22%; min-width: 260px; max-width: 360px;
   display: flex; flex-direction: column; gap: 8px;
-  padding: 8px 10px; overflow-y: auto; border-right: 1px solid var(--border);
+  padding: 4px 10px 8px; overflow-y: auto; border-right: 1px solid var(--border);
   background: rgba(0,0,0,0.15);
+  box-shadow: inset -1px 0 0 rgba(255,255,255,0.03), 2px 0 12px rgba(0,0,0,0.2);
 }
 /* Hide edit controls in viewer mode */
 body.viewer-mode .ctrl-row { display: none; }
 body.viewer-mode .pc .dx { display: none !important; }
 body.viewer-mode .hb-ctrl-btn { display: none !important; }
-body.viewer-mode .theme-strip #undo-btn,
-body.viewer-mode .theme-strip #redo-btn,
-body.viewer-mode .theme-strip button[title="Settings"],
-body.viewer-mode .theme-strip button[title="Đăng xuất"] { display: none !important; }
+body.viewer-mode #undo-btn,
+body.viewer-mode #redo-btn,
+body.viewer-mode .tb-right-actions, body.viewer-mode .sponsor-upload-btn { display: none !important; }
 
 /* ============ HEADER BANNER ============ */
 .header-banner {
@@ -359,7 +300,30 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 
 /* ============ CENTER PANEL (BRACKET) ============ */
-.center { flex: 1; position: relative; overflow: auto; padding: 12px; background: transparent; isolation: isolate; }
+.center { flex: 1; position: relative; overflow: auto; padding: 8px 12px 12px; background: transparent; isolation: isolate; }
+.center-top-info {
+  position: relative;
+  z-index: 8;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 10px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--card) 90%, #fff 10%), color-mix(in srgb, var(--card) 82%, #000 18%));
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.cti-top { display:flex; align-items:center; justify-content:space-between; gap:10px; padding: 6px 10px; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
+.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cti-meta { font-family: var(--font-mono); font-size: 10px; opacity: 0.75; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cti-sponsor { position: relative; padding: 5px 10px; min-height: 38px; }
+.sponsor-marquee { overflow: hidden; white-space: nowrap; }
+.sponsor-track { display: inline-flex; align-items: center; gap: 12px; min-width: 100%; animation: sponsorScroll 26s linear infinite; }
+.sponsor-item { width: 72px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+.sponsor-item img { max-width: 100%; max-height: 100%; object-fit: contain; display:block; }
+.sponsor-empty { font-size: 9px; font-family: var(--font-mono); opacity: 0.4; letter-spacing: 1px; text-transform: uppercase; }
+.sponsor-upload-btn { position:absolute; right:8px; top:6px; width:20px; height:20px; border-radius:6px; border:1px solid var(--border); background:rgba(0,0,0,.38); color:var(--text); font-size:11px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+.center-top-info:hover .sponsor-upload-btn { opacity: .92; pointer-events:auto; }
+body.viewer-mode .sponsor-upload-btn { display:none !important; }
+@keyframes sponsorScroll { from { transform: translateX(0);} to { transform: translateX(-50%);} }
 .bracket-bg-layer {
   position: absolute;
   left: 0;
@@ -643,6 +607,7 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   flex: 0 0 18%; min-width: 210px; max-width: 300px;
   display: flex; flex-direction: column; padding: 8px 10px;
   border-left: 1px solid var(--border); background: rgba(0,0,0,0.15);
+  box-shadow: inset 1px 0 0 rgba(255,255,255,0.03), -2px 0 12px rgba(0,0,0,0.2);
 }
 .right-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 0 6px; flex-shrink: 0; }
 .right-header h3 { font-size: 11px; font-weight: 800; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-display); }
@@ -1203,12 +1168,11 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   .tvi [contenteditable] { font-size: 10px; }
 
   /* Theme strip gọn hơn trên mobile */
-  .theme-strip {
-    height: 32px;
-    padding: 4px 10px;
+  .tourney-bar {
+    min-height: 32px;
+    padding: 3px 8px;
     gap: 4px;
   }
-  .theme-strip .label { display: none; }
 
   /* Bốc thăm mobile: hàng nút điều khiển dọc theo vòng quay */
   .wheel-control-wrap {
@@ -1917,31 +1881,29 @@ body.fs-mode #bracket-style-toggle {
   </div>
 </div>
 
-<!-- THEME STRIP (admin only) -->
-<div class="theme-strip" id="theme-strip">
-  <button class="gear-btn" type="button" title="Trang chủ" onclick="window.location.href='index.html'">🏠</button>
-  <div class="strip-spacer"></div>
-  <div class="rt-indicator" id="rt-indicator"><div class="rt-dot offline" id="rt-dot"></div><span id="rt-label">OFFLINE</span></div>
-  <button class="gear-btn" id="undo-btn" onclick="undo()" title="Hoàn tác (Ctrl+Z)" disabled>↩</button>
-  <button class="gear-btn" id="redo-btn" onclick="redo()" title="Làm lại (Ctrl+Y)" disabled>↪</button>
-  <button class="gear-btn" title="Settings" onclick="openModal('settings-modal')" style="margin-left:6px;">⚙️</button>
-  <button class="gear-btn" id="theme-toggle-btn" type="button" onclick="toggleThemeDots()" title="Theme" style="margin-left:4px;">🎨</button>
-  <div id="theme-dots"></div>
-</div>
-
-<!-- TOURNEY BAR -->
+<!-- TOP BROADCAST BAR -->
 <div class="tourney-bar" id="tourney-bar">
-  <div class="tvi"><span class="tvi-icon">🏆</span><div contenteditable="false" id="tb-v0" spellcheck="false"></div></div>
-  <div class="tvi"><span class="tvi-icon">🕒</span><div contenteditable="false" id="tb-v1" spellcheck="false"></div></div>
-  <div class="tvi"><span class="tvi-icon">📍</span><div contenteditable="false" id="tb-v2" spellcheck="false"></div></div>
-  <div class="tvi"><span class="tvi-icon">⚔️</span><div contenteditable="false" id="tb-v3" spellcheck="false"></div></div>
-  <div class="tvi"><span class="tvi-icon">💰</span><div contenteditable="false" id="tb-v4" spellcheck="false"></div></div>
-  <div class="tvi" id="tb-video-url-wrap" style="display:none"><span class="tvi-icon">🎥</span><div contenteditable="false" id="tb-v5" spellcheck="false"></div></div>
-  <div class="tb-sync-status" id="tb-sync-status"><span id="tb-sync-time">—</span></div>
-  <div class="tb-actions">
-    <input type="color" id="tb-bg-color" title="Màu header">
-    <select id="tb-font" title="Font tiêu đề"></select>
+  <div class="tb-left-actions">
+    <button class="gear-btn" type="button" title="Trang chủ" onclick="window.location.href='index.html'">🏠</button>
+    <button class="gear-btn" id="undo-btn" onclick="undo()" title="Hoàn tác (Ctrl+Z)" disabled>↩</button>
+    <button class="gear-btn" id="redo-btn" onclick="redo()" title="Làm lại (Ctrl+Y)" disabled>↪</button>
   </div>
+  <div class="tb-main-info">
+    <div class="tvi"><span class="tvi-icon">🏆</span><div contenteditable="false" id="tb-v0" spellcheck="false"></div></div>
+    <div class="tvi"><span class="tvi-icon">🕒</span><div contenteditable="false" id="tb-v1" spellcheck="false"></div></div>
+    <div class="tvi"><span class="tvi-icon">📍</span><div contenteditable="false" id="tb-v2" spellcheck="false"></div></div>
+    <div class="tb-sync-status" id="tb-sync-status"><span id="tb-sync-time">—</span></div>
+    <div style="display:none"><div id="tb-v3"></div><div id="tb-v4"></div><div id="tb-video-url-wrap"><div id="tb-v5"></div></div></div>
+  </div>
+  <div class="tb-right-actions admin-only">
+    <button class="gear-btn" title="Settings" onclick="openModal('settings-modal')">⚙️</button>
+    <button class="gear-btn" id="theme-toggle-btn" type="button" onclick="toggleThemeDots()" title="Theme">🎨</button>
+    <div class="tb-actions">
+      <input type="color" id="tb-bg-color" title="Màu header">
+      <select id="tb-font" title="Font tiêu đề"></select>
+    </div>
+  </div>
+  <div id="theme-dots"></div>
 </div>
 
 <!-- MAIN -->
@@ -1980,6 +1942,17 @@ body.fs-mode #bracket-style-toggle {
 
   <!-- CENTER: BRACKET -->
   <section class="center" id="center-panel">
+    <div class="center-top-info" id="center-top-info">
+      <div class="cti-top">
+        <div class="cti-title" id="cti-title">Giải đấu</div>
+        <div class="cti-meta" id="cti-meta">Địa điểm · Thời gian</div>
+      </div>
+      <div class="cti-sponsor" id="cti-sponsor">
+        <div class="sponsor-marquee" id="sponsor-marquee"></div>
+        <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
+        <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
+      </div>
+    </div>
     <div class="bracket-bg-layer" id="bracket-bg-layer">
       <div class="bracket-bg-glow" id="bracket-bg-glow"></div>
       <div class="bracket-bg-particles" id="bracket-bg-particles"></div>
@@ -2203,7 +2176,8 @@ const DEFAULTS = {
     line: '#fff6d9',
     nameColor: '#1f2937',
     unitColor: '#5b4a16',
-  }
+  },
+  sponsorLogos: []
 };
 
 const genBracket = generateBracket;
@@ -2217,6 +2191,7 @@ let S = {
   tbVals: [...DEFAULTS.tbVals], tbBg: DEFAULTS.tbBg, tbFont: DEFAULTS.tbFont,
   titleFont: DEFAULTS.titleFont,
   bracketColors: { ...DEFAULTS.bracketColors },
+  sponsorLogos: [...DEFAULTS.sponsorLogos],
   supaUrl: '', supaKey: '',
   isAdmin: false
 };
@@ -2362,6 +2337,7 @@ function loadState() {
   if (!S.tbVals || S.tbVals.length < 6) S.tbVals = [...DEFAULTS.tbVals];
   if (!S.titleFont) S.titleFont = DEFAULTS.titleFont;
   S.bracketColors = { ...DEFAULTS.bracketColors, ...(S.bracketColors || {}) };
+  if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [...DEFAULTS.sponsorLogos];
   loadVideoFromDB();
 }
 
@@ -2899,25 +2875,27 @@ function renderAll() {
   renderPlayers();
   renderBracket();
   drawWheel();
+  renderTopInfo();
+  renderSponsorMarquee();
 }
 
 /* ================================================================
    THEMES
    ================================================================ */
 function toggleThemeDots() {
-  const strip = document.getElementById('theme-strip');
+  const strip = document.getElementById('tourney-bar');
   if (!strip) return;
   strip.classList.toggle('theme-open');
 }
 
 function closeThemeDots() {
-  const strip = document.getElementById('theme-strip');
+  const strip = document.getElementById('tourney-bar');
   if (!strip) return;
   strip.classList.remove('theme-open');
 }
 
 document.addEventListener('pointermove', (e) => {
-  const strip = document.getElementById('theme-strip');
+  const strip = document.getElementById('tourney-bar');
   if (!strip || !strip.classList.contains('theme-open')) return;
   if (!strip.contains(e.target)) closeThemeDots();
 });
@@ -2937,7 +2915,7 @@ function buildThemeDots() {
     d.onclick = () => {
       applyTheme(k);
       buildThemeDots();
-      document.getElementById('theme-strip')?.classList.remove('theme-open');
+      document.getElementById('tourney-bar')?.classList.remove('theme-open');
     };
     c.appendChild(d);
   }
@@ -3052,23 +3030,27 @@ function setupTopBar() {
       el._histTimer = setTimeout(() => pushHistory(), 500);
       S.tbVals[i] = el.textContent.trim();
       if (i === 0) updateBcName();
+      renderTopInfo();
       saveState();
       supaPushDebounced();
     };
     el.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } };
   });
-  document.getElementById('tb-video-url-wrap').style.display = S.tbVals[5] ? 'flex' : 'none';
+
+  const tbVideoWrap = document.getElementById('tb-video-url-wrap');
+  if (tbVideoWrap) tbVideoWrap.style.display = 'none';
 
   const bgEl = document.getElementById('tb-bg-color');
-  bgEl.value = S.tbBg || '#0d1117';
-  document.documentElement.style.setProperty('--tb-bg', S.tbBg);
-  bgEl.oninput = e => {
-    S.tbBg = e.target.value;
-    // Chỉ đổi --tb-bg, KHÔNG đổi --bg (tránh ảnh hưởng phần khác)
+  if (bgEl) {
+    bgEl.value = S.tbBg || '#0d1117';
     document.documentElement.style.setProperty('--tb-bg', S.tbBg);
-    document.getElementById('tourney-bar').style.background = S.tbBg;
-    saveState();
-  };
+    bgEl.oninput = e => {
+      S.tbBg = e.target.value;
+      document.documentElement.style.setProperty('--tb-bg', S.tbBg);
+      document.getElementById('tourney-bar').style.background = S.tbBg;
+      saveState();
+    };
+  }
 
   const fontEl = document.getElementById('tb-font');
   if (fontEl) {
@@ -3081,10 +3063,59 @@ function setupTopBar() {
       const titleSel = document.getElementById('title-font-select');
       if (titleSel) titleSel.value = f;
       updateFontPreview(f);
+      renderTopInfo();
       saveState();
       supaPushDebounced();
     };
   }
+
+  renderTopInfo();
+}
+
+function renderTopInfo() {
+  const title = document.getElementById('cti-title');
+  const meta = document.getElementById('cti-meta');
+  if (title) title.textContent = S.tbVals?.[0] || 'Giải đấu';
+  if (meta) {
+    const loc = S.tbVals?.[2] || 'Địa điểm';
+    const time = S.tbVals?.[1] || 'Thời gian';
+    meta.textContent = `${loc} · ${time}`;
+  }
+}
+
+function renderSponsorMarquee() {
+  const wrap = document.getElementById('sponsor-marquee');
+  if (!wrap) return;
+  const logos = Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [];
+  if (!logos.length) {
+    wrap.innerHTML = '<div class="sponsor-empty">SPONSOR STRIP · NO LOGO</div>';
+    return;
+  }
+  const items = logos.map(src => `<span class="sponsor-item"><img src="${src}" alt="sponsor"></span>`).join('');
+  wrap.innerHTML = `<div class="sponsor-track">${items}${items}</div>`;
+}
+
+function handleSponsorUpload(e) {
+  if (!S.isAdmin) return;
+  const files = Array.from(e?.target?.files || []);
+  if (!files.length) return;
+  const readers = files.map(file => new Promise((resolve) => {
+    const rd = new FileReader();
+    rd.onload = () => resolve(rd.result);
+    rd.onerror = () => resolve(null);
+    rd.readAsDataURL(file);
+  }));
+  Promise.all(readers).then((arr) => {
+    const ok = arr.filter(Boolean);
+    if (!ok.length) return;
+    pushHistory();
+    S.sponsorLogos = [...(S.sponsorLogos || []), ...ok].slice(-40);
+    renderSponsorMarquee();
+    saveState();
+    supaPushDebounced();
+    showToast('✅ Đã cập nhật sponsor', 'success');
+    if (e?.target) e.target.value = '';
+  });
 }
 
 function handleVideoUpload(e) {
@@ -4379,7 +4410,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   init();
 
   document.addEventListener('click', (e) => {
-    const strip = document.getElementById('theme-strip');
+    const strip = document.getElementById('tourney-bar');
     if (!strip) return;
     if (!strip.contains(e.target)) closeThemeDots();
   });
@@ -4472,7 +4503,7 @@ function checkBracketTabVisibility() {
   tabBar.classList.add('visible');
 
   // Đảm bảo theme picker đóng khi đổi tab/resize
-  const strip = document.getElementById('theme-strip');
+  const strip = document.getElementById('tourney-bar');
   if (strip) strip.classList.remove('theme-open');
 }
 
@@ -4871,6 +4902,7 @@ Object.assign(globalThis, {
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
+  handleSponsorUpload,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
