@@ -325,7 +325,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   box-shadow: 0 8px 20px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset;
   margin-bottom: 8px;
   overflow: hidden;
-  min-height: 84px;
+  min-height: 56px;
 }
 .cti-title, .cti-meta {
   position:absolute;
@@ -336,8 +336,8 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   max-width:none;
   z-index: 4;
 }
-.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:10px; }
-.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; left:220px; right:auto; top:14px; }
+.cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:8px; }
+.cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; right:10px; left:auto; top:10px; text-align:right; }
 .cti-title::before { content:'🏆 '; opacity:.9; }
 .cti-meta::before { content:'📍 '; opacity:.9; }
 .cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
@@ -3243,7 +3243,7 @@ function setupTopBar() {
   renderTopInfo();
 }
 
-let ctiDragState = null;
+let ctiDragState = null; // giữ biến cũ để không ảnh hưởng nơi khác
 
 function ensureCtiState() {
   if (!S.cti) S.cti = { ...DEFAULTS.cti };
@@ -3262,17 +3262,11 @@ function renderTopInfo() {
   const time = S.tbVals?.[1] || 'Thời gian';
   meta.textContent = S.cti.metaText || `${loc} · ${time}`;
 
-  const bw = box.clientWidth || 1;
-  const bh = box.clientHeight || 1;
-  const tLeft = Number.isFinite(S.cti.titleXPct) ? (S.cti.titleXPct * bw) : S.cti.titleX;
-  const tTop = Number.isFinite(S.cti.titleYPct) ? (S.cti.titleYPct * bh) : S.cti.titleY;
-  const mLeft = Number.isFinite(S.cti.metaXPct) ? (S.cti.metaXPct * bw) : S.cti.metaX;
-  const mTop = Number.isFinite(S.cti.metaYPct) ? (S.cti.metaYPct * bh) : S.cti.metaY;
-  title.style.left = `${tLeft}px`;
-  title.style.top = `${tTop}px`;
-  meta.style.left = `${mLeft}px`;
-  meta.style.top = `${mTop}px`;
-  meta.style.right = 'auto';
+  title.style.left = '10px';
+  title.style.top = '8px';
+  meta.style.right = '10px';
+  meta.style.left = 'auto';
+  meta.style.top = '10px';
 
   box.classList.toggle('cti-snap-grid', !!S.ctiSnap);
 
@@ -3285,59 +3279,16 @@ function renderTopInfo() {
   meta.style.color = S.cti.metaColor;
   if (box) box.style.background = S.cti.panelBg || '';
 
-  if (!box.dataset.dragWired) {
-    const startDrag = (type, ev) => {
-      if (!S.isAdmin) return;
-      const tRect = box.getBoundingClientRect();
-      const target = type === 'title' ? title : meta;
-      const o = target.getBoundingClientRect();
-      ctiDragState = {
-        type,
-        offsetX: ev.clientX - o.left,
-        offsetY: ev.clientY - o.top,
-        bounds: tRect
-      };
-      ev.preventDefault();
-    };
-    title.addEventListener('pointerdown', (ev) => startDrag('title', ev));
-    meta.addEventListener('pointerdown', (ev) => startDrag('meta', ev));
-    box.dataset.dragWired = '1';
-  }
+  // cố định vị trí title/meta theo layout mới
 }
 
 document.addEventListener('pointermove', (ev) => {
-  if (!ctiDragState || !S.isAdmin) return;
-  const box = document.getElementById('center-top-info');
-  const title = document.getElementById('cti-title');
-  const meta = document.getElementById('cti-meta');
-  if (!box || !title || !meta) return;
-  const target = ctiDragState.type === 'title' ? title : meta;
-  const b = box.getBoundingClientRect();
-  let nx = ev.clientX - b.left - ctiDragState.offsetX;
-  let ny = ev.clientY - b.top - ctiDragState.offsetY;
-  if (S.ctiSnap) {
-    nx = Math.round(nx / SPONSOR_GRID) * SPONSOR_GRID;
-    ny = Math.round(ny / SPONSOR_GRID) * SPONSOR_GRID;
-  }
-  nx = Math.max(0, Math.min(nx, b.width - target.offsetWidth));
-  ny = Math.max(0, Math.min(ny, b.height - target.offsetHeight));
-  if (ctiDragState.type === 'title') {
-    S.cti.titleX = nx; S.cti.titleY = ny;
-    S.cti.titleXPct = nx / Math.max(1, b.width);
-    S.cti.titleYPct = ny / Math.max(1, b.height);
-  } else {
-    S.cti.metaX = nx; S.cti.metaY = ny;
-    S.cti.metaXPct = nx / Math.max(1, b.width);
-    S.cti.metaYPct = ny / Math.max(1, b.height);
-  }
-  renderTopInfo();
+  void ev;
 });
 
 document.addEventListener('pointerup', () => {
   if (!ctiDragState) return;
   ctiDragState = null;
-  saveState();
-  supaPushDebounced();
 });
 
 function buildCtiToolOptions() {
