@@ -3711,6 +3711,7 @@ function drawWheel(rotation = 0) {
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.stroke();
 
   syncFullscreenMiniWheel();
+  setTimeout(() => applyMobileBracketOverview(), 40);
 }
 
 function playTickSound() {
@@ -4938,36 +4939,49 @@ function applyMobileBracketOverview() {
   const center = document.getElementById('center-panel');
   if (!bc) return;
 
-  if (window.innerWidth > 768) {
+  const isMobile = window.innerWidth <= 768;
+  const isFsCenter = !!document.fullscreenElement && document.fullscreenElement.id === 'center-panel';
+
+  const reset = () => {
     document.body.classList.remove('mobile-bracket-overview');
     bc.style.transform = '';
     bc.style.width = '';
     bc.style.height = '';
+    bc.style.transformOrigin = '';
+  };
+
+  if (!isMobile) {
+    reset();
     return;
   }
 
   const isCenterTab = document.body.classList.contains('tab-center');
   const isBracketActive = document.getElementById('btab-bracket')?.classList.contains('active');
   if (!isCenterTab || !isBracketActive || !center) {
-    document.body.classList.remove('mobile-bracket-overview');
-    bc.style.transform = '';
-    bc.style.width = '';
-    bc.style.height = '';
+    reset();
     return;
   }
 
+  // Mobile thường: để dọc bình thường, không xoay
+  if (!isFsCenter) {
+    reset();
+    return;
+  }
+
+  // Mobile fullscreen: tự xoay ngang + fit 100% sơ đồ
   document.body.classList.add('mobile-bracket-overview');
 
   const w = bc.scrollWidth || bc.offsetWidth;
   const h = bc.scrollHeight || bc.offsetHeight;
   if (!w || !h) return;
 
-  const fitW = (center.clientWidth - 12) / h;
-  const fitH = (center.clientHeight - 12) / w;
-  const scale = Math.max(0.2, Math.min(0.68, Math.min(fitW, fitH)));
+  const fitW = (center.clientWidth - 8) / h;
+  const fitH = (center.clientHeight - 8) / w;
+  const scale = Math.max(0.2, Math.min(1, Math.min(fitW, fitH)));
 
   bc.style.width = `${h}px`;
   bc.style.height = `${w}px`;
+  bc.style.transformOrigin = 'top left';
   bc.style.transform = `rotate(90deg) translateY(-100%) scale(${scale})`;
 }
 
