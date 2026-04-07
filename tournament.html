@@ -1478,14 +1478,14 @@ body.fs-mode #bracket-style-toggle {
 }
 #fs-draw-stage { display: none; }
 .btab {
-  width: 16px;
-  height: 16px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border-radius: 4px;
+  border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   background: rgba(255,255,255,0.03);
   color: var(--text);
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
@@ -1879,14 +1879,14 @@ body.fs-mode #bracket-style-toggle {
   .sched-match-num { font-size: 9px; letter-spacing: 1px; }
   .sched-match-status { font-size: 7px; }
   .sched-match-body {
-    grid-template-columns: minmax(42px, 0.6fr) minmax(106px, 1.6fr) auto minmax(106px, 1.6fr) minmax(42px, 0.6fr);
-    column-gap: 4px;
-    padding: 4px 5px;
+    grid-template-columns: minmax(48px, 0.7fr) minmax(132px, 1.7fr) auto minmax(132px, 1.7fr) minmax(48px, 0.7fr);
+    column-gap: 5px;
+    padding: 4px 6px;
   }
-  .sched-name { font-size: 12px; white-space: normal; overflow: visible; text-overflow: clip; }
-  .sched-name.name-sm { font-size: 11px; }
-  .sched-name.name-xs { font-size: 10px; }
-  .sched-side-unit { font-size: 8px; white-space: nowrap; }
+  .sched-name { font-size: 12px; white-space: nowrap; overflow: visible; text-overflow: clip; }
+  .sched-name.name-sm { font-size: 11.5px; }
+  .sched-name.name-xs { font-size: 11px; }
+  .sched-side-unit { font-size: 8px; white-space: nowrap; overflow: visible; text-overflow: clip; }
   .sched-center-pack { gap: 2px; min-width: 48px; }
   .sched-vs-col { width: 28px; }
   .sched-center-logo { width: 26px; height: 26px; }
@@ -2069,6 +2069,7 @@ body.fs-mode #bracket-style-toggle {
     </div>
     <!-- Tab bar (chỉ hiện sau bốc thăm) -->
     <div class="bracket-tab-bar" id="bracket-tab-bar">
+      <button class="btab" id="btab-register" onclick="switchBracketTab('register')" title="Danh sách đăng kí">👥</button>
       <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')" title="Bracket">▦</button>
       <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')" title="Lịch thi đấu">☰</button>
       <span class="bracket-tab-spacer"></span>
@@ -3600,6 +3601,32 @@ function saveAndRender() {
 
 function getUndrawn() { return S.players.filter(p => !p.drawn); }
 
+let currentBracketTab = 'bracket';
+
+function renderRegisterCards() {
+  const table = document.getElementById('overview-table');
+  if (!table) return;
+  const useTwoCols = S.players.length > 16;
+  table.innerHTML = '';
+  table.classList.add('register-grid');
+  table.style.display = 'grid';
+  table.style.gridTemplateColumns = useTwoCols ? '1fr 1fr' : '1fr';
+  table.style.gap = '8px';
+
+  S.players.forEach((p, idx) => {
+    const stt = p.stt || String(idx + 1);
+    const card = document.createElement('div');
+    card.className = 'ot-row' + (p.drawn ? ' drawn' : '');
+    card.innerHTML = `
+      <span class="ot-stt">${stt}</span>
+      <span class="ot-name" title="${p.name}">${p.name}</span>
+      <span class="ot-unit">${p.unit || ''}</span>
+      <span class="ot-rank">${p.rank || ''}</span>
+    `;
+    table.appendChild(card);
+  });
+}
+
 function renderPlayers() {
   const list = document.getElementById('player-list');
   list.innerHTML = '';
@@ -3619,6 +3646,17 @@ function renderPlayers() {
     list.appendChild(c);
   });
   const table = document.getElementById('overview-table');
+  if (!table) return;
+
+  if (currentBracketTab === 'register') {
+    renderRegisterCards();
+    return;
+  }
+
+  table.classList.remove('register-grid');
+  table.style.display = '';
+  table.style.gridTemplateColumns = '';
+  table.style.gap = '';
   table.innerHTML = '<div class="ot-head"><span>STT</span><span>Tên</span><span>Đơn vị</span><span>Hạng</span></div>';
   S.players.forEach((p, idx) => {
     const stt = p.stt || String(idx + 1);
@@ -4170,6 +4208,15 @@ function commitPlayer(player, slot) {
   // Render lại toàn bộ
   renderBracket();
   renderPlayers();
+  if (currentBracketTab === 'register') {
+    const table = document.getElementById('overview-table');
+    if (table) {
+      const useTwoCols = S.players.length > 16;
+      table.style.display = 'grid';
+      table.style.gridTemplateColumns = useTwoCols ? '1fr 1fr' : '1fr';
+      table.style.gap = '8px';
+    }
+  }
   drawWheel();
   saveState();
   supaPushDebounced();
@@ -4998,32 +5045,50 @@ function applyMobileBracketOverview() {
 }
 
 function switchBracketTab(tab) {
+  currentBracketTab = tab;
   const bracketContainer = document.getElementById('bracket-container');
   const schedulePanel = document.getElementById('schedule-panel');
   const centerPanel = document.getElementById('center-panel');
+  const rightPanel = document.getElementById('right-panel');
+  const btabRegister = document.getElementById('btab-register');
   const btabBracket = document.getElementById('btab-bracket');
   const btabSchedule = document.getElementById('btab-schedule');
 
-  if (!bracketContainer || !schedulePanel || !centerPanel || !btabBracket || !btabSchedule) return;
+  if (!bracketContainer || !schedulePanel || !centerPanel || !rightPanel || !btabBracket || !btabSchedule || !btabRegister) return;
 
-  if (tab === 'bracket') {
+  btabRegister.classList.toggle('active', tab === 'register');
+  btabBracket.classList.toggle('active', tab === 'bracket');
+  btabSchedule.classList.toggle('active', tab === 'schedule');
+
+  if (tab === 'register') {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
+    schedulePanel.style.display = 'none';
+    centerPanel.classList.remove('schedule-active');
+    rightPanel.style.display = 'flex';
+    const table = document.getElementById('overview-table');
+    if (table) {
+      const useTwoCols = S.players.length > 16;
+      table.style.display = 'grid';
+      table.style.gridTemplateColumns = useTwoCols ? '1fr 1fr' : '1fr';
+      table.style.gap = '8px';
+    }
+  } else if (tab === 'bracket') {
+    rightPanel.style.display = 'none';
     bracketContainer.style.display = '';
     schedulePanel.classList.remove('active');
     schedulePanel.style.display = 'none';
     centerPanel.classList.remove('schedule-active');
-    btabBracket.classList.add('active');
-    btabSchedule.classList.remove('active');
     setTimeout(() => {
       drawBracketLines();
       applyMobileBracketOverview();
     }, 80);
   } else {
+    rightPanel.style.display = 'none';
     bracketContainer.style.display = 'none';
     schedulePanel.classList.add('active');
     schedulePanel.style.display = 'block';
     centerPanel.classList.add('schedule-active');
-    btabBracket.classList.remove('active');
-    btabSchedule.classList.add('active');
     renderSchedule();
     applyMobileBracketOverview();
   }
