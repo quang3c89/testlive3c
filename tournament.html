@@ -5394,11 +5394,17 @@ function switchTab(tab) {
   document.querySelectorAll('.m-tab').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
+
   if (tab === 'center') {
+    switchBracketTab('bracket');
+    const center = document.getElementById('center-panel');
+    const bc = document.getElementById('bracket-container');
+    if (center) center.style.display = 'flex';
+    if (bc) bc.style.display = '';
     setTimeout(() => {
       drawBracketLines();
       applyMobileBracketOverview();
-    }, 100);
+    }, 120);
   } else {
     applyMobileBracketOverview();
   }
