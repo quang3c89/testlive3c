@@ -277,27 +277,21 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
   height: 40px;
   padding: 4px 7px;
   border-radius: 7px;
-  background:
-    linear-gradient(160deg,
-      color-mix(in srgb, var(--card, #1f2937) 92%, #ffffff 8%) 0%,
-      color-mix(in srgb, var(--card, #1f2937) 82%, #000000 18%) 100%);
+  background: var(--surface-gradient, linear-gradient(160deg,#1f2937 0%,#111827 100%));
   position: relative;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
-  border: 1px solid color-mix(in srgb, var(--accent, #f0a500) 22%, transparent);
-  border-left: 1.5px solid color-mix(in srgb, var(--accent, #f0a500) 45%, transparent);
+  border: 1px solid var(--surface-border, rgba(240,165,0,0.22));
+  border-left: 1.5px solid var(--surface-border-strong, rgba(240,165,0,0.45));
   animation: fadeScaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
   box-sizing: border-box;
-  box-shadow:
-    0 8px 20px rgba(0,0,0,0.34),
-    0 0 0 1px rgba(255,255,255,0.05) inset,
-    0 0 14px color-mix(in srgb, var(--accent, #f0a500) 18%, transparent);
+  box-shadow: var(--surface-shadow, 0 8px 20px rgba(0,0,0,0.34));
 }
 .pc::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 38%);
+  background: var(--surface-overlay, linear-gradient(180deg, rgba(255,255,255,0.05), transparent 38%));
   opacity: 0.55;
 }
 .pc .dx {
@@ -306,11 +300,8 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 .pc:hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--accent, #f0a500) 48%, transparent);
-  box-shadow:
-    0 12px 26px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.08) inset,
-    0 0 22px color-mix(in srgb, var(--accent, #f0a500) 35%, transparent);
+  border-color: var(--surface-border-hover, rgba(240,165,0,0.48));
+  box-shadow: var(--surface-shadow-hover, 0 12px 26px rgba(0,0,0,0.5));
 }
 .pc:hover .dx { opacity: 1; }
 .pc.drawn {
@@ -507,20 +498,14 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
 }
 /* Match box */
 .mb {
-  background:
-    linear-gradient(160deg,
-      color-mix(in srgb, var(--primary-dark, #111827) 76%, var(--match-tint, #ffdf80) 24%) 0%,
-      color-mix(in srgb, var(--primary-dark, #111827) 84%, #000 16%) 100%);
+  background: var(--surface-gradient, linear-gradient(160deg,#1f2937 0%,#111827 100%));
   border-radius: 10px;
-  border: 1.5px solid color-mix(in srgb, var(--match-edge, var(--primary, #f0a500)) 42%, transparent);
+  border: 1.5px solid var(--surface-border, rgba(240,165,0,0.22));
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
   overflow: hidden;
-  box-shadow:
-    0 12px 28px rgba(0,0,0,0.45),
-    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 18%, transparent) inset,
-    0 0 24px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 45%, transparent);
+  box-shadow: var(--surface-shadow, 0 12px 28px rgba(0,0,0,0.45));
   position: relative;
 }
 .mb::after {
@@ -528,17 +513,14 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%);
+  background: var(--surface-overlay, linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%));
   opacity: 0.6;
 }
 .mb:hover {
-  border-color: color-mix(in srgb, var(--match-edge, var(--primary, #f0a500)) 64%, transparent);
+  border-color: var(--surface-border-hover, rgba(240,165,0,0.42));
   transform: translateY(-1px) scale(1.015);
   z-index: 5;
-  box-shadow:
-    0 16px 34px rgba(0,0,0,0.58),
-    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 30%, transparent) inset,
-    0 0 34px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 85%, transparent);
+  box-shadow: var(--surface-shadow-hover, 0 16px 34px rgba(0,0,0,0.58));
 }
 .mb.anim-enter { animation: matchEnter 0.5s cubic-bezier(0.34,1.56,0.64,1); }
 .mb-bye { min-height: 74px; }
@@ -548,19 +530,13 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
   to { opacity:1; transform: none; }
 }
 .mb-bye {
-  border-color: color-mix(in srgb, var(--match-edge, var(--primary, #f0a500)) 42%, transparent);
-  box-shadow:
-    0 12px 28px rgba(0,0,0,0.45),
-    0 0 0 1px color-mix(in srgb, var(--primary-light, #f8d77a) 18%, transparent) inset,
-    0 0 24px color-mix(in srgb, var(--primary-glow, rgba(240,165,0,0.28)) 45%, transparent);
+  border-color: var(--surface-border, rgba(240,165,0,0.22));
+  box-shadow: var(--surface-shadow, 0 12px 28px rgba(0,0,0,0.45));
 }
 .mp-bye-merged {
   display:flex; align-items:center; justify-content:space-between;
   padding: 8px 10px;
-  background:
-    linear-gradient(155deg,
-      color-mix(in srgb, var(--primary-dark, #111827) 78%, #000 22%) 0%,
-      color-mix(in srgb, var(--primary-dark, #111827) 60%, #000 40%) 100%);
+  background: var(--surface-gradient, linear-gradient(155deg,#1f2937 0%, #111827 100%));
 }
 .bye-pass-badge {
   font-family: var(--font-mono);
@@ -2729,16 +2705,47 @@ function applyBracketColorVars() {
   const primaryHex = c.bg || DEFAULTS.bracketColors.bg;
   const hsl = hexToHsl(primaryHex) || { h: 220, s: 35, l: 14 };
 
-  const baseS = Math.max(36, Math.min(88, hsl.s || 56));
-  const baseL = Math.max(38, Math.min(62, hsl.l || 48));
-  const lightL = Math.min(82, baseL + 18);
-  const darkL = Math.max(11, baseL - 30);
+  const isLightMode = (hsl.l || 0) >= 50;
+  const baseS = Math.max(32, Math.min(86, hsl.s || 56));
+  const baseL = Math.max(18, Math.min(72, hsl.l || 48));
+  const primaryLightL = Math.min(92, baseL + (isLightMode ? 14 : 18));
+  const primarySoftL = Math.min(97, baseL + (isLightMode ? 30 : 22));
+  const primaryDarkL = Math.max(8, baseL - (isLightMode ? 18 : 30));
 
-  root.style.setProperty('--primary', hslToCss(hsl.h, baseS, baseL));
-  root.style.setProperty('--primary-light', hslToCss(hsl.h, Math.max(30, baseS - 8), lightL));
-  root.style.setProperty('--primary-dark', hslToCss(hsl.h, Math.max(34, baseS - 4), darkL));
-  root.style.setProperty('--primary-glow', hslToCss(hsl.h, Math.max(30, baseS - 6), Math.min(72, baseL + 12), 0.42));
-  root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(18, baseS - 20), Math.min(88, baseL + 30), 0.5));
+  const primary = hslToCss(hsl.h, baseS, baseL);
+  const primaryLight = hslToCss(hsl.h, Math.max(24, baseS - 8), primaryLightL);
+  const primarySoft = hslToCss(hsl.h, Math.max(14, baseS - 18), primarySoftL);
+  const primaryDark = hslToCss(hsl.h, Math.max(24, baseS - 6), primaryDarkL);
+  const primaryGlow = hslToCss(hsl.h, Math.max(26, baseS - 8), Math.min(86, baseL + (isLightMode ? 10 : 16)), isLightMode ? 0.24 : 0.4);
+
+  root.style.setProperty('--primary', primary);
+  root.style.setProperty('--primary-light', primaryLight);
+  root.style.setProperty('--primary-soft', primarySoft);
+  root.style.setProperty('--primary-dark', primaryDark);
+  root.style.setProperty('--primary-glow', primaryGlow);
+  root.style.setProperty('--surface-mode', isLightMode ? 'light' : 'dark');
+
+  if (isLightMode) {
+    root.style.setProperty('--surface-gradient', `linear-gradient(156deg, ${hslToCss(hsl.h, Math.max(16, baseS - 20), Math.min(98, primarySoftL + 2))} 0%, ${hslToCss(hsl.h, Math.max(14, baseS - 22), Math.min(99, primarySoftL + 6))} 100%)`);
+    root.style.setProperty('--surface-border', hslToCss(hsl.h, Math.max(20, baseS - 14), Math.max(42, baseL - 8), 0.32));
+    root.style.setProperty('--surface-border-strong', hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(38, baseL - 14), 0.5));
+    root.style.setProperty('--surface-border-hover', hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(34, baseL - 18), 0.62));
+    root.style.setProperty('--surface-shadow', `0 8px 18px rgba(148,163,184,0.24), 0 0 0 1px rgba(255,255,255,0.8) inset, 0 0 14px ${hslToCss(hsl.h, Math.max(18, baseS - 16), Math.min(86, baseL + 18), 0.18)}`);
+    root.style.setProperty('--surface-shadow-hover', `0 12px 24px rgba(148,163,184,0.3), 0 0 0 1px rgba(255,255,255,0.92) inset, 0 0 18px ${hslToCss(hsl.h, Math.max(18, baseS - 14), Math.min(86, baseL + 20), 0.24)}`);
+    root.style.setProperty('--surface-overlay', 'linear-gradient(180deg, rgba(255,255,255,0.68), rgba(255,255,255,0.08) 45%, transparent 100%)');
+    root.style.setProperty('--line-color', hslToCss(hsl.h, Math.max(22, baseS - 14), Math.max(34, baseL - 20), 0.9));
+    root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(14, baseS - 22), Math.min(84, baseL + 24), 0.22));
+  } else {
+    root.style.setProperty('--surface-gradient', `linear-gradient(160deg, ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.max(10, primaryDarkL + 6))} 0%, ${hslToCss(hsl.h, Math.max(24, baseS - 8), Math.max(7, primaryDarkL - 2))} 100%)`);
+    root.style.setProperty('--surface-border', hslToCss(hsl.h, Math.max(28, baseS - 4), Math.min(68, baseL + 6), 0.28));
+    root.style.setProperty('--surface-border-strong', hslToCss(hsl.h, Math.max(28, baseS - 2), Math.min(72, baseL + 10), 0.46));
+    root.style.setProperty('--surface-border-hover', hslToCss(hsl.h, Math.max(28, baseS), Math.min(76, baseL + 14), 0.62));
+    root.style.setProperty('--surface-shadow', `0 12px 28px rgba(0,0,0,0.45), 0 0 0 1px ${hslToCss(hsl.h, Math.max(22, baseS - 12), Math.min(86, baseL + 20), 0.18)} inset, 0 0 24px ${primaryGlow}`);
+    root.style.setProperty('--surface-shadow-hover', `0 16px 34px rgba(0,0,0,0.58), 0 0 0 1px ${hslToCss(hsl.h, Math.max(24, baseS - 10), Math.min(90, baseL + 24), 0.28)} inset, 0 0 34px ${hslToCss(hsl.h, Math.max(26, baseS - 6), Math.min(90, baseL + 20), 0.48)}`);
+    root.style.setProperty('--surface-overlay', 'linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%)');
+    root.style.setProperty('--line-color', hslToCss(hsl.h, Math.max(20, baseS - 10), Math.min(88, baseL + 32), 0.92));
+    root.style.setProperty('--particle-color', hslToCss(hsl.h, Math.max(18, baseS - 20), Math.min(88, baseL + 30), 0.5));
+  }
 
   const matchTint = c.matchBg || DEFAULTS.bracketColors.matchBg;
   const matchEdge = c.matchBorder || DEFAULTS.bracketColors.matchBorder;
@@ -2748,15 +2755,20 @@ function applyBracketColorVars() {
   root.style.setProperty('--match-border', matchEdge);
   root.style.setProperty('--match-tint', matchTint);
   root.style.setProperty('--match-edge', matchEdge);
-  root.style.setProperty('--line-color', c.line || DEFAULTS.bracketColors.line);
   root.style.setProperty('--bracket-name-color', c.nameColor || DEFAULTS.bracketColors.nameColor);
   root.style.setProperty('--bracket-unit-color', c.unitColor || DEFAULTS.bracketColors.unitColor || '#5b4a16');
 
   const bgLayer = document.getElementById('bracket-bg-layer');
   if (bgLayer) {
-    bgLayer.style.background = `
-      radial-gradient(90% 70% at 50% 38%, ${hslToCss(hsl.h, Math.max(18, hsl.s - 8), lightL, 0.36)} 0%, transparent 60%),
-      radial-gradient(120% 100% at 50% 50%, ${hslToCss(hsl.h, Math.max(14, hsl.s), Math.max(10, hsl.l))} 0%, ${hslToCss(hsl.h, Math.max(16, hsl.s + 4), darkL)} 78%)`;
+    if (isLightMode) {
+      bgLayer.style.background = `
+        radial-gradient(92% 72% at 50% 32%, ${hslToCss(hsl.h, Math.max(14, baseS - 18), Math.min(98, primarySoftL + 4), 0.88)} 0%, transparent 64%),
+        radial-gradient(128% 110% at 50% 56%, ${hslToCss(hsl.h, Math.max(12, baseS - 22), Math.min(98, primarySoftL + 8), 0.98)} 0%, ${hslToCss(hsl.h, Math.max(10, baseS - 24), Math.min(99, primarySoftL + 10), 0.98)} 84%)`;
+    } else {
+      bgLayer.style.background = `
+        radial-gradient(90% 70% at 50% 38%, ${hslToCss(hsl.h, Math.max(18, baseS - 8), Math.min(84, primaryLightL), 0.36)} 0%, transparent 60%),
+        radial-gradient(120% 100% at 50% 50%, ${hslToCss(hsl.h, Math.max(20, baseS - 4), Math.max(10, baseL - 4))} 0%, ${hslToCss(hsl.h, Math.max(24, baseS - 2), Math.max(6, primaryDarkL))} 78%)`;
+    }
   }
 
   ensureBracketParticles();
