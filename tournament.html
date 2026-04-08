@@ -318,7 +318,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 
 /* ============ CENTER PANEL (BRACKET) ============ */
-.center { flex: 1; position: relative; overflow: auto; padding: 8px 12px 12px; background: var(--bracket-bg, var(--bg)); isolation: isolate; }
+.center { flex: 1; position: relative; overflow: auto; padding: 8px 0 12px; background: var(--bracket-bg, var(--bg)); isolation: isolate; }
 .center-top-info {
   position: relative;
   z-index: 8;
@@ -440,7 +440,7 @@ body.export-static .bracket-color-tools,
 body.export-static .bracket-tool-zone {
   display: none !important;
 }
-.bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; z-index: 2; }
+.bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; justify-content: flex-start; z-index: 2; }
 .sponsor-stage { position:absolute; inset:0; z-index:3; pointer-events:none; }
 .sponsor-stage.snap-grid {
   background-image:
@@ -1516,7 +1516,7 @@ body.fs-mode #bracket-style-toggle {
   box-sizing: border-box;
   overflow-y: auto;
   padding: 52px 20px 20px;
-  background: var(--bg);
+  background: var(--bracket-bg, var(--bg));
 }
 #schedule-panel.active { display: block; }
 
@@ -4794,6 +4794,8 @@ function updateBracketSize() {
   let raw = parseInt(document.getElementById('bracket-size-input').value);
   if (isNaN(raw) || raw < 2) raw = 4;
   pushHistory();
+
+  currentBracketTab = 'bracket';
 
   const sz = nextPowerOfTwo(raw);
   const byes = sz - raw;
