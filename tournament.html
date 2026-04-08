@@ -1521,6 +1521,7 @@ body.fs-mode #bracket-style-toggle {
   background: var(--bracket-bg, var(--bg));
 }
 #schedule-panel.active { display: block; }
+#schedule-panel:not(.active) { display: none !important; }
 
 #register-panel {
   display: none;
@@ -5201,7 +5202,6 @@ function switchBracketTab(tab) {
   if (!bracketContainer || !schedulePanel || !registerPanel || !centerPanel || !btabBracket || !btabSchedule || !btabRegister) return;
 
   registerPanel.classList.remove('active');
-  registerPanel.style.display = 'none';
 
   btabRegister.classList.toggle('active', tab === 'register');
   btabBracket.classList.toggle('active', tab === 'bracket');
@@ -5210,26 +5210,21 @@ function switchBracketTab(tab) {
   if (tab === 'register') {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
-    schedulePanel.style.display = 'none';
     registerPanel.classList.add('active');
     centerPanel.classList.remove('schedule-active');
     renderRegisterCards();
     applyMobileBracketOverview();
   } else if (tab === 'bracket') {
-    registerPanel.classList.remove('active');
     bracketContainer.style.display = '';
     schedulePanel.classList.remove('active');
-    schedulePanel.style.display = 'none';
     centerPanel.classList.remove('schedule-active');
     setTimeout(() => {
       drawBracketLines();
       applyMobileBracketOverview();
     }, 80);
   } else {
-    registerPanel.classList.remove('active');
     bracketContainer.style.display = 'none';
     schedulePanel.classList.add('active');
-    schedulePanel.style.display = 'block';
     centerPanel.classList.add('schedule-active');
     renderSchedule();
     applyMobileBracketOverview();
@@ -5408,11 +5403,8 @@ function renderSchedule() {
   getScheduleOrder().forEach(({ m, rIdx, mIdx }, idx) => {
     const p1Real = !!m?.p1 && !m.p1.isBye;
     const p2Real = !!m?.p2 && !m.p2.isBye;
-    const isPlayable = p1Real && p2Real;
-    if (!isPlayable) return; // không hiển thị card BYE trong lịch
-
-    const num = globalMatchNum++;
-    grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (num || idx + 1) * 12));
+    const num = (p1Real && p2Real) ? globalMatchNum++ : '';
+    grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (idx + 1) * 12));
   });
 
   container.appendChild(grid);
