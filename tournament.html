@@ -1362,7 +1362,13 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
   /* Khi tab right active: hiển thị Danh sách đăng kí trong center */
   body.tab-right .left   { display: none !important; }
-  body.tab-right .center { display: flex !important; }
+  body.tab-right .center {
+    display: flex !important;
+    min-height: calc(100vh - 124px) !important;
+    max-height: calc(100vh - 124px) !important;
+    height: calc(100vh - 124px) !important;
+    overflow: hidden !important;
+  }
   body.tab-right .right  { display: none !important; }
   body.tab-right #bracket-container,
   body.tab-right #schedule-panel { display: none !important; }
@@ -2040,18 +2046,28 @@ body.fs-mode #bracket-style-toggle {
   .sched-match-num { font-size: 8px; letter-spacing: .8px; }
   .sched-match-status { font-size: 7px; }
   .sched-match-body {
-    grid-template-columns: minmax(44px, 0.65fr) minmax(92px, 1.35fr) 64px minmax(92px, 1.35fr) minmax(44px, 0.65fr);
+    grid-template-columns: minmax(38px, 0.55fr) minmax(110px, 1.65fr) 52px minmax(110px, 1.65fr) minmax(38px, 0.55fr);
     column-gap: 4px;
-    padding: 4px 5px;
-    min-height: 38px;
+    padding: 4px 6px;
+    min-height: 40px;
   }
-  .sched-name { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sched-name.name-sm { font-size: 10px; }
-  .sched-name.name-xs { font-size: 9.5px; }
-  .sched-side-unit { font-size: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sched-center-pack { gap: 2px; min-width: 44px; }
-  .sched-vs-col { width: 24px; }
-  .sched-center-logo { width: 22px; height: 22px; }
+  .sched-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sched-name.name-sm { font-size: 10.5px; }
+  .sched-name.name-xs { font-size: 10px; }
+  .sched-side-unit {
+    display: block !important;
+    font-size: 8px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.95;
+  }
+  .sched-center-pack { gap: 2px; min-width: 40px; }
+  .sched-outcome-inline { padding: 1px 2px; }
+  .sched-score { min-width: 10px; font-size: 9px; height: 14px; padding: 0 3px; }
+  .sched-vs-col { width: 22px; }
+  .sched-center-logo { width: 20px; height: 20px; }
   .sched-outcome-inline { gap: 2px; padding: 1px 4px; }
 
   .plist-left {
