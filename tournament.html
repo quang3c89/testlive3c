@@ -1370,6 +1370,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     display: block !important;
     visibility: visible !important;
     pointer-events: auto !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    padding: 0 8px 8px !important;
   }
   body.tab-right .register-layout {
     width: 100% !important;
@@ -1377,6 +1380,16 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
     border-left: none !important;
     border-right: none !important;
     border-radius: 8px;
+    height: 100% !important;
+    max-height: none !important;
+  }
+  body.tab-right #register-list {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding-bottom: 12px !important;
   }
   body.tab-right .register-cols {
     grid-template-columns: 1fr !important;
