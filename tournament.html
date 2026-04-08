@@ -1836,11 +1836,14 @@ body.fs-mode #bracket-style-toggle {
 /* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
   display: grid;
-  grid-template-columns: minmax(90px, 0.95fr) minmax(260px, 2.5fr) 120px minmax(260px, 2.5fr) minmax(90px, 0.95fr);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.75fr) minmax(64px, 0.9fr) minmax(0, 1.75fr) minmax(0, 0.8fr);
   align-items: center;
-  column-gap: 10px;
+  column-gap: 8px;
   padding: 6px 10px;
-  min-height: 44px;
+  min-height: 42px;
 }
 
 .sched-side-unit {
