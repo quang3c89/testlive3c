@@ -5197,18 +5197,28 @@ function captureScheduleImage() {
 }
 
 function captureRegisterImage() {
-  const panel = document.getElementById('register-list');
-  if (!panel) return;
-  html2canvas(panel, {
-    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
-    scale: 2,
-    useCORS: true
-  }).then(canvas => {
-    const a = document.createElement('a');
-    a.download = `live3c_register_${Date.now()}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-  }).catch(err => showToast('❌ Chụp danh sách đăng kí thất bại: ' + err.message, 'error'));
+  const panel = document.getElementById('register-panel');
+  const list = document.getElementById('register-list');
+  if (!panel || !list) return;
+
+  const wasRegisterTab = currentBracketTab === 'register';
+  if (!wasRegisterTab) switchBracketTab('register');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      html2canvas(panel, {
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+        scale: 2,
+        useCORS: true
+      }).then(canvas => {
+        const a = document.createElement('a');
+        a.download = `live3c_register_${Date.now()}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+        showToast('✅ Đã chụp danh sách đăng kí', 'success');
+      }).catch(err => showToast('❌ Chụp danh sách đăng kí thất bại: ' + err.message, 'error'));
+    });
+  });
 }
 
 function toggleBracketFullscreen() {
