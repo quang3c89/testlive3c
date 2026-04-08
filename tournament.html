@@ -1872,9 +1872,9 @@ body.fs-mode #bracket-style-toggle {
   display: block;
   width: 100%;
   background: transparent !important;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   line-height: 1.25;
 }
 
@@ -5293,56 +5293,32 @@ function renderSchedule() {
   if (!container) return;
   container.innerHTML = '';
 
-  // Collect ALL rounds with matches
   const bracket = S.bracket;
   if (!bracket || bracket.length === 0) {
     container.innerHTML = '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
     return;
   }
 
-  // Chỉ tính trận thực đấu: cả 2 bên đều là người thật
   let totalMatchCount = 0;
-  let hasAnyPlayerInBracket = false;
-  bracket.forEach(round => {
-    round.forEach(m => {
-      const p1Real = !!m?.p1 && !m.p1.isBye;
-      const p2Real = !!m?.p2 && !m.p2.isBye;
-      if (p1Real || p2Real) hasAnyPlayerInBracket = true;
-      if (p1Real && p2Real) totalMatchCount += 1;
-    });
-  });
-
-  if (!hasAnyPlayerInBracket) {
+  bracket.forEach(round => round.forEach(m => { if (!isByeMatch(m)) totalMatchCount += 1; }));
+  if (totalMatchCount === 0) {
     container.innerHTML = '<div style="text-align:center;opacity:0.3;font-family:var(--font-mono);font-size:11px;padding:40px;">Chưa có dữ liệu bốc thăm</div>';
     return;
   }
 
-  const rounds = bracket.length;
+  if (subtitle) subtitle.textContent = '';
   let globalMatchNum = 1;
 
-  // Ẩn subtitle theo yêu cầu
-  if (subtitle) subtitle.textContent = '';
-
   function getScheduleOrder() {
-    const playable = [];
-
+    const ordered = [];
     bracket.forEach((round, rIdx) => {
       const half = Math.floor(round.length / 2);
-      const scan = [];
-      for (let mi = 0; mi < half; mi++) if (round[mi]) scan.push({ m: round[mi], rIdx, mIdx: mi });
-      for (let mi = half; mi < round.length; mi++) if (round[mi]) scan.push({ m: round[mi], rIdx, mIdx: mi });
-
-      scan.forEach((it) => {
-        const p1Real = !!it.m?.p1 && !it.m.p1.isBye;
-        const p2Real = !!it.m?.p2 && !it.m.p2.isBye;
-        if (p1Real && p2Real) playable.push(it);
-      });
+      for (let mi = 0; mi < half; mi++) if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+      for (let mi = half; mi < round.length; mi++) if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
     });
-
-    return playable;
+    return ordered;
   }
 
-  // Build match card HTML
   function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay) {
     if (!m || typeof m !== 'object') return '';
     const p1 = m.p1, p2 = m.p2;
@@ -5400,7 +5376,7 @@ function renderSchedule() {
 
             <div class="sched-center-pack">
               <div class="sched-outcome-inline">
-                ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : '<span class="sched-score">—</span>'}
+                ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
                 ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
                 ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
               </div>
@@ -5412,7 +5388,7 @@ function renderSchedule() {
               <div class="sched-outcome-inline">
                 ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
                 ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
-                ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : '<span class="sched-score">—</span>'}
+                ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
               </div>
             </div>
 
@@ -5430,9 +5406,7 @@ function renderSchedule() {
   grid.className = 'schedule-grid';
 
   getScheduleOrder().forEach(({ m, rIdx, mIdx }, idx) => {
-    const p1Real = !!m?.p1 && !m.p1.isBye;
-    const p2Real = !!m?.p2 && !m.p2.isBye;
-    const num = (p1Real && p2Real) ? globalMatchNum++ : '';
+    const num = isByeMatch(m) ? null : globalMatchNum++;
     grid.insertAdjacentHTML('beforeend', makeMatchCard(m, num, rIdx, mIdx, (idx + 1) * 12));
   });
 
