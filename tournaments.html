@@ -185,6 +185,51 @@ footer.footer-lite {
   color: var(--text-muted);
   text-align: center;
 }
+/* polish: reduce clutter and improve readability */
+.page-sub { max-width: 760px; }
+.filter-bar { margin-bottom: 18px; }
+.filter-tab { transition: var(--transition, all .2s ease); }
+.filter-tab:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+.tournament-card.tc-list-card .tc-body { padding-top: 4px !important; }
+.tournament-card .tc-meta { margin-top: 6px; }
+.tournament-card .tc-row { display: flex; align-items: center; gap: 6px; }
+.tournament-card .ico { opacity: .55; }
+.tournament-card .prize-row { color: var(--text-muted); }
+.tournament-card .tc-card-actions { margin-top: 10px; }
+.tournament-card .fi-btn.pri,
+.tournament-card .fi-btn.sec {
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  padding: 6px 12px;
+}
+.tournament-card .fi-btn.pri {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.tournament-card .fi-btn.sec {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.load-more-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+}
+.load-more-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+@media (max-width: 768px) {
+  .tournaments-inner { padding: 0 16px 56px; }
+  .tournaments-header { padding: 24px 16px 20px; }
+  .filter-bar { gap: 10px; }
+  .filter-search-wrap { width: 100%; }
+  .filter-search { max-width: 100%; }
+}
 </style>
 </head>
 <body class="page-tournaments">

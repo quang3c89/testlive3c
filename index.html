@@ -256,6 +256,40 @@ footer {
   .hero-layout { grid-template-columns: 1fr; }
   .hero-right { display: none; }
 }
+
+/* polish: calmer palette + cleaner hierarchy */
+.hero-tag { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); }
+.hero-h1 { letter-spacing: -0.02em; }
+.hero-desc { color: var(--text-secondary); }
+
+.section-label {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.tourney-card .tc-body { padding-top: 4px !important; }
+.tourney-card .tc-row .ico { opacity: .55; }
+.tourney-card .tc-name { color: var(--text-primary) !important; }
+.tourney-card .tc-meta .tc-row { color: var(--text-secondary) !important; }
+
+.featured-cover { background: var(--bg-muted) !important; }
+.featured-cover-overlay { display: none !important; }
+.featured-cover-badge {
+  border-radius: var(--radius-badge) !important;
+  border: 1px solid transparent;
+  box-shadow: none !important;
+}
+.featured-cover-badge.badge-ongoing { background: #e8f5e9 !important; color: #2e7d32 !important; }
+.featured-cover-badge.badge-open { background: #fff8e1 !important; color: #f57f17 !important; }
+.featured-cover-badge.badge-done { background: var(--bg-muted) !important; color: var(--text-muted) !important; }
+
+.contact-card {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+.cc-arrow { color: var(--text-muted) !important; }
 </style>
 </head>
 <body>
