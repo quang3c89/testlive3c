@@ -5436,7 +5436,7 @@ function renderSchedule() {
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : '\u00A0'}</span>
             </div>
 
-            <div class="sched-side-unit right" title="${p2Meta}">${p2UnitText || p2MetaShort || '—'}</div>
+            <div class="sched-side-unit right" title="${hasP2 ? (getPlayerUnit(p2) || p2Meta || '') : ''}">${hasP2 ? (getPlayerUnit(p2) || '—') : '—'}</div>
           `}
         </div>
       </div>`;
