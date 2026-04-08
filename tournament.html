@@ -2348,6 +2348,25 @@ body.fs-mode #bracket-style-toggle {
   </div>
 </div>
 
+<div id="edit-player-modal" class="modal">
+  <div class="modal-c">
+    <h2>✏️ Sửa cơ thủ</h2>
+    <input type="hidden" id="edit-player-id">
+    <div class="field-group"><label>Tên *</label><input class="minput" type="text" id="edit-player-name" placeholder="Tên cơ thủ" autocomplete="off"></div>
+    <div class="field-group"><label>Đơn vị / CLB</label><input class="minput" type="text" id="edit-player-unit" placeholder="Đơn vị / CLB" autocomplete="off"></div>
+    <div class="field-group"><label>Phân hạng</label>
+      <select class="mselect" id="edit-player-rank">
+        <option value="">Không có</option>
+        <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+      </select>
+    </div>
+    <div class="mactions">
+      <button class="mbtn pri" onclick="saveEditPlayer()">Lưu</button>
+      <button class="mbtn" onclick="closeModal('edit-player-modal')">Hủy</button>
+    </div>
+  </div>
+</div>
+
 <div id="settings-modal" class="modal">
   <div class="modal-c">
     <h2>⚙️ Cài đặt</h2>
@@ -3796,6 +3815,54 @@ function removePlayer(id) {
   supaPushDebounced();
 }
 
+function openEditPlayer(id) {
+  const p = (S.players || []).find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('edit-player-id').value = p.id;
+  document.getElementById('edit-player-name').value = p.name || '';
+  document.getElementById('edit-player-unit').value = p.unit || '';
+  document.getElementById('edit-player-rank').value = p.rank || '';
+  openModal('edit-player-modal');
+}
+
+function saveEditPlayer() {
+  const id = document.getElementById('edit-player-id').value;
+  const name = document.getElementById('edit-player-name').value.trim();
+  const unit = document.getElementById('edit-player-unit').value.trim();
+  const rank = document.getElementById('edit-player-rank').value;
+  if (!id || !name) return;
+
+  const p = (S.players || []).find(x => x.id === id);
+  if (!p) return;
+
+  pushHistory();
+  p.name = name;
+  p.unit = unit;
+  p.rank = rank;
+
+  (S.bracket || []).forEach(round => round.forEach(m => {
+    if (m?.p1?.id === id) {
+      m.p1.name = name;
+      m.p1.unit = unit;
+      m.p1.rank = rank;
+    }
+    if (m?.p2?.id === id) {
+      m.p2.name = name;
+      m.p2.unit = unit;
+      m.p2.rank = rank;
+    }
+    if (m?.winner?.id === id) {
+      m.winner.name = name;
+      m.winner.unit = unit;
+      m.winner.rank = rank;
+    }
+  }));
+
+  closeModal('edit-player-modal');
+  saveAndRender();
+  supaPushDebounced();
+}
+
 function saveAndRender() {
   saveState();
   renderPlayers();
@@ -3852,6 +3919,7 @@ function renderRegisterCards() {
 
     const card = document.createElement('div');
     card.className = `register-item cols-${fields.length}` + (p.drawn ? ' drawn' : '');
+    card.onclick = () => openEditPlayer(p.id);
 
     const nodes = [`<span class="f-stt">${stt}</span>`, `<span class="f-name" title="${p.name || ''}">${p.name || ''}</span>`];
     if (hasAnyUnit) nodes.push(`<span class="f-unit" title="${p.unit || ''}">${p.unit || ''}</span>`);
@@ -5734,6 +5802,7 @@ Object.assign(globalThis, {
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
   handleSponsorUpload, removeSponsorLogo, toggleSponsorSnap, toggleCtiSnap, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
   setFastDrawMode,
+  openEditPlayer, saveEditPlayer,
   previewTitleFont, startAutoSpin, stopAutoSpin, captureScheduleImage,
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
