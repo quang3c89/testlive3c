@@ -1360,55 +1360,28 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   body.tab-center .center { display: flex !important; }
   body.tab-center .right  { display: none !important; }
 
-  /* Khi tab right active: Cơ thủ full màn hình */
+  /* Khi tab right active: hiển thị Danh sách đăng kí trong center */
   body.tab-right .left   { display: none !important; }
-  body.tab-right .center { display: none !important; }
-  body.tab-right .right  {
-    display: flex !important;
+  body.tab-right .center { display: flex !important; }
+  body.tab-right .right  { display: none !important; }
+  body.tab-right #bracket-container,
+  body.tab-right #schedule-panel { display: none !important; }
+  body.tab-right #register-panel {
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  body.tab-right .register-layout {
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 100% !important;
-    min-height: calc(100vh - 124px) !important;
-    max-height: calc(100vh - 124px) !important;
-    flex: 1 1 100% !important;
-    padding: 8px 8px 10px !important;
-    border-top: none !important;
-    overflow: hidden !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 8px;
   }
-  body.tab-right .right-header {
-    padding: 2px 0 6px;
-    margin-bottom: 2px;
+  body.tab-right .register-cols {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
   }
-  body.tab-right .right-header h3 {
-    font-size: 12px;
-    letter-spacing: 1px;
-    opacity: 0.75;
-  }
-  body.tab-right .export-btn {
-    padding: 4px 8px;
-    font-size: 10px;
-  }
-  body.tab-right .overview-table {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    padding-bottom: 4px;
-  }
-  body.tab-right .ot-head {
-    grid-template-columns: 38px minmax(100px,1fr) minmax(90px,1fr) 48px;
-    gap: 5px;
-    font-size: 8px;
-    padding: 6px 4px;
-  }
-  body.tab-right .ot-row {
-    grid-template-columns: 38px minmax(100px,1fr) minmax(90px,1fr) 48px;
-    gap: 5px;
-    padding: 7px 4px;
-  }
-  body.tab-right .ot-row .ot-stt,
-  body.tab-right .ot-row .ot-rank { font-size: 11px; }
-  body.tab-right .ot-row .ot-name { font-size: 12px; }
-  body.tab-right .ot-row .ot-unit { font-size: 11px; }
 }
 
 /* ============ BRACKET TABS (Bracket / Lịch Thi Đấu) ============ */
@@ -5707,6 +5680,10 @@ function switchTab(tab) {
       drawBracketLines();
       applyMobileBracketOverview();
     }, 120);
+  } else if (tab === 'right') {
+    switchBracketTab('register');
+    renderRegisterCards();
+    applyMobileBracketOverview();
   } else {
     applyMobileBracketOverview();
   }
