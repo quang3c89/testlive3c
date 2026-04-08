@@ -318,7 +318,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 
 /* ============ CENTER PANEL (BRACKET) ============ */
-.center { flex: 1; position: relative; overflow: auto; padding: 8px 12px 12px; background: var(--bg); isolation: isolate; }
+.center { flex: 1; position: relative; overflow: auto; padding: 8px 12px 12px; background: var(--bracket-bg, var(--bg)); isolation: isolate; }
 .center-top-info {
   position: relative;
   z-index: 8;
@@ -1512,6 +1512,8 @@ body.fs-mode #bracket-style-toggle {
   bottom: 0;
   left: 0;
   z-index: 7;
+  width: 100%;
+  box-sizing: border-box;
   overflow-y: auto;
   padding: 52px 20px 20px;
   background: var(--bg);
@@ -2133,7 +2135,7 @@ body.fs-mode #bracket-style-toggle {
       <div id="register-list" class="overview-table"></div>
     </div>
 
-    <div class="bracket-wrap" id="bracket-container" style="background: var(--bg);">
+    <div class="bracket-wrap" id="bracket-container">
       <div id="sponsor-stage" class="sponsor-stage"></div>
       <svg id="bracket-lines"></svg>
       <div class="bracket-cols" id="bracket-columns"></div>
@@ -4827,6 +4829,7 @@ function updateBracketSize() {
 
   saveState();
   renderAll();
+  switchBracketTab('bracket');
   checkBracketTabVisibility();
   closeModal('count-modal');
   showToast(`🔢 Bracket: ${raw} người (khung ${sz}, BYE ${byes})`, 'info');
@@ -5119,6 +5122,9 @@ function switchBracketTab(tab) {
   const btabSchedule = document.getElementById('btab-schedule');
 
   if (!bracketContainer || !schedulePanel || !registerPanel || !centerPanel || !rightPanel || !btabBracket || !btabSchedule || !btabRegister) return;
+
+  registerPanel.classList.remove('active');
+  registerPanel.style.display = 'none';
 
   btabRegister.classList.toggle('active', tab === 'register');
   btabBracket.classList.toggle('active', tab === 'bracket');
