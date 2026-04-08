@@ -1744,7 +1744,7 @@ body.fs-mode #bracket-style-toggle {
 }
 .schedule-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   align-items: start;
 }
@@ -1864,7 +1864,7 @@ body.fs-mode #bracket-style-toggle {
   background: transparent !important;
 }
 .sched-side-name.left { text-align: right; }
-.sched-side-name.right { text-align: left; }
+.sched-side-name.right { text-align: left; display:block !important; visibility:visible !important; opacity:1 !important; }
 .sched-side-name .sched-name {
   display: block;
   width: 100%;
@@ -5397,7 +5397,7 @@ function renderSchedule() {
             </div>
 
             <div class="sched-side-name right">
-              <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
+              <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : '\u00A0'}</span>
             </div>
 
             <div class="sched-side-unit right" title="${p2Meta}">${p2MetaShort || ''}</div>
