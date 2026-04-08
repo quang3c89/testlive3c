@@ -1736,7 +1736,7 @@ body.fs-mode #bracket-style-toggle {
 /* ============ SCHEDULE COLUMNS ============ */
 .schedule-columns {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1580px;
   margin: 0 auto;
   overflow-y: auto;
   max-height: calc(100vh - 220px);
@@ -1744,12 +1744,9 @@ body.fs-mode #bracket-style-toggle {
 }
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   align-items: start;
-}
-@media (max-width: 1200px) {
-  .schedule-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
   .schedule-grid { grid-template-columns: 1fr; }
@@ -1839,11 +1836,11 @@ body.fs-mode #bracket-style-toggle {
 /* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
   display: grid;
-  grid-template-columns: minmax(56px, 0.75fr) minmax(120px, 1.5fr) 84px minmax(120px, 1.5fr) minmax(56px, 0.75fr);
+  grid-template-columns: minmax(90px, 0.95fr) minmax(260px, 2.5fr) 120px minmax(260px, 2.5fr) minmax(90px, 0.95fr);
   align-items: center;
-  column-gap: 6px;
-  padding: 4px 7px;
-  min-height: 38px;
+  column-gap: 10px;
+  padding: 6px 10px;
+  min-height: 44px;
 }
 
 .sched-side-unit {
@@ -2032,17 +2029,17 @@ body.fs-mode #bracket-style-toggle {
   .sched-match-num { font-size: 9px; letter-spacing: 1px; }
   .sched-match-status { font-size: 7px; }
   .sched-match-body {
-    grid-template-columns: minmax(44px, 0.68fr) minmax(104px, 1.55fr) 70px minmax(104px, 1.55fr) minmax(44px, 0.68fr);
-    column-gap: 4px;
+    grid-template-columns: minmax(52px, 0.7fr) minmax(132px, 1.8fr) 84px minmax(132px, 1.8fr) minmax(52px, 0.7fr);
+    column-gap: 5px;
     padding: 4px 6px;
   }
   .sched-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sched-name.name-sm { font-size: 11.5px; }
   .sched-name.name-xs { font-size: 11px; }
   .sched-side-unit { font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sched-center-pack { gap: 2px; min-width: 48px; }
-  .sched-vs-col { width: 28px; }
-  .sched-center-logo { width: 26px; height: 26px; }
+  .sched-center-pack { gap: 2px; min-width: 58px; }
+  .sched-vs-col { width: 32px; }
+  .sched-center-logo { width: 28px; height: 28px; }
   .tournament-bc-nav { display: none; }
   .tournament-bc-mobile { display: inline-flex !important; }
 }
