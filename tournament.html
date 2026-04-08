@@ -1839,7 +1839,7 @@ body.fs-mode #bracket-style-toggle {
 /* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
   display: grid;
-  grid-template-columns: minmax(72px, 0.9fr) minmax(120px, 1.6fr) auto minmax(120px, 1.6fr) minmax(72px, 0.9fr);
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.5fr) minmax(68px, auto) minmax(0, 1.5fr) minmax(0, 0.75fr);
   align-items: center;
   column-gap: 6px;
   padding: 4px 7px;
@@ -5392,8 +5392,8 @@ function renderSchedule() {
               </div>
             </div>
 
-            <div class="sched-side-name right">
-              <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
+            <div class="sched-side-name right" style="display:block !important; visibility:visible !important; opacity:1 !important;">
+              <span class="sched-name ${p2NameCls}" style="display:block !important; visibility:visible !important; opacity:1 !important;" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
 
             <div class="sched-side-unit right" title="${p2Meta}">${p2MetaShort || ''}</div>
