@@ -5351,18 +5351,36 @@ function renderSchedule() {
     };
     const p1NameCls = !hasP1 ? 'empty-name' : `left-name ${getNameSizeClass(p1?.name)}`;
     const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
+    const readUnitValue = (obj) => {
+      const candidates = [
+        obj?.unit,
+        obj?.donvi,
+        obj?.don_vi,
+        obj?.club,
+        obj?.clb,
+        obj?.organization,
+        obj?.org,
+      ];
+      for (const v of candidates) {
+        const s = String(v || '').trim();
+        if (s) return s;
+      }
+      return '';
+    };
+
     const getPlayerUnit = (pl) => {
-      const direct = (pl?.unit || '').trim();
+      const direct = readUnitValue(pl);
       if (direct) return direct;
       if (!Array.isArray(S.players) || !pl) return '';
 
       const byId = pl?.id ? S.players.find(x => x && x.id === pl.id) : null;
-      if ((byId?.unit || '').trim()) return (byId.unit || '').trim();
+      const byIdUnit = readUnitValue(byId);
+      if (byIdUnit) return byIdUnit;
 
       const n = String(pl?.name || '').trim().toLowerCase();
       if (!n) return '';
       const byName = S.players.find(x => String(x?.name || '').trim().toLowerCase() === n);
-      return (byName?.unit || '').trim();
+      return readUnitValue(byName);
     };
     const p1UnitText = getPlayerUnit(p1);
     const p2UnitText = getPlayerUnit(p2);
