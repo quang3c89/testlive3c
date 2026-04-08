@@ -2047,28 +2047,37 @@ body.fs-mode #bracket-style-toggle {
   .sched-match-num { font-size: 8px; letter-spacing: .8px; }
   .sched-match-status { font-size: 7px; }
   .sched-match-body {
-    grid-template-columns: minmax(34px, 0.5fr) minmax(108px, 1.7fr) 44px minmax(108px, 1.7fr) minmax(34px, 0.5fr);
-    column-gap: 3px;
-    padding: 4px 5px;
-    min-height: 40px;
+    grid-template-columns: minmax(0,1fr) 48px minmax(0,1fr);
+    grid-template-rows: auto auto;
+    column-gap: 4px;
+    row-gap: 2px;
+    padding: 5px 6px;
+    min-height: 46px;
+    align-items: center;
   }
-  .sched-name { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sched-name.name-sm { font-size: 10px; }
-  .sched-name.name-xs { font-size: 9.5px; }
+  .sched-side-name.left { grid-column: 1; grid-row: 1; text-align: left; }
+  .sched-side-unit.left { grid-column: 1; grid-row: 2; text-align: left; }
+  .sched-center-pack { grid-column: 2; grid-row: 1 / span 2; gap: 1px; min-width: 42px; justify-self: center; }
+  .sched-side-name.right { grid-column: 3; grid-row: 1; text-align: right !important; }
+  .sched-side-unit.right { grid-column: 3; grid-row: 2; text-align: right; }
+  .sched-player-inline.left { grid-column: 1 / -1; grid-row: 1 / span 2; }
+
+  .sched-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sched-name.name-sm { font-size: 10.5px; }
+  .sched-name.name-xs { font-size: 10px; }
   .sched-side-unit {
     display: block !important;
-    font-size: 7px;
-    line-height: 1.15;
+    font-size: 8px;
+    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     opacity: 0.95;
   }
-  .sched-center-pack { gap: 1px; min-width: 34px; }
   .sched-outcome-inline { gap: 1px; padding: 1px 2px; }
   .sched-score { min-width: 8px; font-size: 8px; height: 13px; padding: 0 2px; }
-  .sched-vs-col { width: 18px; }
-  .sched-center-logo { width: 16px; height: 16px; }
+  .sched-vs-col { width: 20px; }
+  .sched-center-logo { width: 17px; height: 17px; }
 
   .plist-left {
     grid-template-columns: repeat(2, minmax(0, 1fr));
