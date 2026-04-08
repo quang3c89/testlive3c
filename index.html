@@ -14,6 +14,36 @@
 <link rel="stylesheet" href="assets/css/animations.css">
 <link rel="stylesheet" href="assets/css/redesign.css">
 <link rel="stylesheet" href="assets/css/ux-refactor.css">
+<style>
+:root {
+  --bg-base: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-card-hover: #1e2130;
+  --bg-surface: #252836;
+  --accent: #6366f1;
+  --accent-soft: rgba(99,102,241,0.12);
+  --text-primary: #f1f2f6;
+  --text-secondary: #8b8fa8;
+  --text-muted: #4b4f6b;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.13);
+  --radius-card: 14px;
+  --radius-badge: 6px;
+  --transition: all 0.2s ease;
+}
+.site-nav { backdrop-filter: blur(12px); background: rgba(15,17,23,0.85); border-bottom: 1px solid var(--border); }
+.nav-status-dot-wrap { display:flex; align-items:center; }
+.nav-status-dot-wrap .status-dot { width:8px; height:8px; border-radius:50%; background:#4b4f6b; display:inline-block; }
+.hero { padding-top: 120px; padding-bottom: 120px; }
+.hero-cta.pri { background: var(--accent); border-radius: 10px; padding: 12px 28px; font-weight: 500; box-shadow: 0 0 32px rgba(99,102,241,0.25); }
+.hero-stats { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:12px; }
+.hero-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 20px 28px; }
+.hero-stat .val { font-size:32px; font-weight:600; color:var(--text-primary); }
+.hero-stat .lbl { font-size:13px; color:var(--text-secondary); margin-top:4px; }
+#tournaments .featured-card.featured-primary { border-left:3px solid var(--accent); background:var(--bg-card); }
+.sk-card { border-radius: var(--radius-card); overflow:hidden; background: linear-gradient(90deg, var(--bg-card), var(--bg-surface), var(--bg-card)); background-size: 200% 100%; animation: sk-shimmer 1.5s infinite linear; }
+@keyframes sk-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+</style>
 </head>
 <body>
 
@@ -35,9 +65,9 @@
   <span class="nav-spacer"></span>
   <a class="nav-link" href="tournaments.html">Giải đấu</a>
   <a class="nav-link" href="#contact">Liên hệ</a>
-  <div class="nav-status offline" id="nav-status"><span class="status-dot" id="rt-dot"></span><span id="rt-label">OFFLINE</span></div>
+  <div class="nav-status-dot-wrap" id="nav-status" title="Đang offline"><span class="status-dot" id="rt-dot"></span></div>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
-  <a class="nav-login nav-register" href="admin/login.html?mode=register">📝 Đăng kí</a>
+  <a class="nav-login nav-register" href="admin/login.html?mode=register">Đăng kí</a>
   <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Mở menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer-overlay" id="nav-drawer-overlay"></div>
@@ -81,40 +111,22 @@
       <span class="line2">3 Băng trực quan</span>
     </h1>
     <p class="hero-desc fade-up">Giao diện gọn, mượt và dễ theo dõi: lịch thi đấu, bracket, kết quả realtime cho cộng đồng Live3C.</p>
-    <div class="hero-actions fade-up">
-      <a class="hero-cta pri" href="tournaments.html">🏆 Xem giải đấu</a>
-      <a class="hero-cta sec" href="admin/create-tournament.html">➕ Tạo giải đấu</a>
+    <div class="hero-actions fade-up" id="hero-actions">
+      <a class="hero-cta pri" href="tournaments.html">Xem giải đấu</a>
     </div>
-    <div class="hero-stats fade-up" id="hero-stats">
-      <div class="hero-stat"><div class="val" id="stat-tournaments">—</div><div class="lbl">Giải đấu</div></div>
-      <div class="hero-stat"><div class="val" id="stat-ongoing">—</div><div class="lbl">Đang diễn ra</div></div>
-      <div class="hero-stat"><div class="val" id="stat-players">—</div><div class="lbl">Cơ thủ</div></div>
-    </div>
+    <div id="hero-stats-slot"></div>
   </div>
   <div class="scroll-hint"><span>SCROLL</span><div class="scroll-arrow"></div></div>
 </section>
 
-<section id="featured">
-  <div class="featured-inner">
-    <div class="section-label">Giải nổi bật</div>
-    <h2 class="section-h2">Đang diễn ra</h2>
-    <p class="section-sub">Theo dõi nhanh giải đấu tiêu điểm của cộng đồng Live3C.</p>
-    <div id="featured-area"></div>
-  </div>
-</section>
-
-<div id="tournaments">
-  <div class="section-label">Tất cả giải đấu</div>
-  <h2 class="section-h2">Danh sách giải</h2>
+<section id="tournaments">
+  <div class="section-label">Giải đấu</div>
+  <h2 class="section-h2">Giải đấu</h2>
   <div class="list-toolbar">
-    <div class="filter-tabs">
-      <button type="button" class="ftab active" data-filter="all">Tất cả</button>
-      <button type="button" class="ftab" data-filter="ongoing">Đang diễn ra</button>
-      <button type="button" class="ftab" data-filter="registration">Mở đăng ký</button>
-      <button type="button" class="ftab" data-filter="finished">Đã kết thúc</button>
-    </div>
+    <div class="filter-tabs" id="filter-tabs-slot"></div>
     <div class="list-spacer"></div>
   </div>
+  <div id="featured-area"></div>
   <div class="tourney-grid" id="tourney-grid">
     <div class="sk-card"><div class="skeleton sk-cover"></div><div class="sk-body"><div class="skeleton sk-title"></div><div class="skeleton sk-line" style="width:55%"></div><div class="skeleton sk-line" style="width:40%"></div></div></div>
     <div class="sk-card"><div class="skeleton sk-cover"></div><div class="sk-body"><div class="skeleton sk-title"></div><div class="skeleton sk-line" style="width:55%"></div><div class="skeleton sk-line" style="width:40%"></div></div></div>
@@ -123,7 +135,7 @@
   <div class="tourney-list-footer">
     <a href="tournaments.html" class="btn btn-sec">Xem tất cả giải đấu →</a>
   </div>
-</div>
+</section>
 
 <section id="contact">
   <div class="contact-inner">
@@ -204,6 +216,9 @@ const CONTACT_INFO = [
 const LANDING_CARD_LIMIT = 3;
 let allTournaments = [];
 let currentFilter = 'all';
+let fetchDone = false;
+let fetchSuccess = false;
+let isOnlineState = true;
 
 function getSampleData() {
   return [
@@ -315,10 +330,28 @@ function renderTournaments(list) {
   });
 }
 
-function updateStats(list) {
-  animCount('stat-tournaments', list.length);
-  animCount('stat-ongoing', list.filter(t => t.status === 'ongoing').length);
-  document.getElementById('stat-players').textContent = '∞';
+function renderHeroStats(list) {
+  const slot = document.getElementById('hero-stats-slot');
+  const tournaments = list.length;
+  const ongoing = list.filter(t => t.status === 'ongoing').length;
+  const players = list.reduce((sum, t) => sum + (Number(t.player_count) || 0), 0);
+  const ok = isOnlineState && tournaments > 0 && ongoing > 0 && players > 0;
+
+  if (!ok) {
+    slot.innerHTML = '';
+    return;
+  }
+
+  slot.innerHTML = `
+    <div class="hero-stats fade-up">
+      <div class="hero-stat"><div class="val" id="stat-tournaments"></div><div class="lbl">Giải đấu</div></div>
+      <div class="hero-stat"><div class="val" id="stat-ongoing"></div><div class="lbl">Đang diễn ra</div></div>
+      <div class="hero-stat"><div class="val" id="stat-players"></div><div class="lbl">Cơ thủ</div></div>
+    </div>`;
+
+  animCount('stat-tournaments', tournaments);
+  animCount('stat-ongoing', ongoing);
+  animCount('stat-players', players);
 }
 
 function animCount(id, target) {
@@ -338,13 +371,33 @@ function filterTourneys(filter, btn) {
   renderTournaments(allTournaments.length ? allTournaments : getSampleData());
 }
 
+function renderFilterTabs() {
+  const slot = document.getElementById('filter-tabs-slot');
+  if (!fetchDone || !fetchSuccess) {
+    slot.innerHTML = '';
+    return;
+  }
+
+  slot.innerHTML = `
+    <button type="button" class="ftab ${currentFilter==='all'?'active':''}" data-filter="all">Tất cả</button>
+    <button type="button" class="ftab ${currentFilter==='ongoing'?'active':''}" data-filter="ongoing">Đang diễn ra</button>
+    <button type="button" class="ftab ${currentFilter==='registration'?'active':''}" data-filter="registration">Mở đăng ký</button>
+    <button type="button" class="ftab ${currentFilter==='finished'?'active':''}" data-filter="finished">Đã kết thúc</button>`;
+
+  slot.querySelectorAll('.ftab').forEach(btn => {
+    btn.addEventListener('click', () => filterTourneys(btn.dataset.filter, btn));
+  });
+}
+
 async function loadTournaments() {
   const { baseUrl, apiKey } = resolveSupabaseClient();
   if (!baseUrl || !apiKey) {
     const sample = getSampleData();
     allTournaments = sample;
+    fetchDone = true; fetchSuccess = true; isOnlineState = false;
+    renderFilterTabs();
     renderTournaments(sample);
-    updateStats(sample);
+    renderHeroStats(sample);
     renderFeatured(sample);
     return;
   }
@@ -353,14 +406,18 @@ async function loadTournaments() {
     if (data && Array.isArray(data)) {
       allTournaments = data;
       setRT(true, { mode: 'landing' });
+      fetchDone = true; fetchSuccess = true; isOnlineState = true;
+      renderFilterTabs();
       renderTournaments(data);
-      updateStats(data);
+      renderHeroStats(data);
       renderFeatured(data);
     } else {
       const sample = getSampleData();
       allTournaments = sample;
+      fetchDone = true; fetchSuccess = true; isOnlineState = false;
+      renderFilterTabs();
       renderTournaments(sample);
-      updateStats(sample);
+      renderHeroStats(sample);
       renderFeatured(sample);
     }
   } catch (e) {
@@ -368,8 +425,10 @@ async function loadTournaments() {
     toast('⚠️ Không thể kết nối cloud — hiển thị dữ liệu mẫu', 'error');
     const sample = getSampleData();
     allTournaments = sample;
+    fetchDone = true; fetchSuccess = true; isOnlineState = false;
+    renderFilterTabs();
     renderTournaments(sample);
-    updateStats(sample);
+    renderHeroStats(sample);
     renderFeatured(sample);
   }
 }
@@ -395,9 +454,10 @@ async function init() {
     setTimeout(() => el.classList.add('in'), 600 + i * 120);
   });
 
-  document.querySelectorAll('.ftab').forEach(btn => {
-    btn.addEventListener('click', () => filterTourneys(btn.dataset.filter, btn));
-  });
+  const heroActions = document.getElementById('hero-actions');
+  if (isAdmin()) {
+    heroActions.insertAdjacentHTML('beforeend', `<a class="hero-cta sec" href="admin/create-tournament.html">Tạo giải đấu</a>`);
+  }
 
   await loadTournaments();
 
