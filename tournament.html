@@ -5348,10 +5348,16 @@ function renderSchedule() {
     };
     const p1NameCls = !hasP1 ? 'empty-name' : `left-name ${getNameSizeClass(p1?.name)}`;
     const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
-    const p1Meta = [p1?.unit, p1?.rank ? `H${p1.rank}` : ''].filter(Boolean).join(' · ');
-    const p2Meta = [p2?.unit, p2?.rank ? `H${p2.rank}` : ''].filter(Boolean).join(' · ');
-    const p1UnitText = (p1?.unit || '').trim();
-    const p2UnitText = (p2?.unit || '').trim();
+    const getPlayerUnit = (pl) => {
+      const direct = (pl?.unit || '').trim();
+      if (direct) return direct;
+      const byId = (pl?.id && Array.isArray(S.players)) ? S.players.find(x => x && x.id === pl.id) : null;
+      return (byId?.unit || '').trim();
+    };
+    const p1UnitText = getPlayerUnit(p1);
+    const p2UnitText = getPlayerUnit(p2);
+    const p1Meta = [p1UnitText, p1?.rank ? `H${p1.rank}` : ''].filter(Boolean).join(' · ');
+    const p2Meta = [p2UnitText, p2?.rank ? `H${p2.rank}` : ''].filter(Boolean).join(' · ');
     const p1MetaShort = p1Meta.length > 28 ? `${p1Meta.slice(0, 28)}…` : p1Meta;
     const p2MetaShort = p2Meta.length > 28 ? `${p2Meta.slice(0, 28)}…` : p2Meta;
     const isMobile = (typeof window !== 'undefined' ? window.innerWidth : 1024) <= 768;
