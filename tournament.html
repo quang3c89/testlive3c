@@ -1557,12 +1557,30 @@ body.fs-mode #bracket-style-toggle {
   flex-direction: column;
   overflow: hidden;
 }
+.register-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  margin-bottom: 10px;
+}
+.register-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--register-title-color, var(--label-contrast, #ffffff));
+  text-shadow: 0 0 10px color-mix(in srgb, var(--register-title-color, #fff) 24%, transparent);
+}
 #register-list {
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  padding: 2px;
+  padding: 8px 2px 2px;
 }
 .register-empty {
   display: grid;
@@ -2218,11 +2236,9 @@ body.fs-mode #bracket-style-toggle {
 
     <div id="register-panel">
       <div class="register-layout">
-        <div class="right-header">
-          <h3>Players</h3>
-          <div style="display:flex;gap:4px;">
-            <button class="export-btn" onclick="exportImage('register-panel','players')">📸</button>
-          </div>
+        <div class="register-header">
+          <div class="register-title">DANH SÁCH ĐĂNG KÍ</div>
+          <button class="export-btn" onclick="exportImage('register-panel','register-list')">📸</button>
         </div>
         <div id="register-list"></div>
       </div>
@@ -3082,6 +3098,7 @@ function applyBracketColorVars() {
   const contrast = pickContrast(primaryHex);
   root.style.setProperty('--label-contrast', contrast);
   root.style.setProperty('--list-contrast', contrast);
+  root.style.setProperty('--register-title-color', contrast);
 
   const bgLayer = document.getElementById('bracket-bg-layer');
   if (bgLayer) {
