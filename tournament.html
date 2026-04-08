@@ -1561,23 +1561,85 @@ body.fs-mode #bracket-style-toggle {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+  padding: 2px;
+}
+.register-empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border: 1px dashed color-mix(in srgb, var(--border) 74%, transparent);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.6px;
 }
 .register-cols {
   width: 100%;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
 .register-cols.one-col {
-  grid-template-columns: minmax(320px, 760px);
+  grid-template-columns: minmax(340px, 860px);
 }
 .register-cols.two-col {
-  grid-template-columns: repeat(2, minmax(280px, 420px));
+  grid-template-columns: repeat(2, minmax(320px, 470px));
 }
 .register-col {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+.register-item {
+  border: 1px solid color-mix(in srgb, var(--border) 74%, var(--accent) 26%);
+  border-radius: 12px;
+  background: linear-gradient(168deg, color-mix(in srgb, var(--card) 92%, #ffffff 8%), color-mix(in srgb, var(--card) 84%, #000 16%));
+  box-shadow: 0 6px 16px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  padding: 9px 10px;
+  display: grid;
+  align-items: center;
   gap: 8px;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  animation: registerFadeIn .26s ease both;
+}
+.register-item:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.07) inset;
+}
+.register-item.drawn { opacity: .5; filter: grayscale(42%); }
+.register-item.cols-2 { grid-template-columns: 56px 1fr; }
+.register-item.cols-3 { grid-template-columns: 56px 1fr minmax(70px,auto); }
+.register-item.cols-4 { grid-template-columns: 56px 1fr minmax(150px,1fr) minmax(70px,auto); }
+.register-item .f-stt,
+.register-item .f-rank {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  color: var(--list-contrast, #ffd447);
+  font-size: 13px;
+}
+.register-item .f-name {
+  font-weight: 800;
+  color: var(--list-contrast, var(--name-color));
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.register-item .f-unit {
+  color: var(--list-contrast, var(--unit-color));
+  font-style: italic;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@keyframes registerFadeIn {
+  from { opacity: 0; transform: translateY(6px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* When schedule is active, hide bracket */
@@ -2136,8 +2198,8 @@ body.fs-mode #bracket-style-toggle {
     <!-- Tab bar (chỉ hiện sau bốc thăm) -->
     <div class="bracket-tab-bar" id="bracket-tab-bar">
       <button class="btab" id="btab-register" onclick="switchBracketTab('register')" title="Danh sách đăng kí">👥</button>
-      <button class="btab active" id="btab-bracket" onclick="switchBracketTab('bracket')" title="Bracket">▦</button>
-      <button class="btab" id="btab-schedule" onclick="switchBracketTab('schedule')" title="Lịch thi đấu">☰</button>
+      <button class="btab" id="btab-bracket" onclick="switchBracketTab('bracket')" title="Bracket">▦</button>
+      <button class="btab active" id="btab-schedule" onclick="switchBracketTab('schedule')" title="Lịch thi đấu">☰</button>
       <span class="bracket-tab-spacer"></span>
       <button class="bracket-full-btn" id="bracket-style-toggle" onclick="toggleBracketStyleTools(event)" title="Tùy chỉnh bracket">⚙</button>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
@@ -2161,7 +2223,7 @@ body.fs-mode #bracket-style-toggle {
             <button class="export-btn" onclick="exportImage('register-panel','players')">📸</button>
           </div>
         </div>
-        <div id="register-list" class="overview-table"></div>
+        <div id="register-list"></div>
       </div>
     </div>
 
@@ -2182,18 +2244,6 @@ body.fs-mode #bracket-style-toggle {
     </div>
   </section>
 
-  <!-- RIGHT: OVERVIEW -->
-  <aside class="right" id="right-panel">
-    <div class="right-header">
-      <h3>Players</h3>
-      <div style="display:flex;gap:4px;">
-        <button class="export-btn" onclick="exportImage('right-panel','players')">📸</button>
-      </div>
-    </div>
-    <div class="overview-table" id="overview-table">
-      <div class="ot-head"><span>Số thứ tự · Tên Cơ Thủ</span><span>Hạng</span></div>
-    </div>
-  </aside>
 </main>
 
 <!-- MODALS -->
@@ -2873,6 +2923,7 @@ async function init() {
   setupTopBar();
   updateBcName();
   renderAll();
+  switchBracketTab('schedule');
 
   setSyncProgress(100);
   loadTxt.textContent = 'SẴN SÀNG';
@@ -3689,20 +3740,25 @@ function saveAndRender() {
 
 function getUndrawn() { return S.players.filter(p => !p.drawn); }
 
-let currentBracketTab = 'bracket';
+let currentBracketTab = 'schedule';
 
 function renderRegisterCards() {
   const table = document.getElementById('register-list');
   if (!table) return;
 
-  const total = S.players.length;
-  const useTwoCols = total > 32;
+  const players = Array.isArray(S.players) ? S.players : [];
+  const total = players.length;
 
   table.innerHTML = '';
-  table.classList.remove('register-grid');
-  table.style.display = '';
-  table.style.gridTemplateColumns = '';
-  table.style.gap = '';
+
+  if (!total) {
+    table.innerHTML = '<div class="register-empty">Chưa có danh sách đăng kí</div>';
+    return;
+  }
+
+  const hasAnyUnit = players.some(p => String(p.unit || '').trim() !== '');
+  const hasAnyRank = players.some(p => String(p.rank || '').trim() !== '');
+  const useTwoCols = total > 32;
 
   const colsWrap = document.createElement('div');
   colsWrap.className = `register-cols ${useTwoCols ? 'two-col' : 'one-col'}`;
@@ -3720,16 +3776,19 @@ function renderRegisterCards() {
 
   const splitAt = useTwoCols ? Math.ceil(total / 2) : total;
 
-  S.players.forEach((p, idx) => {
+  players.forEach((p, idx) => {
     const stt = p.stt || String(idx + 1);
+    const fields = ['stt', 'name'];
+    if (hasAnyUnit) fields.push('unit');
+    if (hasAnyRank) fields.push('rank');
+
     const card = document.createElement('div');
-    card.className = 'ot-row' + (p.drawn ? ' drawn' : '');
-    card.innerHTML = `
-      <span class="ot-stt">${stt}</span>
-      <span class="ot-name" title="${p.name}">${p.name}</span>
-      <span class="ot-unit">${p.unit || ''}</span>
-      <span class="ot-rank">${p.rank || ''}</span>
-    `;
+    card.className = `register-item cols-${fields.length}` + (p.drawn ? ' drawn' : '');
+
+    const nodes = [`<span class="f-stt">${stt}</span>`, `<span class="f-name" title="${p.name || ''}">${p.name || ''}</span>`];
+    if (hasAnyUnit) nodes.push(`<span class="f-unit" title="${p.unit || ''}">${p.unit || ''}</span>`);
+    if (hasAnyRank) nodes.push(`<span class="f-rank">${p.rank || ''}</span>`);
+    card.innerHTML = nodes.join('');
 
     if (!useTwoCols || idx < splitAt) leftCol.appendChild(card);
     else rightCol.appendChild(card);
@@ -3758,27 +3817,6 @@ function renderPlayers() {
   });
 
   renderRegisterCards();
-
-  const table = document.getElementById('overview-table');
-  if (!table) return;
-
-  table.classList.remove('register-grid');
-  table.style.display = '';
-  table.style.gridTemplateColumns = '';
-  table.style.gap = '';
-  table.innerHTML = '<div class="ot-head"><span>STT</span><span>Tên</span><span>Đơn vị</span><span>Hạng</span></div>';
-  S.players.forEach((p, idx) => {
-    const stt = p.stt || String(idx + 1);
-    const row = document.createElement('div');
-    row.className = 'ot-row' + (p.drawn ? ' drawn' : '');
-    row.innerHTML = `
-      <span class="ot-stt">${stt}</span>
-      <span class="ot-name" title="${p.name}">${p.name}</span>
-      <span class="ot-unit">${p.unit || ''}</span>
-      <span class="ot-rank">${p.rank || ''}</span>
-    `;
-    table.appendChild(row);
-  });
 }
 
 /* ================================================================
@@ -5156,7 +5194,6 @@ function switchBracketTab(tab) {
   const schedulePanel = document.getElementById('schedule-panel');
   const registerPanel = document.getElementById('register-panel');
   const centerPanel = document.getElementById('center-panel');
-  const rightPanel = document.getElementById('right-panel');
   const btabRegister = document.getElementById('btab-register');
   const btabBracket = document.getElementById('btab-bracket');
   const btabSchedule = document.getElementById('btab-schedule');
@@ -5171,7 +5208,6 @@ function switchBracketTab(tab) {
   btabSchedule.classList.toggle('active', tab === 'schedule');
 
   if (tab === 'register') {
-    rightPanel.style.display = 'none';
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
     schedulePanel.style.display = 'none';
@@ -5180,7 +5216,6 @@ function switchBracketTab(tab) {
     renderRegisterCards();
     applyMobileBracketOverview();
   } else if (tab === 'bracket') {
-    rightPanel.style.display = 'none';
     registerPanel.classList.remove('active');
     bracketContainer.style.display = '';
     schedulePanel.classList.remove('active');
@@ -5191,7 +5226,6 @@ function switchBracketTab(tab) {
       applyMobileBracketOverview();
     }, 80);
   } else {
-    rightPanel.style.display = 'none';
     registerPanel.classList.remove('active');
     bracketContainer.style.display = 'none';
     schedulePanel.classList.add('active');
