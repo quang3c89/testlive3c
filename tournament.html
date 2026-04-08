@@ -318,7 +318,7 @@ body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
 }
 
 /* ============ CENTER PANEL (BRACKET) ============ */
-.center { flex: 1; position: relative; overflow: auto; padding: 8px 0 12px; background: var(--bracket-bg, var(--bg)); isolation: isolate; }
+.center { flex: 1; position: relative; overflow-x: hidden; overflow-y: auto; padding: 8px 0 12px; background: var(--bracket-bg, var(--bg)); isolation: isolate; }
 .center-top-info {
   position: relative;
   z-index: 8;
@@ -1535,8 +1535,14 @@ body.fs-mode #bracket-style-toggle {
   background: rgba(0,0,0,.18);
   max-height: calc(100% - 70px);
   overflow: auto;
+  visibility: hidden;
+  pointer-events: none;
 }
-#register-panel.active { display: block; }
+#register-panel.active {
+  display: block;
+  visibility: visible;
+  pointer-events: auto;
+}
 #register-list {
   width: 100%;
 }
@@ -2490,6 +2496,13 @@ function setAdminMode(isAdminVal) {
   });
   const tools = document.getElementById('bracket-color-tools');
   if (tools) tools.style.display = isAdminVal ? 'flex' : 'none';
+
+  const registerPanel = document.getElementById('register-panel');
+  if (registerPanel && currentBracketTab !== 'register') {
+    registerPanel.classList.remove('active');
+    registerPanel.style.display = 'none';
+  }
+
   syncAdminEditButton();
 }
 
@@ -3645,6 +3658,9 @@ function saveAndRender() {
   renderPlayers();
   renderBracket();
   drawWheel();
+  if (currentBracketTab === 'schedule') {
+    renderSchedule();
+  }
 }
 
 function getUndrawn() { return S.players.filter(p => !p.drawn); }
