@@ -1847,6 +1847,7 @@ body.fs-mode #bracket-style-toggle {
 }
 
 .sched-side-unit {
+  display: block;
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
@@ -1857,6 +1858,9 @@ body.fs-mode #bracket-style-toggle {
   text-overflow: ellipsis;
   line-height: 1.2;
   min-width: 0;
+  width: 100%;
+  position: relative;
+  z-index: 2;
   background: transparent !important;
 }
 .sched-side-unit.left { text-align: left; }
@@ -5408,7 +5412,7 @@ function renderSchedule() {
               </div>
             </div>
           ` : `
-            <div class="sched-side-unit left" title="${p1Meta}">${p1MetaShort || ''}</div>
+            <div class="sched-side-unit left" title="${p1Meta}">${p1UnitText || '—'}</div>
 
             <div class="sched-side-name left">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
