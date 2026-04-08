@@ -1578,8 +1578,24 @@ body.fs-mode #bracket-style-toggle {
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px 2px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 58%, #ffffff 8%) rgba(255,255,255,0.08);
+}
+#register-list::-webkit-scrollbar { width: 10px; }
+#register-list::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+}
+#register-list::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 58%, #ffffff 8%);
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+#register-list::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 72%, #ffffff 10%);
 }
 .register-empty {
   display: grid;
