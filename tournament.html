@@ -5188,46 +5188,31 @@ function captureScheduleImage() {
   const wasScheduleTab = currentBracketTab === 'schedule';
   if (!wasScheduleTab) switchBracketTab('schedule');
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      html2canvas(panel, {
-        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
-        scale: 2,
-        useCORS: true
-      }).then(canvas => {
-        const a = document.createElement('a');
-        a.download = `live3c_schedule_${Date.now()}.png`;
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-        showToast('✅ Đã chụp lịch thi đấu', 'success');
-      }).catch(err => showToast('❌ Chụp lịch thi đấu thất bại: ' + err.message, 'error'));
-    });
-  });
+  setTimeout(async () => {
+    try {
+      await exportImage('schedule-panel', 'schedule');
+      showToast('✅ Đã chụp lịch thi đấu', 'success');
+    } catch (err) {
+      showToast('❌ Chụp lịch thi đấu thất bại: ' + err.message, 'error');
+    }
+  }, 120);
 }
 
 function captureRegisterImage() {
   const panel = document.getElementById('register-panel');
-  const list = document.getElementById('register-list');
-  if (!panel || !list) return;
+  if (!panel) return;
 
   const wasRegisterTab = currentBracketTab === 'register';
   if (!wasRegisterTab) switchBracketTab('register');
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      html2canvas(panel, {
-        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
-        scale: 2,
-        useCORS: true
-      }).then(canvas => {
-        const a = document.createElement('a');
-        a.download = `live3c_register_${Date.now()}.png`;
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-        showToast('✅ Đã chụp danh sách đăng kí', 'success');
-      }).catch(err => showToast('❌ Chụp danh sách đăng kí thất bại: ' + err.message, 'error'));
-    });
-  });
+  setTimeout(async () => {
+    try {
+      await exportImage('register-panel', 'register');
+      showToast('✅ Đã chụp danh sách đăng kí', 'success');
+    } catch (err) {
+      showToast('❌ Chụp danh sách đăng kí thất bại: ' + err.message, 'error');
+    }
+  }, 120);
 }
 
 function toggleBracketFullscreen() {
