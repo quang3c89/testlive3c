@@ -5137,7 +5137,7 @@ function downloadTemplate() {
    ================================================================ */
 async function exportImage(elementId, filename) {
   const el = document.getElementById(elementId);
-  if (!el) return;
+  if (!el) throw new Error('Không tìm thấy vùng cần chụp');
 
   const isBracketShot = elementId === 'center-panel' || elementId === 'bracket-container';
 
@@ -5176,8 +5176,7 @@ async function exportImage(elementId, filename) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-  } catch (err) {
-    showToast('❌ Export thất bại: ' + err.message, 'error');
+    return true;
   } finally {
     if (isBracketShot) document.body.classList.remove('export-static');
   }
@@ -5195,7 +5194,7 @@ function captureScheduleImage() {
       await exportImage('schedule-panel', 'schedule');
       showToast('✅ Đã chụp lịch thi đấu', 'success');
     } catch (err) {
-      showToast('❌ Chụp lịch thi đấu thất bại: ' + err.message, 'error');
+      showToast('❌ Chụp lịch thi đấu thất bại: ' + (err?.message || err), 'error');
     }
   }, 120);
 }
@@ -5212,7 +5211,7 @@ function captureRegisterImage() {
       await exportImage('register-panel', 'register');
       showToast('✅ Đã chụp danh sách đăng kí', 'success');
     } catch (err) {
-      showToast('❌ Chụp danh sách đăng kí thất bại: ' + err.message, 'error');
+      showToast('❌ Chụp danh sách đăng kí thất bại: ' + (err?.message || err), 'error');
     }
   }, 120);
 }
