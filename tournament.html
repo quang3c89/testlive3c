@@ -5354,8 +5354,15 @@ function renderSchedule() {
     const getPlayerUnit = (pl) => {
       const direct = (pl?.unit || '').trim();
       if (direct) return direct;
-      const byId = (pl?.id && Array.isArray(S.players)) ? S.players.find(x => x && x.id === pl.id) : null;
-      return (byId?.unit || '').trim();
+      if (!Array.isArray(S.players) || !pl) return '';
+
+      const byId = pl?.id ? S.players.find(x => x && x.id === pl.id) : null;
+      if ((byId?.unit || '').trim()) return (byId.unit || '').trim();
+
+      const n = String(pl?.name || '').trim().toLowerCase();
+      if (!n) return '';
+      const byName = S.players.find(x => String(x?.name || '').trim().toLowerCase() === n);
+      return (byName?.unit || '').trim();
     };
     const p1UnitText = getPlayerUnit(p1);
     const p2UnitText = getPlayerUnit(p2);
