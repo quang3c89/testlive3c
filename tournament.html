@@ -1514,6 +1514,43 @@ body.fs-mode #bracket-style-toggle {
 }
 #schedule-panel.active { display: block; }
 
+#register-panel {
+  display: none;
+  position: absolute;
+  z-index: 9;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 24px), 980px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(0,0,0,.18);
+  max-height: calc(100% - 70px);
+  overflow: auto;
+}
+#register-panel.active { display: block; }
+#register-list {
+  width: 100%;
+}
+.register-cols {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+}
+.register-cols.one-col {
+  grid-template-columns: minmax(320px, 760px);
+}
+.register-cols.two-col {
+  grid-template-columns: repeat(2, minmax(280px, 420px));
+}
+.register-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* When schedule is active, hide bracket */
 .center.schedule-active #bracket-container { display: none; }
 .center.schedule-active .bracket-tab-bar { background: transparent; }
@@ -2086,6 +2123,10 @@ body.fs-mode #bracket-style-toggle {
       <div class="bct-item" data-k="unitColor"><button class="bct-btn" type="button" title="Màu đơn vị trên bracket" onclick="toggleBracketColorPicker(event, 'unitColor')">U</button><input class="bct-picker" id="bct-unitColor" type="color" value="#5b4a16" oninput="setBracketColor('unitColor', this.value)"></div>
     </div>
     <div id="fs-draw-stage"></div>
+
+    <div id="register-panel">
+      <div id="register-list" class="overview-table"></div>
+    </div>
 
     <div class="bracket-wrap" id="bracket-container">
       <div id="sponsor-stage" class="sponsor-stage"></div>
@@ -3604,14 +3645,33 @@ function getUndrawn() { return S.players.filter(p => !p.drawn); }
 let currentBracketTab = 'bracket';
 
 function renderRegisterCards() {
-  const table = document.getElementById('overview-table');
+  const table = document.getElementById('register-list');
   if (!table) return;
-  const useTwoCols = S.players.length > 16;
+
+  const total = S.players.length;
+  const useTwoCols = total > 32;
+
   table.innerHTML = '';
-  table.classList.add('register-grid');
-  table.style.display = 'grid';
-  table.style.gridTemplateColumns = useTwoCols ? '1fr 1fr' : '1fr';
-  table.style.gap = '8px';
+  table.classList.remove('register-grid');
+  table.style.display = '';
+  table.style.gridTemplateColumns = '';
+  table.style.gap = '';
+
+  const colsWrap = document.createElement('div');
+  colsWrap.className = `register-cols ${useTwoCols ? 'two-col' : 'one-col'}`;
+
+  const leftCol = document.createElement('div');
+  leftCol.className = 'register-col';
+  colsWrap.appendChild(leftCol);
+
+  let rightCol = null;
+  if (useTwoCols) {
+    rightCol = document.createElement('div');
+    rightCol.className = 'register-col';
+    colsWrap.appendChild(rightCol);
+  }
+
+  const splitAt = useTwoCols ? Math.ceil(total / 2) : total;
 
   S.players.forEach((p, idx) => {
     const stt = p.stt || String(idx + 1);
@@ -3623,8 +3683,12 @@ function renderRegisterCards() {
       <span class="ot-unit">${p.unit || ''}</span>
       <span class="ot-rank">${p.rank || ''}</span>
     `;
-    table.appendChild(card);
+
+    if (!useTwoCols || idx < splitAt) leftCol.appendChild(card);
+    else rightCol.appendChild(card);
   });
+
+  table.appendChild(colsWrap);
 }
 
 function renderPlayers() {
@@ -4209,13 +4273,7 @@ function commitPlayer(player, slot) {
   renderBracket();
   renderPlayers();
   if (currentBracketTab === 'register') {
-    const table = document.getElementById('overview-table');
-    if (table) {
-      const useTwoCols = S.players.length > 16;
-      table.style.display = 'grid';
-      table.style.gridTemplateColumns = useTwoCols ? '1fr 1fr' : '1fr';
-      table.style.gap = '8px';
-    }
+    renderRegisterCards();
   }
   drawWheel();
   saveState();
@@ -5048,33 +5106,31 @@ function switchBracketTab(tab) {
   currentBracketTab = tab;
   const bracketContainer = document.getElementById('bracket-container');
   const schedulePanel = document.getElementById('schedule-panel');
+  const registerPanel = document.getElementById('register-panel');
   const centerPanel = document.getElementById('center-panel');
   const rightPanel = document.getElementById('right-panel');
   const btabRegister = document.getElementById('btab-register');
   const btabBracket = document.getElementById('btab-bracket');
   const btabSchedule = document.getElementById('btab-schedule');
 
-  if (!bracketContainer || !schedulePanel || !centerPanel || !rightPanel || !btabBracket || !btabSchedule || !btabRegister) return;
+  if (!bracketContainer || !schedulePanel || !registerPanel || !centerPanel || !rightPanel || !btabBracket || !btabSchedule || !btabRegister) return;
 
   btabRegister.classList.toggle('active', tab === 'register');
   btabBracket.classList.toggle('active', tab === 'bracket');
   btabSchedule.classList.toggle('active', tab === 'schedule');
 
   if (tab === 'register') {
+    rightPanel.style.display = 'none';
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
     schedulePanel.style.display = 'none';
+    registerPanel.classList.add('active');
     centerPanel.classList.remove('schedule-active');
-    rightPanel.style.display = 'flex';
-    const table = document.getElementById('overview-table');
-    if (table) {
-      const useTwoCols = S.players.length > 16;
-      table.style.display = 'grid';
-      table.style.gridTemplateColumns = useTwoCols ? '1fr 1fr' : '1fr';
-      table.style.gap = '8px';
-    }
+    renderRegisterCards();
+    applyMobileBracketOverview();
   } else if (tab === 'bracket') {
     rightPanel.style.display = 'none';
+    registerPanel.classList.remove('active');
     bracketContainer.style.display = '';
     schedulePanel.classList.remove('active');
     schedulePanel.style.display = 'none';
@@ -5085,6 +5141,7 @@ function switchBracketTab(tab) {
     }, 80);
   } else {
     rightPanel.style.display = 'none';
+    registerPanel.classList.remove('active');
     bracketContainer.style.display = 'none';
     schedulePanel.classList.add('active');
     schedulePanel.style.display = 'block';
