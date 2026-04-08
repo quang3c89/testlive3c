@@ -2575,7 +2575,6 @@ function setAdminMode(isAdminVal) {
   const registerPanel = document.getElementById('register-panel');
   if (registerPanel && currentBracketTab !== 'register') {
     registerPanel.classList.remove('active');
-    registerPanel.style.display = 'none';
   }
 
   syncAdminEditButton();
