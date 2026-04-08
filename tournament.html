@@ -2244,7 +2244,7 @@ body.fs-mode #bracket-style-toggle {
       <div class="register-layout">
         <div class="register-header">
           <div class="register-title">DANH SÁCH ĐĂNG KÍ</div>
-          <button class="export-btn" onclick="exportImage('register-panel','register-list')">📸</button>
+          <button class="export-btn" onclick="captureRegisterImage()">📸</button>
         </div>
         <div id="register-list"></div>
       </div>
@@ -5075,6 +5075,21 @@ function captureScheduleImage() {
     a.href = canvas.toDataURL('image/png');
     a.click();
   }).catch(err => showToast('❌ Chụp lịch thi đấu thất bại: ' + err.message, 'error'));
+}
+
+function captureRegisterImage() {
+  const panel = document.getElementById('register-list');
+  if (!panel) return;
+  html2canvas(panel, {
+    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+    scale: 2,
+    useCORS: true
+  }).then(canvas => {
+    const a = document.createElement('a');
+    a.download = `live3c_register_${Date.now()}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }).catch(err => showToast('❌ Chụp danh sách đăng kí thất bại: ' + err.message, 'error'));
 }
 
 function toggleBracketFullscreen() {
