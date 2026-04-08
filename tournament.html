@@ -2576,7 +2576,13 @@ const redoStack = [];
 const MAX_HISTORY = 30;
 
 function pushHistory() {
-  undoStack.push(JSON.stringify(S));
+  const snapshot = JSON.stringify(S);
+  const last = undoStack.length ? undoStack[undoStack.length - 1] : null;
+  if (snapshot === last) {
+    updateUndoRedoUI();
+    return;
+  }
+  undoStack.push(snapshot);
   if (undoStack.length > MAX_HISTORY) undoStack.shift();
   redoStack.length = 0;
   updateUndoRedoUI();
