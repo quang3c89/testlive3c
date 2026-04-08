@@ -5324,9 +5324,7 @@ function renderSchedule() {
   if (subtitle) subtitle.textContent = '';
 
   function getScheduleOrder() {
-    const ordered = [];
     const playable = [];
-    const waiting = [];
 
     bracket.forEach((round, rIdx) => {
       const half = Math.floor(round.length / 2);
@@ -5338,12 +5336,10 @@ function renderSchedule() {
         const p1Real = !!it.m?.p1 && !it.m.p1.isBye;
         const p2Real = !!it.m?.p2 && !it.m.p2.isBye;
         if (p1Real && p2Real) playable.push(it);
-        else if (p1Real || p2Real) waiting.push(it);
       });
     });
 
-    ordered.push(...playable, ...waiting);
-    return ordered;
+    return playable;
   }
 
   // Build match card HTML
