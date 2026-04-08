@@ -5350,6 +5350,8 @@ function renderSchedule() {
     const p2NameCls = !hasP2 ? 'empty-name' : `right-name ${getNameSizeClass(p2?.name)}`;
     const p1Meta = [p1?.unit, p1?.rank ? `H${p1.rank}` : ''].filter(Boolean).join(' · ');
     const p2Meta = [p2?.unit, p2?.rank ? `H${p2.rank}` : ''].filter(Boolean).join(' · ');
+    const p1UnitText = (p1?.unit || '').trim();
+    const p2UnitText = (p2?.unit || '').trim();
     const p1MetaShort = p1Meta.length > 28 ? `${p1Meta.slice(0, 28)}…` : p1Meta;
     const p2MetaShort = p2Meta.length > 28 ? `${p2Meta.slice(0, 28)}…` : p2Meta;
     const isMobile = (typeof window !== 'undefined' ? window.innerWidth : 1024) <= 768;
@@ -5400,7 +5402,7 @@ function renderSchedule() {
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : '\u00A0'}</span>
             </div>
 
-            <div class="sched-side-unit right" title="${p2Meta}">${p2MetaShort || ''}</div>
+            <div class="sched-side-unit right" title="${p2Meta}">${p2UnitText || p2MetaShort || '—'}</div>
           `}
         </div>
       </div>`;
