@@ -7,7 +7,7 @@
 <meta property="og:title" content="Live3C">
 <meta property="og:image" content="/assets/og-image.jpg">
 <title>Giải đấu — Live3C</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/variables.css">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/components.css">
@@ -15,6 +15,177 @@
 <link rel="stylesheet" href="assets/css/tournaments.css">
 <link rel="stylesheet" href="assets/css/redesign.css">
 <link rel="stylesheet" href="assets/css/ux-refactor.css">
+<style>
+:root {
+  --bg: #f5f4f0;
+  --bg-card: #ffffff;
+  --bg-muted: #f0efe9;
+  --accent: #5b5bd6;
+  --accent-soft: rgba(91,91,214,0.08);
+  --accent-border: rgba(91,91,214,0.25);
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b6b80;
+  --text-muted: #a0a0b0;
+  --border: rgba(0,0,0,0.07);
+  --border-hover: rgba(0,0,0,0.13);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-badge: 20px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.site-nav {
+  background: rgba(245,244,240,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+  padding: 0 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.nav-logo { font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.nav-link { font-size: 14px; color: var(--text-secondary); transition: color .15s ease; }
+.nav-link:hover { color: var(--text-primary); }
+.nav-login {
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  font-size: 14px;
+}
+.nav-register {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  font-size: 14px;
+  border: none;
+}
+.nav-status-dot-wrap { display: flex; align-items: center; }
+.nav-status-dot-wrap .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d1db; display: inline-block; }
+
+.tournaments-header {
+  padding: 48px 32px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.page-title { font-size: 26px; font-weight: 700; }
+.page-sub { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+
+.tournaments-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+}
+
+.filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.filter-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-badge);
+  padding: 6px 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.filter-tab.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  font-weight: 500;
+}
+.filter-search {
+  width: 100%;
+  max-width: 320px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-size: 14px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.filter-search:focus {
+  outline: none;
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.tournament-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .tournament-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .tournament-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.sk-card {
+  background: linear-gradient(90deg, var(--bg-muted) 25%, #e8e7e1 50%, var(--bg-muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius);
+  height: 120px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.tournament-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  transition: .2s;
+}
+.tournament-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+.tc-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.tc-meta .tc-row { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.featured-cover-badge { border-radius: var(--radius-badge); padding: 4px 12px; font-size: 12px; font-weight: 500; }
+.badge-ongoing { background: #e8f5e9; color: #2e7d32; }
+.badge-open { background: #fff8e1; color: #f57f17; }
+.badge-done { background: var(--bg-muted); color: var(--text-muted); }
+
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+footer.footer-lite {
+  border-top: 1px solid var(--border);
+  padding: 24px 32px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+</style>
 </head>
 <body class="page-tournaments">
 
@@ -30,9 +201,9 @@
   <span class="nav-spacer"></span>
   <a class="nav-link active" href="tournaments.html" aria-current="page">Giải đấu</a>
   <a class="nav-link" href="index.html#contact">Liên hệ</a>
-  <div class="nav-status offline" id="nav-status"><span class="status-dot" id="rt-dot"></span><span id="rt-label">OFFLINE</span></div>
+  <div class="nav-status-dot-wrap" id="nav-status" title="Offline"><span class="status-dot" id="rt-dot"></span></div>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
-  <a class="nav-login nav-register" href="admin/login.html?mode=register">📝 Đăng kí</a>
+  <a class="nav-login nav-register" href="admin/login.html?mode=register">Đăng kí</a>
   <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Mở menu"><span></span><span></span><span></span></button>
 </nav>
 <div class="nav-drawer-overlay" id="nav-drawer-overlay"></div>
@@ -152,7 +323,7 @@ function render() {
   const admin = isAdmin();
 
   if (filtered.length === 0) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏆</div><div class="empty-title">Không có giải đấu phù hợp</div><div class="empty-sub">Thử đổi bộ lọc hoặc từ khóa tìm kiếm.</div></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-title">Không có giải đấu nào</div></div>`;
     loadMoreBtn.hidden = true;
     return;
   }

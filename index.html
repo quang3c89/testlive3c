@@ -7,7 +7,7 @@
 <meta property="og:title" content="Live3C">
 <meta property="og:image" content="/assets/og-image.jpg">
 <title>Live3C — Billiards Carom 3 Băng</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/variables.css">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/components.css">
@@ -16,114 +16,246 @@
 <link rel="stylesheet" href="assets/css/ux-refactor.css">
 <style>
 :root {
-  --bg-base: #0f1117;
-  --bg-card: #1a1d27;
-  --bg-card-hover: #1e2130;
-  --bg-surface: #252836;
-  --accent: #6366f1;
-  --accent-soft: rgba(99,102,241,0.12);
-  --text-primary: #f1f2f6;
-  --text-secondary: #8b8fa8;
-  --text-muted: #4b4f6b;
-  --border: rgba(255,255,255,0.07);
-  --border-hover: rgba(255,255,255,0.13);
-  --radius-card: 14px;
-  --radius-badge: 6px;
-  --transition: all 0.2s ease;
+  --bg: #f5f4f0;
+  --bg-card: #ffffff;
+  --bg-muted: #f0efe9;
+  --accent: #5b5bd6;
+  --accent-soft: rgba(91,91,214,0.08);
+  --accent-border: rgba(91,91,214,0.25);
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b6b80;
+  --text-muted: #a0a0b0;
+  --border: rgba(0,0,0,0.07);
+  --border-hover: rgba(0,0,0,0.13);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-badge: 20px;
 }
 
-html, body {
-  font-family: 'Inter', sans-serif !important;
-  background: var(--bg-base) !important;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
   color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 .site-nav {
-  backdrop-filter: blur(12px);
-  background: rgba(15,17,23,0.9);
+  background: rgba(245,244,240,0.85);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+  padding: 0 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-
-.nav-status-dot-wrap {
-  display:flex;
-  align-items:center;
+.nav-logo { font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.nav-link { font-size: 14px; color: var(--text-secondary); transition: color .15s ease; }
+.nav-link:hover { color: var(--text-primary); }
+.nav-login {
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  font-size: 14px;
 }
-.nav-status-dot-wrap .status-dot {
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:#4b4f6b;
-  display:inline-block;
+.nav-register {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  font-size: 14px;
+  border: none;
 }
+.nav-status-dot-wrap { display: flex; align-items: center; }
+.nav-status-dot-wrap .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d1db; display: inline-block; }
 
 .hero {
-  padding-top: 100px;
-  padding-bottom: 100px;
-}
-.hero-content {
-  width: 100%;
+  padding: 80px 32px 64px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
-  box-sizing: border-box;
+}
+.hero-layout {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+  align-items: start;
+}
+.hero-tag {
+  display: inline-flex;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: var(--radius-badge);
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 500;
 }
 .hero-h1 {
-  font-size: 40px;
-  font-weight: 600;
-  text-transform: none !important;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-top: 16px;
 }
 .hero-desc {
   font-size: 16px;
-  color: #8b8fa8;
+  color: var(--text-secondary);
+  margin-top: 12px;
+  max-width: 480px;
 }
 .hero-cta.pri {
-  background: #6366f1;
-  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius-sm);
   padding: 12px 28px;
+  font-size: 15px;
   font-weight: 500;
-  box-shadow: 0 0 32px rgba(99,102,241,0.25);
+  margin-top: 28px;
+  box-shadow: 0 4px 14px rgba(91,91,214,0.3);
 }
+.hero-right { min-width: 0; }
 
-#tournaments,
-#contact,
-footer {
-  width: 100%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 24px;
-  padding-right: 24px;
-  box-sizing: border-box;
+.hero-stats {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
 }
-
-.section-h2 {
-  font-weight: 600;
-  text-transform: none !important;
-}
-
-.hero-stats { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:12px; }
 .hero-stat {
-  background: #1a1d27;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 14px;
-  padding: 20px 28px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
 }
-.hero-stat .val { font-size:32px; font-weight:600; color:#f1f2f6; }
-.hero-stat .lbl { font-size:13px; color:#8b8fa8; margin-top:4px; }
+.hero-stat:last-child { border-bottom: none; }
+.hero-stat .val { font-size: 28px; font-weight: 700; color: var(--accent); }
+.hero-stat .lbl { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
 
-#tournaments .featured-card.featured-primary {
-  border-left: 3px solid #6366f1;
-  background: #1a1d27;
+#tournaments {
+  padding: 0 32px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+#tournaments .section-h2 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+.filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.ftab {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-badge);
+  padding: 6px 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.ftab.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.tourney-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .tourney-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .tourney-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .sk-card {
-  border-radius: 14px;
-  overflow:hidden;
-  background: linear-gradient(90deg, #1a1d27, #252836, #1a1d27);
+  background: linear-gradient(90deg, var(--bg-muted) 25%, #e8e7e1 50%, var(--bg-muted) 75%);
   background-size: 200% 100%;
-  animation: sk-shimmer 1.5s infinite linear;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius);
+  height: 120px;
 }
-@keyframes sk-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.tourney-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 24px;
+  transition: .2s;
+}
+.tourney-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+#featured-area:empty { display: none; }
+#tournaments .featured-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+#tournaments .featured-card.featured-primary,
+#tournaments .featured-card:has(.badge-ongoing) {
+  border-left: 3px solid var(--accent);
+}
+
+.empty-state {
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 48px 0;
+}
+
+#contact {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 32px;
+  max-width: 600px;
+  margin: 0 auto 80px;
+}
+#contact .section-h2 { font-size: 18px; font-weight: 600; }
+#contact .contact-desc { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+.contact-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cc-label { font-size: 12px; color: var(--text-muted); }
+.cc-val { font-size: 14px; font-weight: 500; }
+
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 32px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .hero-layout { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+}
 </style>
 </head>
 <body>
@@ -146,7 +278,7 @@ footer {
   <span class="nav-spacer"></span>
   <a class="nav-link" href="tournaments.html">Giải đấu</a>
   <a class="nav-link" href="#contact">Liên hệ</a>
-  <div class="nav-status-dot-wrap" id="nav-status" title="Đang offline"><span class="status-dot" id="rt-dot"></span></div>
+  <div class="nav-status-dot-wrap" id="nav-status" title="Offline"><span class="status-dot" id="rt-dot"></span></div>
   <a class="nav-login" href="admin/login.html">Đăng nhập</a>
   <a class="nav-login nav-register" href="admin/login.html?mode=register">Đăng kí</a>
   <button class="nav-menu-btn" id="nav-menu-btn" aria-label="Mở menu"><span></span><span></span><span></span></button>
@@ -160,44 +292,19 @@ footer {
 </aside>
 
 <section class="hero" id="home">
-  <div class="hero-bg"></div>
-
-  <svg class="hero-deco" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
-    <rect x="40" y="40" width="520" height="320" rx="28" fill="none" stroke="#f0a500" stroke-width="8"/>
-    <rect x="70" y="70" width="460" height="260" rx="12" fill="none" stroke="#f0a500" stroke-width="3"/>
-    <line x1="300" y1="70" x2="300" y2="330" stroke="#f0a500" stroke-width="2" stroke-dasharray="6 4"/>
-    <circle cx="300" cy="200" r="30" fill="none" stroke="#f0a500" stroke-width="2"/>
-    <circle cx="40" cy="40" r="14" fill="#f0a500"/>
-    <circle cx="560" cy="40" r="14" fill="#f0a500"/>
-    <circle cx="40" cy="360" r="14" fill="#f0a500"/>
-    <circle cx="560" cy="360" r="14" fill="#f0a500"/>
-    <circle cx="300" cy="40" r="10" fill="#f0a500"/>
-    <circle cx="300" cy="360" r="10" fill="#f0a500"/>
-    <circle cx="40" cy="200" r="10" fill="#f0a500"/>
-    <circle cx="560" cy="200" r="10" fill="#f0a500"/>
-    <circle cx="200" cy="170" r="20" fill="#f0a500"/>
-    <circle cx="380" cy="230" r="20" fill="#e05a2b"/>
-    <circle cx="310" cy="200" r="20" fill="none" stroke="#f0a500" stroke-width="4"/>
-  </svg>
-
-  <div class="hero-content">
-    <div class="brand-row fade-up">
-      <img class="brand-logo-img" src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/logo.png" alt="Live3C logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="brand-logo-fallback" style="display:none;">3C</div>
-      <div class="brand-wordmark"><span class="b-red">live</span><span class="b-white">3c</span><span class="b-yellow">.xyz</span></div>
+  <div class="hero-content hero-layout">
+    <div class="hero-left">
+      <div class="hero-tag fade-up">Billiards Carom 3 Băng</div>
+      <h1 class="hero-h1 fade-up">Quản lý giải đấu chuyên nghiệp</h1>
+      <p class="hero-desc fade-up">Giao diện gọn, mượt và dễ theo dõi: lịch thi đấu, bracket, kết quả realtime cho cộng đồng Live3C.</p>
+      <div class="hero-actions fade-up" id="hero-actions">
+        <a class="hero-cta pri" href="tournaments.html">Xem giải đấu</a>
+      </div>
     </div>
-    <div class="hero-badge fade-up"><span class="dot"></span>Nền tảng quản lý giải đấu</div>
-    <h1 class="hero-h1 fade-up">
-      <span class="line1">Giải đấu Carom</span>
-      <span class="line2">3 Băng trực quan</span>
-    </h1>
-    <p class="hero-desc fade-up">Giao diện gọn, mượt và dễ theo dõi: lịch thi đấu, bracket, kết quả realtime cho cộng đồng Live3C.</p>
-    <div class="hero-actions fade-up" id="hero-actions">
-      <a class="hero-cta pri" href="tournaments.html">Xem giải đấu</a>
+    <div class="hero-right" id="hero-right">
+      <div id="hero-stats-slot"></div>
     </div>
-    <div id="hero-stats-slot"></div>
   </div>
-  <div class="scroll-hint"><span>SCROLL</span><div class="scroll-arrow"></div></div>
 </section>
 
 <section id="tournaments">
