@@ -5173,7 +5173,9 @@ async function exportImage(elementId, filename) {
     const a = document.createElement('a');
     a.download = `live3c_${filename}_${Date.now()}.png`;
     a.href = canvas.toDataURL('image/png');
+    document.body.appendChild(a);
     a.click();
+    a.remove();
   } catch (err) {
     showToast('❌ Export thất bại: ' + err.message, 'error');
   } finally {
