@@ -5313,8 +5313,15 @@ function renderSchedule() {
     const ordered = [];
     bracket.forEach((round, rIdx) => {
       const half = Math.floor(round.length / 2);
-      for (let mi = 0; mi < half; mi++) if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
-      for (let mi = half; mi < round.length; mi++) if (round[mi]) ordered.push({ m: round[mi], rIdx, mIdx: mi });
+      const pushIfPlayable = (mi) => {
+        const m = round[mi];
+        if (!m) return;
+        const p1Real = !!m?.p1 && !m.p1.isBye;
+        const p2Real = !!m?.p2 && !m.p2.isBye;
+        if (p1Real && p2Real) ordered.push({ m, rIdx, mIdx: mi });
+      };
+      for (let mi = 0; mi < half; mi++) pushIfPlayable(mi);
+      for (let mi = half; mi < round.length; mi++) pushIfPlayable(mi);
     });
     return ordered;
   }
@@ -5376,7 +5383,7 @@ function renderSchedule() {
 
             <div class="sched-center-pack">
               <div class="sched-outcome-inline">
-                ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : ''}
+                ${hasScore1 ? `<span class="sched-score ${p1ScoreClass}">${m.s1}</span>` : '<span class="sched-score">—</span>'}
                 ${p1IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
                 ${p1IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
               </div>
@@ -5388,12 +5395,12 @@ function renderSchedule() {
               <div class="sched-outcome-inline">
                 ${p2IsLoser ? `<span class="sched-loser-badge">${loseTxt}</span>` : ''}
                 ${p2IsWinner ? `<span class="sched-winner-badge">${winTxt}</span>` : ''}
-                ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : ''}
+                ${hasScore2 ? `<span class="sched-score ${p2ScoreClass}">${m.s2}</span>` : '<span class="sched-score">—</span>'}
               </div>
             </div>
 
-            <div class="sched-side-name right" style="display:block !important; visibility:visible !important; opacity:1 !important;">
-              <span class="sched-name ${p2NameCls}" style="display:block !important; visibility:visible !important; opacity:1 !important;" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
+            <div class="sched-side-name right">
+              <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
 
             <div class="sched-side-unit right" title="${p2Meta}">${p2MetaShort || ''}</div>
