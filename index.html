@@ -84,20 +84,15 @@ section, .section, .hero, .featured, .tournament-section, .list-section, .tourna
 footer { border-top:1px solid var(--border); padding:24px 32px; font-size:13px; color:var(--text-3); text-align:center; }
 @media (max-width:900px){ .hero-shell{ grid-template-columns:1fr; gap:24px; } }
 
-:root {
-  --bg: #0f172a;
-  --bg-card: #162033;
-  --bg-subtle: #1b2740;
-  --text-1: #5b5bd6;
-  --text-2: #d4ddf4;
-  --text-3: #a8b4d6;
-  --border: rgba(255,255,255,0.12);
-  --border-md: rgba(255,255,255,0.2);
+.tourney-card .tc-body { position: relative; }
+.tourney-card .tc-meta .tc-row:first-child {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-top: 0;
 }
-body { background: var(--bg); color: #ffffff; }
-p, span, a, li, td, th, div { color: inherit; }
-.section-h2, .page-title, .hero-shell h1, .tc-name, .fi-tournament-name, .register-title { color: var(--text-1) !important; }
-.hero-shell p, .tc-meta .tc-row, .contact-desc, .footer-copy { color: #ffffff !important; opacity: 0.92; }
+.tourney-card .tc-name { padding-right: 120px; min-height: 22px; }
+.tourney-card .tc-meta .tc-row:nth-child(n+2) { margin-top: 4px; }
 </style>
 </head>
 <body>
