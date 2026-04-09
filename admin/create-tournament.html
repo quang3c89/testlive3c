@@ -79,7 +79,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
 
 <script type="module">
 import { requireAdmin, logout } from '../assets/js/auth.js';
-import { supaFetch } from '../assets/js/supabase.js';
+import { supaFetch, resolveSupabaseClient } from '../assets/js/supabase.js';
 import { toast } from '../assets/js/ui.js';
 
 requireAdmin();
