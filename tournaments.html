@@ -241,14 +241,29 @@ body { background: var(--bg); color: #ffffff; }
 .page-title { color: #ffffff !important; }
 .page-sub, .tc-meta .tc-row, .empty-state { color: #d6e0f2 !important; opacity: 0.95; }
 .tournament-card.tc-list-card .tc-body { position: relative; }
-.tournament-card .tc-row:first-child {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
+.tournament-card .tc-head-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 10px;
 }
-.tournament-card .tc-name { color: #ffffff !important; padding-right: 0 !important; }
-.tournament-card .featured-cover-badge { margin-left: auto; flex-shrink: 0; }
+.tournament-card .tc-name {
+  color: #ffffff !important;
+  padding-right: 0 !important;
+  min-width: 0;
+  line-height: 1.32;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.tournament-card .featured-cover-badge {
+  margin-left: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  justify-self: end;
+  align-self: start;
+  position: static !important;
+  transform: none !important;
+}
 .tournament-card .tc-meta .tc-row { gap: 8px; }
 .tournament-card .fi-btn.pri { background: rgba(91,91,214,0.18); color: #e3e7ff; border-color: rgba(91,91,214,0.45); }
 .tournament-card .fi-btn.sec { color: #d0daef; border-color: rgba(255,255,255,0.2); }
