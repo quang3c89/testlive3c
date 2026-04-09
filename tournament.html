@@ -4289,12 +4289,6 @@ function spinWheel() {
     } else {
       S.wheelRotation = endRot % 360;
       drawWheel(S.wheelRotation);
-      const freshSlot = findNextSlot(tp);
-      if (!freshSlot) {
-        showToast('🏆 Bracket đã đầy!');
-        resetWheel();
-        return;
-      }
       const freshPlayer = S.players.find(p => p.id === tp.id && !p.drawn);
       if (!freshPlayer) {
         const undrawnNow = getUndrawn();
@@ -4303,7 +4297,7 @@ function spinWheel() {
       } else {
         pendingSpinPlayer = freshPlayer;
       }
-      pendingSpinSlot = freshSlot;
+      pendingSpinSlot = slot;
       stopSpinSound();
       showSpinPopup(pendingSpinPlayer);
     }
@@ -4455,57 +4449,100 @@ function getRound1Slots() {
 }
 
 function buildDrawPlan() {
-  const undrawn = getUndrawn();
-  const slots = getRound1Slots();
+  const undrawn = shuffled(getUndrawn());
+  const slots = shuffled(getRound1Slots());
   if (!undrawn.length || !slots.length) return [];
 
-  const seeds = shuffled(undrawn.filter(p => p.isSeed));
-  const normals = shuffled(undrawn.filter(p => !p.isSeed));
-  const allSeeds = (S.players || []).filter(p => p.isSeed).length;
-
-  const matchCount = (S.bracket?.[0] || []).length;
+  const r0 = S.bracket?.[0] || [];
+  const matchCount = r0.length;
   const half = Math.ceil(matchCount / 2);
+  const allSeeds = (S.players || []).filter(p => p.isSeed).length;
   const targetLeft = Math.ceil(allSeeds / 2);
   const targetRight = Math.floor(allSeeds / 2);
 
-  let leftSeedPlaced = 0;
-  let rightSeedPlaced = 0;
+  const assignedByMatch = new Map();
+  let leftSeeds = 0;
+  let rightSeeds = 0;
 
-  const seedSlots = [];
-  const normalSlots = [];
+  for (let m = 0; m < r0.length; m++) {
+    const row = r0[m];
+    const p1Seed = !!row?.p1?.isSeed;
+    const p2Seed = !!row?.p2?.isSeed;
+    assignedByMatch.set(m, { p1Seed, p2Seed });
+    const cnt = (p1Seed ? 1 : 0) + (p2Seed ? 1 : 0);
+    if (m < half) leftSeeds += cnt;
+    else rightSeeds += cnt;
+  }
 
-  slots.forEach((sl) => {
-    const isLeft = sl.m < half;
-    const canTakeSeed = isLeft ? leftSeedPlaced < targetLeft : rightSeedPlaced < targetRight;
-    const match = S.bracket?.[0]?.[sl.m];
-    const other = sl.pKey === 'p1' ? match?.p2 : match?.p1;
-    if (canTakeSeed && !other?.isSeed) {
-      seedSlots.push(sl);
-      if (isLeft) leftSeedPlaced += 1; else rightSeedPlaced += 1;
-    } else {
-      normalSlots.push(sl);
+  const plan = [];
+  const openSlots = [...slots];
+  let queue = [...undrawn];
+
+  const isSlotValidFor = (player, slot) => {
+    if (!player?.isSeed) return true;
+
+    const m = slot.m;
+    const state = assignedByMatch.get(m) || { p1Seed: false, p2Seed: false };
+    const otherKey = slot.pKey === 'p1' ? 'p2Seed' : 'p1Seed';
+
+    const match = r0[m];
+    const otherExisting = slot.pKey === 'p1' ? match?.p2 : match?.p1;
+    if (otherExisting?.isSeed) return false;
+    if (state[otherKey]) return false;
+
+    const isLeft = m < half;
+    if (isLeft && leftSeeds >= targetLeft) return false;
+    if (!isLeft && rightSeeds >= targetRight) return false;
+
+    return true;
+  };
+
+  let safety = 0;
+  while (queue.length && openSlots.length && safety < 2000) {
+    safety += 1;
+    let placedInRound = false;
+    const deferred = [];
+
+    for (const player of queue) {
+      const candidates = openSlots.filter(sl => isSlotValidFor(player, sl));
+      if (!candidates.length) {
+        deferred.push(player);
+        continue;
+      }
+
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      plan.push({ playerId: player.id, slot: chosen });
+      const idx = openSlots.findIndex(s => s.r === chosen.r && s.m === chosen.m && s.pKey === chosen.pKey);
+      if (idx >= 0) openSlots.splice(idx, 1);
+
+      if (player.isSeed) {
+        const st = assignedByMatch.get(chosen.m) || { p1Seed: false, p2Seed: false };
+        if (chosen.pKey === 'p1') st.p1Seed = true;
+        else st.p2Seed = true;
+        assignedByMatch.set(chosen.m, st);
+        if (chosen.m < half) leftSeeds += 1;
+        else rightSeeds += 1;
+      }
+
+      placedInRound = true;
     }
-  });
 
-  const queue = [];
-  const used = new Set();
+    if (!deferred.length) break;
 
-  seedSlots.forEach((sl) => {
-    const p = seeds.find(x => !used.has(x.id));
-    if (!p) return;
-    used.add(p.id);
-    queue.push({ playerId: p.id, slot: sl });
-  });
+    if (!placedInRound) {
+      // fallback an toàn: tránh deadlock do ràng buộc quá chặt
+      for (const p of deferred) {
+        if (!openSlots.length) break;
+        const chosen = openSlots.shift();
+        plan.push({ playerId: p.id, slot: chosen });
+      }
+      break;
+    }
 
-  normalSlots.forEach((sl) => {
-    let p = normals.find(x => !used.has(x.id));
-    if (!p) p = undrawn.find(x => !used.has(x.id));
-    if (!p) return;
-    used.add(p.id);
-    queue.push({ playerId: p.id, slot: sl });
-  });
+    queue = deferred;
+  }
 
-  return queue;
+  return plan;
 }
 
 function ensureDrawPlan() {
