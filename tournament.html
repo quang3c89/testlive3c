@@ -3979,6 +3979,25 @@ function saveAndRender() {
 function getUndrawn() { return S.players.filter(p => !p.drawn); }
 
 let currentBracketTab = 'schedule';
+let registerDragPlayerId = null;
+
+function reorderPlayersByIds(orderedIds) {
+  const byId = new Map((S.players || []).map(p => [p.id, p]));
+  const next = [];
+
+  orderedIds.forEach((id) => {
+    const p = byId.get(id);
+    if (p) next.push(p);
+  });
+
+  // fallback giữ các phần tử chưa có trong DOM order
+  (S.players || []).forEach((p) => {
+    if (!next.find(x => x.id === p.id)) next.push(p);
+  });
+
+  next.forEach((p, idx) => { p.stt = String(idx + 1); });
+  S.players = next;
+}
 
 function renderRegisterCards() {
   const table = document.getElementById('register-list');
@@ -4022,7 +4041,58 @@ function renderRegisterCards() {
 
     const card = document.createElement('div');
     card.className = `register-item cols-${fields.length}` + (p.drawn ? ' drawn' : '');
-    card.onclick = () => openEditPlayer(p.id);
+    card.setAttribute('draggable', S.isAdmin ? 'true' : 'false');
+    card.dataset.playerId = p.id;
+
+    let dragged = false;
+    card.addEventListener('dragstart', (ev) => {
+      if (!S.isAdmin) return;
+      registerDragPlayerId = p.id;
+      dragged = true;
+      card.classList.add('dragging');
+      if (ev.dataTransfer) {
+        ev.dataTransfer.effectAllowed = 'move';
+        ev.dataTransfer.setData('text/plain', p.id);
+      }
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      setTimeout(() => { dragged = false; }, 0);
+    });
+
+    card.addEventListener('dragover', (ev) => {
+      if (!S.isAdmin || !registerDragPlayerId || registerDragPlayerId === p.id) return;
+      ev.preventDefault();
+      if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+      card.classList.add('drag-over');
+    });
+
+    card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+
+    card.addEventListener('drop', (ev) => {
+      if (!S.isAdmin || !registerDragPlayerId || registerDragPlayerId === p.id) return;
+      ev.preventDefault();
+      card.classList.remove('drag-over');
+
+      const orderedIds = [...table.querySelectorAll('.register-item')].map(el => el.dataset.playerId);
+      const from = orderedIds.indexOf(registerDragPlayerId);
+      const to = orderedIds.indexOf(p.id);
+      if (from < 0 || to < 0 || from === to) return;
+
+      pushHistory();
+      const [moved] = orderedIds.splice(from, 1);
+      orderedIds.splice(to, 0, moved);
+      reorderPlayersByIds(orderedIds);
+      registerDragPlayerId = null;
+      saveAndRender();
+      supaPushDebounced();
+    });
+
+    card.onclick = () => {
+      if (dragged) return;
+      openEditPlayer(p.id);
+    };
 
     const nodes = [`<span class="f-stt">${stt}</span>`, `<span class="f-name" title="${p.name || ''}">${p.name || ''}</span>`];
     if (hasAnyUnit) nodes.push(`<span class="f-unit" title="${p.unit || ''}">${p.unit || ''}</span>`);
