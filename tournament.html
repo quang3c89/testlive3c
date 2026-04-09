@@ -5766,22 +5766,27 @@ function normalizeBattlePlayers(match) {
   const p1Base = match?.p1 || null;
   const p2Base = match?.p2 || null;
 
+  const cleanText = (v, fallback = '') => {
+    const s = String(v ?? '').replace(/\u00A0/g, ' ').trim();
+    return s || fallback;
+  };
+
   const p1 = {
-    name: p1Base?.name || 'Chưa có',
+    name: cleanText(p1Base?.name ?? match?.player1?.name, 'Chưa có'),
     score: match?.player1?.score ?? match?.s1 ?? '',
     avg: match?.player1?.avg ?? '',
     hr: match?.player1?.hr ?? '',
-    unit: p1Base?.unit || '',
-    rank: p1Base?.rank || ''
+    unit: cleanText(p1Base?.unit, 'Chưa có'),
+    rank: cleanText(p1Base?.rank)
   };
 
   const p2 = {
-    name: p2Base?.name || 'Chưa có',
+    name: cleanText(p2Base?.name ?? match?.player2?.name, 'Chưa có'),
     score: match?.player2?.score ?? match?.s2 ?? '',
     avg: match?.player2?.avg ?? '',
     hr: match?.player2?.hr ?? '',
-    unit: p2Base?.unit || '',
-    rank: p2Base?.rank || ''
+    unit: cleanText(p2Base?.unit, 'Chưa có'),
+    rank: cleanText(p2Base?.rank)
   };
 
   return { p1, p2 };
@@ -5879,15 +5884,23 @@ async function saveBattlePopup() {
     const s1 = Number(m.player1.score);
     const s2 = Number(m.player2.score);
     const valid = Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2 && m.p1 && m.p2;
+    const nr = roundIdx + 1;
+    const nm = Math.floor(matchIdx / 2);
+
     if (valid) {
       const winnerKey = s1 > s2 ? 'p1' : 'p2';
       const w = winnerKey === 'p1' ? m.p1 : m.p2;
       m.winner = w;
-      const nr = roundIdx + 1;
-      const nm = Math.floor(matchIdx / 2);
       if (nr < S.bracket.length) {
         const np = matchIdx % 2 === 0 ? 'p1' : 'p2';
         S.bracket[nr][nm][np] = w;
+        S.bracket[nr][nm].winner = null;
+      }
+    } else {
+      m.winner = null;
+      if (nr < S.bracket.length) {
+        const np = matchIdx % 2 === 0 ? 'p1' : 'p2';
+        S.bracket[nr][nm][np] = null;
         S.bracket[nr][nm].winner = null;
       }
     }
