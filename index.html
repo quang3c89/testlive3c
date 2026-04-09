@@ -69,7 +69,9 @@ section, .section, .hero, .featured, .tournament-section, .list-section, .tourna
 .tourney-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
 .tourney-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; box-shadow:var(--shadow-xs); transition: transform .18s, box-shadow .18s; }
 .tourney-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
-.tourney-card .tc-name { font-size:15px; font-weight:600; color:var(--text-1); }
+.tourney-card .tc-head-row { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.tourney-card .tc-name { font-size:15px; font-weight:600; color:var(--text-1); line-height:1.3; flex:1 1 auto; }
+.tourney-card .featured-cover-badge { flex:0 0 auto; margin-top:1px; }
 .tourney-card .tc-meta .tc-row { font-size:13px; color:var(--text-2); margin-top:6px; }
 .tourney-card .ico { display:none !important; }
 .tourney-card .tc-footer { border-top:1px solid var(--border); padding-top:12px; margin-top:14px; display:flex; justify-content:space-between; align-items:center; }
@@ -318,9 +320,11 @@ function renderTournaments(list) {
     const idEnc = encodeURIComponent(t.id);
     return `<a class="tourney-card fade-up" href="tournament.html?id=${idEnc}" style="animation-delay:${i*60}ms">
       <div class="tc-body" style="padding-top:14px;">
-        <div class="tc-name">${t.name}</div>
+        <div class="tc-head-row">
+          <div class="tc-name">${t.name}</div>
+          <span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span>
+        </div>
         <div class="tc-meta">
-          <div class="tc-row"><span class="ico">📌</span><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
           ${t.date_str ? `<div class="tc-row"><span class="ico">🕒</span>${t.date_str}</div>` : ''}
           ${t.location ? `<div class="tc-row"><span class="ico">📍</span>${t.location}</div>` : ''}
           ${t.format ? `<div class="tc-row"><span class="ico">⚔️</span>${t.format}</div>` : ''}
