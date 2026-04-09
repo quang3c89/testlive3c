@@ -1051,21 +1051,33 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   pointer-events: none;
 }
 #battle-popup.show { display:flex; pointer-events:all; }
-.battle-box { border-color: rgba(56,189,248,0.5); }
+.battle-box { border-color: rgba(56,189,248,0.5); max-width: 760px; }
 .battle-bg {
   position:absolute; inset:0;
   background:
-    radial-gradient(circle at 15% 20%, rgba(59,130,246,0.28), transparent 45%),
-    radial-gradient(circle at 85% 78%, rgba(239,68,68,0.24), transparent 42%),
-    linear-gradient(145deg, rgba(17,24,39,0.95), rgba(2,6,23,0.98));
+    radial-gradient(circle at 8% 50%, rgba(59,130,246,0.30), transparent 45%),
+    radial-gradient(circle at 92% 50%, rgba(239,68,68,0.26), transparent 45%),
+    radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 35%),
+    linear-gradient(145deg, rgba(17,24,39,0.96), rgba(2,6,23,0.98));
   pointer-events:none;
 }
-.battle-row { display:flex; align-items:center; gap:16px; width:100%; margin-top:8px; }
-.battle-side { flex:1; min-width:0; text-align:center; }
-.battle-name { font-family: var(--font-display); font-size: 24px; font-weight: 900; line-height: 1.1; }
-.battle-unit { font-size: 12px; color: var(--unit-color); margin-top: 4px; word-break: break-word; }
+.battle-row { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:18px; width:100%; margin-top:8px; }
+.battle-side { min-width:0; text-align:center; animation: battleSideIn .3s ease both; }
+.battle-side.right { animation-delay:.04s; }
+.battle-name { font-family: var(--font-display); font-size: 24px; font-weight: 900; line-height: 1.1; color:#fff; text-shadow:0 1px 8px rgba(0,0,0,.35); }
+.battle-unit { font-size: 12px; color: color-mix(in srgb, var(--unit-color) 85%, #fff 15%); margin-top: 4px; word-break: break-word; }
 .battle-rank { font-size: 10px; color: var(--accent); margin-top: 4px; font-family: var(--font-mono); }
 .battle-vs { font-family: var(--font-display); font-size: 28px; font-weight: 900; color: #38bdf8; text-shadow: 0 0 18px rgba(56,189,248,0.7); }
+.battle-score-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; min-width:120px; }
+.battle-score-big { font-family: var(--font-display); font-size: 32px; font-weight: 900; color:#fff; text-shadow:0 3px 14px rgba(0,0,0,.42); letter-spacing:.5px; }
+.battle-edit-grid { margin-top:12px; display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:8px; }
+.battle-edit-grid .field-group { gap:4px; }
+.battle-readonly { margin-top:12px; display:flex; justify-content:center; gap:12px; font-size:12px; opacity:.92; }
+.battle-metric { padding:4px 8px; border-radius:6px; border:1px solid var(--border); background:rgba(255,255,255,.04); }
+.battle-save-btn.loading { opacity:.7; pointer-events:none; }
+@keyframes battleSideIn { from { opacity:0; transform: translateX(-14px);} to { opacity:1; transform: translateX(0);} }
+.battle-side.right { animation-name:battleSideInRight; }
+@keyframes battleSideInRight { from { opacity:0; transform: translateX(14px);} to { opacity:1; transform: translateX(0);} }
 
 /* ============ MATCH CLICK FEEDBACK ============ */
 @keyframes slotWin {
@@ -2188,22 +2200,51 @@ body.fs-mode #bracket-style-toggle {
     <div class="battle-bg"></div>
     <div class="wp-content">
       <div class="wp-round-label" id="battle-round-label">⚔️ BATTLE MODE</div>
-      <div class="wp-headline">STAR BATTLE</div>
+      <div class="wp-headline">MATCH CONTROL</div>
       <div class="battle-row">
-        <div class="battle-side">
+        <div class="battle-side left">
           <div class="battle-name" id="battle-p1-name">TBD</div>
           <div class="battle-unit" id="battle-p1-unit"></div>
           <div class="battle-rank" id="battle-p1-rank"></div>
         </div>
-        <div class="battle-vs">VS</div>
-        <div class="battle-side">
+        <div class="battle-score-wrap">
+          <div class="battle-vs">VS</div>
+          <div class="battle-score-big" id="battle-score-big">— : —</div>
+        </div>
+        <div class="battle-side right">
           <div class="battle-name" id="battle-p2-name">TBD</div>
           <div class="battle-unit" id="battle-p2-unit"></div>
           <div class="battle-rank" id="battle-p2-rank"></div>
         </div>
       </div>
+
+      <div id="battle-edit-wrap" class="battle-edit-grid" style="display:none;">
+        <div class="field-group">
+          <label>Điểm (P1)</label>
+          <input class="minput" id="battle-s1" type="number" min="0" step="1" inputmode="numeric">
+        </div>
+        <div class="field-group">
+          <label>Điểm (P2)</label>
+          <input class="minput" id="battle-s2" type="number" min="0" step="1" inputmode="numeric">
+        </div>
+        <div class="field-group">
+          <label>AVG</label>
+          <input class="minput" id="battle-avg" type="number" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="field-group">
+          <label>HR</label>
+          <input class="minput" id="battle-hr" type="number" min="0" step="1" inputmode="numeric">
+        </div>
+      </div>
+
+      <div id="battle-readonly-wrap" class="battle-readonly">
+        <span class="battle-metric" id="battle-avg-view">AVG: —</span>
+        <span class="battle-metric" id="battle-hr-view">HR: —</span>
+      </div>
+
       <div class="wp-actions">
         <button class="wp-btn close" onclick="closeBattlePopup()">Đóng</button>
+        <button class="wp-btn battle-save-btn" id="battle-save-btn" style="display:none;" onclick="saveBattlePopup()">Lưu cập nhật</button>
       </div>
     </div>
   </div>
@@ -5708,10 +5749,21 @@ function closeWinnerPopup() {
   stopParticles();
 }
 
-function showBattlePopup(match, roundIdx) {
+let battlePopupState = { roundIdx: null, matchIdx: null, dirty: false };
+
+function getMatchMetrics(match) {
+  const avg = match?.avg ?? match?.meta?.avg ?? '';
+  const hr = match?.hr ?? match?.meta?.hr ?? '';
+  return { avg, hr };
+}
+
+function showBattlePopup(match, roundIdx, matchIdx) {
   const p1 = match?.p1 || null;
   const p2 = match?.p2 || null;
   const roundLabel = `${getRoundName(roundIdx, S.bracket.length).toUpperCase()} · STAR BATTLE`;
+  const m = getMatchMetrics(match);
+
+  battlePopupState = { roundIdx, matchIdx, dirty: false };
 
   document.getElementById('battle-round-label').textContent = roundLabel;
   document.getElementById('battle-p1-name').textContent = p1?.name || 'TBD';
@@ -5720,12 +5772,97 @@ function showBattlePopup(match, roundIdx) {
   document.getElementById('battle-p2-unit').textContent = p2?.unit || '';
   document.getElementById('battle-p1-rank').textContent = p1?.rank ? `HẠNG ${p1.rank}` : '';
   document.getElementById('battle-p2-rank').textContent = p2?.rank ? `HẠNG ${p2.rank}` : '';
+  document.getElementById('battle-score-big').textContent = `${match?.s1 ?? '—'} : ${match?.s2 ?? '—'}`;
+
+  const editWrap = document.getElementById('battle-edit-wrap');
+  const roWrap = document.getElementById('battle-readonly-wrap');
+  const saveBtn = document.getElementById('battle-save-btn');
+
+  if (S.isAdmin) {
+    document.getElementById('battle-s1').value = match?.s1 ?? '';
+    document.getElementById('battle-s2').value = match?.s2 ?? '';
+    document.getElementById('battle-avg').value = m.avg ?? '';
+    document.getElementById('battle-hr').value = m.hr ?? '';
+
+    ['battle-s1','battle-s2','battle-avg','battle-hr'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.oninput = () => { battlePopupState.dirty = true; };
+    });
+
+    editWrap.style.display = 'grid';
+    roWrap.style.display = 'none';
+    saveBtn.style.display = 'inline-flex';
+  } else {
+    editWrap.style.display = 'none';
+    roWrap.style.display = 'flex';
+    saveBtn.style.display = 'none';
+    document.getElementById('battle-avg-view').textContent = `AVG: ${m.avg || '—'}`;
+    document.getElementById('battle-hr-view').textContent = `HR: ${m.hr || '—'}`;
+  }
 
   document.getElementById('battle-popup').classList.add('show');
 }
 
-function closeBattlePopup() {
+async function saveBattlePopup() {
+  if (!S.isAdmin) return;
+  const { roundIdx, matchIdx } = battlePopupState;
+  if (roundIdx == null || matchIdx == null) return;
+
+  const m = S?.bracket?.[roundIdx]?.[matchIdx];
+  if (!m) return;
+
+  const saveBtn = document.getElementById('battle-save-btn');
+  saveBtn.classList.add('loading');
+  const oldText = saveBtn.textContent;
+  saveBtn.textContent = 'Đang lưu...';
+
+  try {
+    pushHistory();
+    const s1Raw = document.getElementById('battle-s1').value;
+    const s2Raw = document.getElementById('battle-s2').value;
+    const avgRaw = document.getElementById('battle-avg').value;
+    const hrRaw = document.getElementById('battle-hr').value;
+
+    m.s1 = s1Raw === '' ? '' : Number(s1Raw);
+    m.s2 = s2Raw === '' ? '' : Number(s2Raw);
+    m.avg = avgRaw === '' ? '' : Number(avgRaw);
+    m.hr = hrRaw === '' ? '' : Number(hrRaw);
+
+    const s1 = Number(m.s1);
+    const s2 = Number(m.s2);
+    const valid = Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2 && m.p1 && m.p2;
+    if (valid) {
+      const winnerKey = s1 > s2 ? 'p1' : 'p2';
+      const w = winnerKey === 'p1' ? m.p1 : m.p2;
+      m.winner = w;
+      const nr = roundIdx + 1;
+      const nm = Math.floor(matchIdx / 2);
+      if (nr < S.bracket.length) {
+        const np = matchIdx % 2 === 0 ? 'p1' : 'p2';
+        S.bracket[nr][nm][np] = w;
+        S.bracket[nr][nm].winner = null;
+      }
+    }
+
+    saveAndRender();
+    supaPushDebounced();
+    battlePopupState.dirty = false;
+    showToast('✅ Đã cập nhật trận đấu', 'success');
+    closeBattlePopup(true);
+  } catch (err) {
+    showToast(`❌ Lưu thất bại: ${err?.message || err}`, 'error');
+  } finally {
+    saveBtn.classList.remove('loading');
+    saveBtn.textContent = oldText;
+  }
+}
+
+function closeBattlePopup(force = false) {
+  if (!force && S.isAdmin && battlePopupState.dirty) {
+    if (!confirm('Bạn có thay đổi chưa lưu. Đóng popup và bỏ thay đổi?')) return;
+  }
   document.getElementById('battle-popup').classList.remove('show');
+  battlePopupState = { roundIdx: null, matchIdx: null, dirty: false };
 }
 
 /* ── Particle system ── */
@@ -5837,7 +5974,7 @@ Object.assign(globalThis, {
   openModal, closeModal, undo, redo, spinWheel, switchBracketTab, exportImage,
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
-  closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, handleExcel, handleVideoUpload,
+  closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, saveBattlePopup, handleExcel, handleVideoUpload,
   handleSponsorUpload, removeSponsorLogo, toggleSponsorSnap, toggleCtiSnap, setCtiFont, setCtiColor, setCtiSize, setCtiBg,
   setFastDrawMode,
   openEditPlayer, saveEditPlayer,
