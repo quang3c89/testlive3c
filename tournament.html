@@ -190,6 +190,13 @@ body.viewer-mode .tb-right-actions, body.viewer-mode .sponsor-upload-btn { displ
 .stop-spin-btn:hover{opacity:.95;transform:translateX(-50%) scale(1.08); box-shadow: 0 0 14px color-mix(in srgb, var(--accent, #f0a500) 42%, transparent);}
 /* Hide spin button in viewer mode */
 body.viewer-mode .spin-btn, body.viewer-mode .stop-spin-btn { display: none; }
+body.viewer-mode .wheel-control-wrap,
+body.viewer-mode .wheel-wrap,
+body.viewer-mode .wheel-inner,
+body.viewer-mode .wheel-ptr,
+body.viewer-mode #wheel-canvas,
+body.viewer-mode #spin-popup,
+body.viewer-mode #fs-mini-wheel { display: none !important; }
 .wheel-ptr {
   position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
   font-size: 22px; color: var(--accent); z-index: 20;
