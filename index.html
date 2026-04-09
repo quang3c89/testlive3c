@@ -48,6 +48,20 @@ section:not(.hero-shell), .section, .hero, .featured, .tournament-section, .list
 [style*="background: #0f"],[style*="background: #1a"],[style*="background: #1e"],[style*="background:#0f"],[style*="background:#1a"],[style*="background:#1e"],[style*="background: rgb(0"],[style*="background: navy"],[style*="background: blue"] { background: transparent !important; }
 .site-nav { height:58px; padding:0 max(24px, calc((100vw - 1200px)/2 + 24px)); display:flex; align-items:center; justify-content:space-between; }
 .nav-logo { font-size:15px; font-weight:700; color:var(--text-1); letter-spacing:-0.3px; text-decoration:none; }
+.brand-live, .y { color:#fbbf24 !important; }
+.brand-3c, .r { color:#ef4444 !important; }
+.brand-xyz, .w { color:#ffffff !important; }
+#toast-box {
+  font-size: 13px;
+}
+#toast-box .toast, #toast-box > div {
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  background: rgba(22,32,51,0.92) !important;
+  color: #eef3ff !important;
+  box-shadow: var(--shadow-sm);
+}
 .nav-link { font-size:14px; color:var(--text-2); padding:0 12px; transition:0.15s; text-decoration:none; }
 .nav-link:hover { color:var(--text-1); }
 .nav-login { font-size:14px; color:var(--text-2); padding:7px 14px; border:1px solid var(--border-md); border-radius:var(--r-sm); text-decoration:none; background:transparent; }
@@ -78,13 +92,26 @@ section:not(.hero-shell), .section, .hero, .featured, .tournament-section, .list
 .tourney-card .tc-open-btn { font-size:13px; color:var(--accent); font-weight:500; text-decoration:none; }
 .tourney-card .tc-open-btn:hover { text-decoration:underline; }
 .featured-cover, .featured-cover-overlay { display:none !important; }
-.featured-cover-badge { font-size:11px; padding:3px 10px; border-radius:var(--r-pill); }
-.featured-cover-badge.badge-ongoing { background:var(--green-soft); color:var(--green); }
-.featured-cover-badge.badge-open { background:var(--amber-soft); color:var(--amber); }
-.featured-cover-badge.badge-done { background:var(--gray-soft); color:var(--text-3); }
+.featured-cover-badge { font-size:11px; padding:4px 10px; border-radius:var(--r-pill); font-weight:500; line-height:1.2; border:1px solid transparent; }
+.featured-cover-badge.badge-ongoing { background:var(--green-soft); color:var(--green); border-color: rgba(22,163,74,0.25); }
+.featured-cover-badge.badge-open { background:var(--amber-soft); color:var(--amber); border-color: rgba(180,83,9,0.25); }
+.featured-cover-badge.badge-done { background:var(--gray-soft); color:var(--text-3); border-color: rgba(0,0,0,0.08); }
 #contact { max-width:600px; margin:0 auto 80px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:32px; color:#ffffff; }
 footer { border-top:1px solid var(--border); padding:24px 32px; font-size:13px; color:#ffffff; text-align:center; }
 @media (max-width:900px){ .hero-shell{ grid-template-columns:1fr; gap:24px; } }
+@media (max-width: 980px) {
+  .site-nav { padding: 0 12px; height: 52px; }
+  .site-nav .nav-link { padding: 0 6px; font-size: 12.5px; }
+  .site-nav .nav-login, .site-nav .nav-register { padding: 5px 10px; font-size: 12px; }
+  .hero-shell { padding: 44px 14px 30px; }
+  #tournaments { padding: 0 16px 48px; }
+  .tourney-grid { grid-template-columns: 1fr; gap: 12px; }
+  .tourney-card { padding: 14px 14px; min-height: 0; }
+  .tourney-card .tc-head-row { grid-template-columns: minmax(0,1fr) auto; column-gap: 8px; }
+  .tourney-card .tc-name { font-size: 14px; }
+  .featured-cover-badge { font-size: 10.5px; padding: 3px 9px; }
+  .tourney-card .tc-meta .tc-row { font-size: 12.5px; }
+}
 
 .tourney-card .tc-body { position: relative; }
 .tourney-card .tc-meta .tc-row:first-child {
@@ -121,7 +148,7 @@ footer { border-top:1px solid var(--border); padding:24px 32px; font-size:13px; 
 <div id="toast-box"></div>
 
 <nav class="site-nav" style="background: rgba(244,243,240,0.88);backdrop-filter: blur(16px);border-bottom: 1px solid var(--border);position: sticky; top: 0; z-index: 100;height: 58px;display: flex; align-items: center;padding: 0 32px;justify-content: space-between;">
-  <a href="index.html" style="font-size:15px;font-weight:700;color:var(--text-1);text-decoration:none;letter-spacing:-0.3px">Live3C</a>
+  <a href="index.html" style="font-size:15px;font-weight:700;color:var(--text-1);text-decoration:none;letter-spacing:-0.3px"><span class="brand-live">live</span><span class="brand-3c">3c</span><span class="brand-xyz">.xyz</span></a>
   <div style="display:flex;align-items:center;gap:4px">
     <a href="tournaments.html" style="font-size:14px;color:var(--text-2);padding:0 14px;text-decoration:none">Giải đấu</a>
     <a href="#contact" style="font-size:14px;color:var(--text-2);padding:0 14px;text-decoration:none;display:flex;align-items:center;gap:6px">Liên hệ <span style="width:7px;height:7px;border-radius:50%;background:#d4d4d8;display:inline-block"></span></a>
@@ -134,7 +161,7 @@ footer { border-top:1px solid var(--border); padding:24px 32px; font-size:13px; 
 
 <section class="hero-shell" id="home">
   <div>
-    <span style="display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:500;padding:4px 14px;border-radius:var(--r-pill);margin-bottom:18px;border:1px solid var(--accent-border);">Billiards Carom 3 Băng</span>
+    <span style="display:inline-block;background:var(--accent-soft);font-size:12px;font-weight:600;padding:4px 14px;border-radius:var(--r-pill);margin-bottom:18px;border:1px solid var(--accent-border);"><span class="brand-live">Billiards</span> <span class="brand-3c">Carom</span> <span class="brand-xyz">3 Băng</span></span>
     <h1 style="font-size:clamp(28px,4vw,42px);font-weight:700;line-height:1.18;letter-spacing:-0.5px;color:var(--text-1);max-width:520px;">Quản lý giải đấu<br>chuyên nghiệp</h1>
     <p style="font-size:16px;color:var(--text-2);margin-top:14px;max-width:440px;line-height:1.65;">Bốc thăm phân loại Hạt Giống và Tạo,Quản lí Giải Đấu, Hình ảnh chuyên nghiệp cho Anh Em Đam Mê 3 Băng.</p>
     <div id="hero-actions">

@@ -59,6 +59,18 @@ body {
   align-items: center;
 }
 .nav-logo { font-weight: 700; font-size: 16px; color: var(--text-primary); }
+.brand-live, .y { color:#fbbf24 !important; }
+.brand-3c, .r { color:#ef4444 !important; }
+.brand-xyz, .w { color:#ffffff !important; }
+#toast-box { font-size: 13px; }
+#toast-box .toast, #toast-box > div {
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  background: rgba(22,32,51,0.92) !important;
+  color: #eef3ff !important;
+  box-shadow: var(--shadow-sm);
+}
 .nav-link { font-size: 14px; color: var(--text-secondary); transition: color .15s ease; }
 .nav-link:hover { color: var(--text-primary); }
 .nav-login {
@@ -163,10 +175,10 @@ body {
 }
 .tc-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
 .tc-meta .tc-row { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-.featured-cover-badge { border-radius: var(--radius-badge); padding: 4px 12px; font-size: 12px; font-weight: 500; }
-.badge-ongoing { background: #e8f5e9; color: #2e7d32; }
-.badge-open { background: #fff8e1; color: #f57f17; }
-.badge-done { background: var(--bg-muted); color: var(--text-muted); }
+.featured-cover-badge { border-radius: var(--radius-badge); padding: 4px 10px; font-size: 11px; font-weight: 500; line-height: 1.2; border:1px solid transparent; }
+.badge-ongoing { background: rgba(22,163,74,0.09); color: #16a34a; border-color: rgba(22,163,74,0.25); }
+.badge-open { background: rgba(180,83,9,0.09); color: #b45309; border-color: rgba(180,83,9,0.25); }
+.badge-done { background: rgba(0,0,0,0.05); color: #a1a1aa; border-color: rgba(0,0,0,0.08); }
 
 .empty-state {
   text-align: center;
@@ -220,12 +232,21 @@ footer.footer-lite {
 }
 .load-more-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
+  .site-nav { padding: 0 12px; height: 52px; }
+  .site-nav .nav-link { padding: 0 6px; font-size: 12.5px; }
+  .site-nav .nav-login, .site-nav .nav-register { padding: 5px 10px; font-size: 12px; }
   .tournaments-inner { padding: 0 16px 56px; }
   .tournaments-header { padding: 24px 16px 20px; }
   .filter-bar { gap: 10px; }
   .filter-search-wrap { width: 100%; }
   .filter-search { max-width: 100%; }
+  .tournament-grid { grid-template-columns: 1fr; gap: 12px; }
+  .tournament-card { padding: 14px 14px; }
+  .tournament-card .tc-head-row { grid-template-columns: minmax(0,1fr) auto; column-gap: 8px; }
+  .tournament-card .tc-name { font-size: 14px; }
+  .featured-cover-badge { font-size: 10.5px; padding: 3px 9px; }
+  .tournament-card .tc-meta .tc-row { font-size: 12.5px; }
 }
 :root {
   --bg: #142238;
