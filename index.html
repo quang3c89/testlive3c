@@ -16,25 +16,25 @@
 <link rel="stylesheet" href="assets/css/ux-refactor.css">
 <style>
 :root {
-  --bg: #f4f3f0;
-  --bg-card: #ffffff;
-  --bg-subtle: #eceae5;
-  --accent: #5b5bd6;
-  --accent-soft: rgba(91,91,214,0.08);
-  --accent-border: rgba(91,91,214,0.18);
-  --green: #16a34a;
-  --green-soft: rgba(22,163,74,0.09);
-  --amber: #b45309;
-  --amber-soft: rgba(180,83,9,0.09);
-  --gray-soft: rgba(0,0,0,0.05);
-  --text-1: #18181b;
-  --text-2: #71717a;
-  --text-3: #a1a1aa;
-  --border: rgba(0,0,0,0.07);
-  --border-md: rgba(0,0,0,0.12);
-  --shadow-xs: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-md: 0 6px 20px rgba(0,0,0,0.08);
+  --bg: #0f172a;
+  --bg-card: #162033;
+  --bg-subtle: #1b2740;
+  --accent: #7c83ff;
+  --accent-soft: rgba(124,131,255,0.14);
+  --accent-border: rgba(124,131,255,0.32);
+  --green: #22c55e;
+  --green-soft: rgba(34,197,94,0.14);
+  --amber: #f59e0b;
+  --amber-soft: rgba(245,158,11,0.15);
+  --gray-soft: rgba(255,255,255,0.10);
+  --text-1: #eaf0ff;
+  --text-2: #c7d2eb;
+  --text-3: #98a6c6;
+  --border: rgba(255,255,255,0.12);
+  --border-md: rgba(255,255,255,0.20);
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.24);
+  --shadow-sm: 0 3px 10px rgba(0,0,0,0.22);
+  --shadow-md: 0 10px 28px rgba(0,0,0,0.34);
   --r: 12px;
   --r-sm: 8px;
   --r-pill: 100px;
@@ -86,12 +86,10 @@ footer { border-top:1px solid var(--border); padding:24px 32px; font-size:13px; 
 
 .tourney-card .tc-body { position: relative; }
 .tourney-card .tc-meta .tc-row:first-child {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin-top: 0;
+  position: static;
+  margin-top: 6px;
 }
-.tourney-card .tc-name { padding-right: 120px; min-height: 22px; }
+.tourney-card .tc-name { padding-right: 0; min-height: 0; }
 .tourney-card .tc-meta .tc-row:nth-child(n+2) { margin-top: 4px; }
 </style>
 </head>
