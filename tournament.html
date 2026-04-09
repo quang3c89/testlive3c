@@ -3907,6 +3907,9 @@ function removePlayer(id) {
   if (!confirm('Xóa cơ thủ này?')) return;
   pushHistory();
   S.players = S.players.filter(p => p.id !== id);
+  // Renumber STT liên tục sau khi xóa
+  S.players.forEach((p, idx) => { p.stt = String(idx + 1); });
+
   S.bracket.forEach(round => round.forEach(m => {
     if (m.p1 && m.p1.id === id) { m.p1 = null; if (m.winner && m.winner.id === id) m.winner = null; }
     if (m.p2 && m.p2.id === id) { m.p2 = null; if (m.winner && m.winner.id === id) m.winner = null; }
