@@ -5741,12 +5741,25 @@ function renderSchedule() {
         if (!m) return;
         const p1Real = !!m?.p1 && !m.p1.isBye;
         const p2Real = !!m?.p2 && !m.p2.isBye;
-        if (p1Real && p2Real) ordered.push({ m, rIdx, mIdx: mi });
+        if (p1Real && p2Real) ordered.push({ m, rIdx, mIdx: mi, key: `${rIdx}-${mi}` });
       };
       for (let mi = 0; mi < half; mi++) pushIfPlayable(mi);
       for (let mi = half; mi < round.length; mi++) pushIfPlayable(mi);
     });
-    return ordered;
+
+    const custom = Array.isArray(S.scheduleOrder) ? S.scheduleOrder : [];
+    if (!custom.length) return ordered;
+
+    const map = new Map(ordered.map(x => [x.key, x]));
+    const result = [];
+    custom.forEach((k) => {
+      if (map.has(k)) {
+        result.push(map.get(k));
+        map.delete(k);
+      }
+    });
+    map.forEach(v => result.push(v));
+    return result;
   }
 
   function makeMatchCard(m, matchNum, roundIdx, matchIdx, animDelay) {
