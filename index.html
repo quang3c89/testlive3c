@@ -69,9 +69,9 @@ section:not(.hero-shell), .section, .hero, .featured, .tournament-section, .list
 .tourney-grid { display:grid; grid-template-columns:repeat(2,minmax(420px,1fr)); gap:16px; }
 .tourney-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:18px 22px; box-shadow:var(--shadow-xs); transition: transform .18s, box-shadow .18s; min-height:176px; }
 .tourney-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
-.tourney-card .tc-head-row { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-.tourney-card .tc-name { font-size:15px; font-weight:600; color:var(--text-1); line-height:1.32; flex:1 1 auto; min-width:0; }
-.tourney-card .featured-cover-badge { display:inline-flex; margin-top:0; flex:0 0 auto; }
+.tourney-card .tc-head-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; column-gap:10px; }
+.tourney-card .tc-name { font-size:15px; font-weight:600; color:var(--text-1); line-height:1.32; min-width:0; overflow-wrap:anywhere; word-break:break-word; }
+.tourney-card .featured-cover-badge { display:inline-flex; margin-top:0; justify-self:end; align-self:start; flex:0 0 auto; }
 .tourney-card .tc-meta .tc-row { font-size:13px; color:var(--text-2); margin-top:6px; }
 .tourney-card .ico { display:none !important; }
 .tourney-card .tc-footer { border-top:1px solid var(--border); padding-top:12px; margin-top:14px; display:flex; justify-content:space-between; align-items:center; }
