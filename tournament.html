@@ -2658,6 +2658,7 @@ let pendingSpinSlot = null;
 let autoSpinEnabled = false;
 let autoSpinStopRequested = false;
 let fsMiniWheelArmed = false;
+let drawPlanQueue = [];
 let spinAudioCtx = null;
 let spinTickTimer = null;
 
@@ -4214,23 +4215,15 @@ function fastDrawAll() {
       return;
     }
 
-    const slot = findNextSlot();
-    if (!slot) {
+    const planItem = consumeDrawPlanItem();
+    if (!planItem) {
       autoSpinEnabled = false;
       resetWheel();
       showToast('🏆 Bracket đã đầy!');
       return;
     }
 
-    const picked = pickCandidateForSlot(slot, undrawn);
-    if (!slot) {
-      autoSpinEnabled = false;
-      resetWheel();
-      showToast('🏆 Bracket đã đầy!');
-      return;
-    }
-
-    commitPlayer(picked, slot);
+    commitPlayer(planItem.player, planItem.slot);
     S.wheelRotation = (S.wheelRotation + 52 + Math.random() * 66) % 360;
     drawWheel(S.wheelRotation);
 
@@ -4257,8 +4250,10 @@ function spinWheel() {
   if (!S.isAdmin) return;
   const undrawn = getUndrawn();
   if (undrawn.length === 0) { showToast('🏁 Đã bốc hết!'); return; }
-  const slot = findNextSlot();
-  if (!slot) { showToast('🏆 Bracket đã đầy!'); return; }
+
+  const planItem = consumeDrawPlanItem();
+  if (!planItem) { showToast('🏆 Bracket đã đầy!'); return; }
+  const slot = planItem.slot;
 
   document.querySelectorAll('.mp.pending-slot').forEach(el => el.classList.remove('pending-slot'));
   const pendingEl = document.getElementById(`match-${slot.r}-${slot.m}-${slot.pKey}`);
@@ -4270,7 +4265,7 @@ function spinWheel() {
   document.getElementById('spin-btn').disabled = true;
   syncFullscreenMiniWheel();
 
-  const tp = pickCandidateForSlot(slot, undrawn);
+  const tp = planItem.player;
   const ti = Math.max(0, undrawn.findIndex(p => p.id === tp?.id));
   const sliceDeg = 360 / undrawn.length;
   const targetAngle = 270 - (ti * sliceDeg) - sliceDeg/2 + (Math.random()-0.5) * sliceDeg * 0.6;
@@ -4447,6 +4442,93 @@ function pickCandidateForSlot(slot, undrawn) {
     if (canPlacePlayerInSlot(p, slot)) return p;
   }
   return pool[0] || null;
+}
+
+function getRound1Slots() {
+  const r0 = S.bracket?.[0] || [];
+  const slots = [];
+  for (let m = 0; m < r0.length; m++) {
+    if (!r0[m].p1) slots.push({ r: 0, m, pKey: 'p1' });
+    if (!r0[m].p2) slots.push({ r: 0, m, pKey: 'p2' });
+  }
+  return slots;
+}
+
+function buildDrawPlan() {
+  const undrawn = getUndrawn();
+  const slots = getRound1Slots();
+  if (!undrawn.length || !slots.length) return [];
+
+  const seeds = shuffled(undrawn.filter(p => p.isSeed));
+  const normals = shuffled(undrawn.filter(p => !p.isSeed));
+  const allSeeds = (S.players || []).filter(p => p.isSeed).length;
+
+  const matchCount = (S.bracket?.[0] || []).length;
+  const half = Math.ceil(matchCount / 2);
+  const targetLeft = Math.ceil(allSeeds / 2);
+  const targetRight = Math.floor(allSeeds / 2);
+
+  let leftSeedPlaced = 0;
+  let rightSeedPlaced = 0;
+
+  const seedSlots = [];
+  const normalSlots = [];
+
+  slots.forEach((sl) => {
+    const isLeft = sl.m < half;
+    const canTakeSeed = isLeft ? leftSeedPlaced < targetLeft : rightSeedPlaced < targetRight;
+    const match = S.bracket?.[0]?.[sl.m];
+    const other = sl.pKey === 'p1' ? match?.p2 : match?.p1;
+    if (canTakeSeed && !other?.isSeed) {
+      seedSlots.push(sl);
+      if (isLeft) leftSeedPlaced += 1; else rightSeedPlaced += 1;
+    } else {
+      normalSlots.push(sl);
+    }
+  });
+
+  const queue = [];
+  const used = new Set();
+
+  seedSlots.forEach((sl) => {
+    const p = seeds.find(x => !used.has(x.id));
+    if (!p) return;
+    used.add(p.id);
+    queue.push({ playerId: p.id, slot: sl });
+  });
+
+  normalSlots.forEach((sl) => {
+    let p = normals.find(x => !used.has(x.id));
+    if (!p) p = undrawn.find(x => !used.has(x.id));
+    if (!p) return;
+    used.add(p.id);
+    queue.push({ playerId: p.id, slot: sl });
+  });
+
+  return queue;
+}
+
+function ensureDrawPlan() {
+  const undrawnIds = new Set(getUndrawn().map(p => p.id));
+  const validQueue = drawPlanQueue.filter(item => undrawnIds.has(item.playerId));
+  if (!validQueue.length) {
+    drawPlanQueue = buildDrawPlan();
+  } else {
+    drawPlanQueue = validQueue;
+  }
+}
+
+function consumeDrawPlanItem() {
+  ensureDrawPlan();
+  if (!drawPlanQueue.length) return null;
+  while (drawPlanQueue.length) {
+    const it = drawPlanQueue.shift();
+    const p = S.players.find(x => x.id === it.playerId && !x.drawn);
+    const sl = it.slot;
+    const exists = S.bracket?.[sl.r]?.[sl.m] && !S.bracket[sl.r][sl.m][sl.pKey];
+    if (p && exists) return { player: p, slot: sl };
+  }
+  return null;
 }
 
 function syncRound1ByesToRound2() {
@@ -5788,22 +5870,38 @@ function normalizeBattlePlayers(match) {
     return s || fallback;
   };
 
+  const normFrom = (src, fallbackName) => {
+    if (!src || typeof src !== 'object') return {
+      name: fallbackName,
+      unit: 'Chưa có',
+      rank: '',
+    };
+    return {
+      name: cleanText(src.name, fallbackName),
+      unit: cleanText(src.unit, 'Chưa có'),
+      rank: cleanText(src.rank),
+    };
+  };
+
+  const p1Src = normFrom(p1Base, cleanText(match?.player1?.name, 'Chưa có'));
+  const p2Src = normFrom(p2Base, cleanText(match?.player2?.name, 'Chưa có'));
+
   const p1 = {
-    name: cleanText(p1Base?.name ?? match?.player1?.name, 'Chưa có'),
+    name: p1Src.name,
     score: match?.player1?.score ?? match?.s1 ?? '',
     avg: match?.player1?.avg ?? '',
     hr: match?.player1?.hr ?? '',
-    unit: cleanText(p1Base?.unit, 'Chưa có'),
-    rank: cleanText(p1Base?.rank)
+    unit: p1Src.unit,
+    rank: p1Src.rank
   };
 
   const p2 = {
-    name: cleanText(p2Base?.name ?? match?.player2?.name, 'Chưa có'),
+    name: p2Src.name,
     score: match?.player2?.score ?? match?.s2 ?? '',
     avg: match?.player2?.avg ?? '',
     hr: match?.player2?.hr ?? '',
-    unit: cleanText(p2Base?.unit, 'Chưa có'),
-    rank: cleanText(p2Base?.rank)
+    unit: p2Src.unit,
+    rank: p2Src.rank
   };
 
   return { p1, p2 };
