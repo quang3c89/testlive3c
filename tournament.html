@@ -5481,38 +5481,66 @@ async function exportImage(elementId, filename) {
   }
 }
 
-function captureScheduleImage() {
-  const panel = document.getElementById('schedule-panel');
-  if (!panel) return;
-
-  const wasScheduleTab = currentBracketTab === 'schedule';
-  if (!wasScheduleTab) switchBracketTab('schedule');
-
-  setTimeout(async () => {
-    try {
-      await exportImage('schedule-panel', 'schedule');
-      showToast('✅ Đã chụp lịch thi đấu', 'success');
-    } catch (err) {
-      showToast('❌ Chụp lịch thi đấu thất bại: ' + (err?.message || err), 'error');
-    }
-  }, 120);
+async function waitPaint(frames = 2) {
+  for (let i = 0; i < frames; i++) {
+    await new Promise(r => requestAnimationFrame(r));
+  }
 }
 
-function captureRegisterImage() {
+async function captureScheduleImage() {
+  const panel = document.getElementById('schedule-panel');
+  const cols = document.getElementById('schedule-columns');
+  if (!panel || !cols) return;
+  if (typeof html2canvas === 'undefined') {
+    showToast('❌ Thiếu thư viện chụp ảnh', 'error');
+    return;
+  }
+
+  const prev = currentBracketTab;
+  if (prev !== 'schedule') switchBracketTab('schedule');
+
+  const prevPanelStyle = panel.getAttribute('style') || '';
+  try {
+    panel.classList.add('active');
+    panel.style.display = 'block';
+    panel.style.visibility = 'visible';
+    await waitPaint(3);
+    await exportImage('schedule-panel', 'schedule');
+    showToast('✅ Đã chụp lịch thi đấu', 'success');
+  } catch (err) {
+    showToast('❌ Chụp lịch thi đấu thất bại: ' + (err?.message || err), 'error');
+  } finally {
+    panel.setAttribute('style', prevPanelStyle);
+    if (prev && prev !== 'schedule') switchBracketTab(prev);
+  }
+}
+
+async function captureRegisterImage() {
   const panel = document.getElementById('register-panel');
-  if (!panel) return;
+  const list = document.getElementById('register-list');
+  if (!panel || !list) return;
+  if (typeof html2canvas === 'undefined') {
+    showToast('❌ Thiếu thư viện chụp ảnh', 'error');
+    return;
+  }
 
-  const wasRegisterTab = currentBracketTab === 'register';
-  if (!wasRegisterTab) switchBracketTab('register');
+  const prev = currentBracketTab;
+  if (prev !== 'register') switchBracketTab('register');
 
-  setTimeout(async () => {
-    try {
-      await exportImage('register-panel', 'register');
-      showToast('✅ Đã chụp danh sách đăng kí', 'success');
-    } catch (err) {
-      showToast('❌ Chụp danh sách đăng kí thất bại: ' + (err?.message || err), 'error');
-    }
-  }, 120);
+  const prevPanelStyle = panel.getAttribute('style') || '';
+  try {
+    panel.classList.add('active');
+    panel.style.display = 'block';
+    panel.style.visibility = 'visible';
+    await waitPaint(3);
+    await exportImage('register-panel', 'register');
+    showToast('✅ Đã chụp danh sách đăng kí', 'success');
+  } catch (err) {
+    showToast('❌ Chụp danh sách đăng kí thất bại: ' + (err?.message || err), 'error');
+  } finally {
+    panel.setAttribute('style', prevPanelStyle);
+    if (prev && prev !== 'register') switchBracketTab(prev);
+  }
 }
 
 function toggleBracketFullscreen() {
@@ -5898,18 +5926,39 @@ function renderSchedule() {
     });
   }
 
+  function persistScheduleOrder() {
+    const cards = [...container.querySelectorAll('.sched-match[data-playable="1"]')];
+    S.scheduleOrder = cards.map((card) => `${card.dataset.round}-${card.dataset.match}`);
+    saveState();
+    supaPushDebounced();
+  }
+
   refreshScheduleSequence();
 
   let dragged = null;
+  let hasReordered = false;
   container.querySelectorAll('.sched-match[data-playable="1"]').forEach(card => {
-    card.addEventListener('dragstart', () => { dragged = card; card.classList.add('dragging'); });
-    card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragged = null; refreshScheduleSequence(); });
+    card.addEventListener('dragstart', () => {
+      dragged = card;
+      hasReordered = false;
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      dragged = null;
+      refreshScheduleSequence();
+      if (hasReordered) persistScheduleOrder();
+    });
     card.addEventListener('dragover', (e) => {
       e.preventDefault();
       if (!dragged || dragged === card) return;
       const rect = card.getBoundingClientRect();
       const before = (e.clientY - rect.top) < rect.height / 2;
-      card.parentNode.insertBefore(dragged, before ? card : card.nextSibling);
+      const parent = card.parentNode;
+      const oldIndex = [...parent.children].indexOf(dragged);
+      parent.insertBefore(dragged, before ? card : card.nextSibling);
+      const newIndex = [...parent.children].indexOf(dragged);
+      if (oldIndex !== newIndex) hasReordered = true;
     });
   });
 
