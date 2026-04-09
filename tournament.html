@@ -2221,25 +2221,36 @@ body.fs-mode #bracket-style-toggle {
       <div id="battle-edit-wrap" class="battle-edit-grid" style="display:none;">
         <div class="field-group">
           <label>Điểm (P1)</label>
-          <input class="minput" id="battle-s1" type="number" min="0" step="1" inputmode="numeric">
+          <input class="minput" id="battle-p1-score" type="number" min="0" step="1" inputmode="numeric">
         </div>
+        <div class="field-group">
+          <label>AVG (P1)</label>
+          <input class="minput" id="battle-p1-avg" type="number" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="field-group">
+          <label>HR (P1)</label>
+          <input class="minput" id="battle-p1-hr" type="number" min="0" step="1" inputmode="numeric">
+        </div>
+
         <div class="field-group">
           <label>Điểm (P2)</label>
-          <input class="minput" id="battle-s2" type="number" min="0" step="1" inputmode="numeric">
+          <input class="minput" id="battle-p2-score" type="number" min="0" step="1" inputmode="numeric">
         </div>
         <div class="field-group">
-          <label>AVG</label>
-          <input class="minput" id="battle-avg" type="number" min="0" step="0.01" inputmode="decimal">
+          <label>AVG (P2)</label>
+          <input class="minput" id="battle-p2-avg" type="number" min="0" step="0.01" inputmode="decimal">
         </div>
         <div class="field-group">
-          <label>HR</label>
-          <input class="minput" id="battle-hr" type="number" min="0" step="1" inputmode="numeric">
+          <label>HR (P2)</label>
+          <input class="minput" id="battle-p2-hr" type="number" min="0" step="1" inputmode="numeric">
         </div>
       </div>
 
       <div id="battle-readonly-wrap" class="battle-readonly">
-        <span class="battle-metric" id="battle-avg-view">AVG: —</span>
-        <span class="battle-metric" id="battle-hr-view">HR: —</span>
+        <span class="battle-metric" id="battle-p1-avg-view">P1 AVG: —</span>
+        <span class="battle-metric" id="battle-p1-hr-view">P1 HR: —</span>
+        <span class="battle-metric" id="battle-p2-avg-view">P2 AVG: —</span>
+        <span class="battle-metric" id="battle-p2-hr-view">P2 HR: —</span>
       </div>
 
       <div class="wp-actions">
@@ -5751,40 +5762,59 @@ function closeWinnerPopup() {
 
 let battlePopupState = { roundIdx: null, matchIdx: null, dirty: false };
 
-function getMatchMetrics(match) {
-  const avg = match?.avg ?? match?.meta?.avg ?? '';
-  const hr = match?.hr ?? match?.meta?.hr ?? '';
-  return { avg, hr };
+function normalizeBattlePlayers(match) {
+  const p1Base = match?.p1 || null;
+  const p2Base = match?.p2 || null;
+
+  const p1 = {
+    name: p1Base?.name || 'Chưa có',
+    score: match?.player1?.score ?? match?.s1 ?? '',
+    avg: match?.player1?.avg ?? '',
+    hr: match?.player1?.hr ?? '',
+    unit: p1Base?.unit || '',
+    rank: p1Base?.rank || ''
+  };
+
+  const p2 = {
+    name: p2Base?.name || 'Chưa có',
+    score: match?.player2?.score ?? match?.s2 ?? '',
+    avg: match?.player2?.avg ?? '',
+    hr: match?.player2?.hr ?? '',
+    unit: p2Base?.unit || '',
+    rank: p2Base?.rank || ''
+  };
+
+  return { p1, p2 };
 }
 
 function showBattlePopup(match, roundIdx, matchIdx) {
-  const p1 = match?.p1 || null;
-  const p2 = match?.p2 || null;
+  const { p1, p2 } = normalizeBattlePlayers(match);
   const roundLabel = `${getRoundName(roundIdx, S.bracket.length).toUpperCase()} · STAR BATTLE`;
-  const m = getMatchMetrics(match);
 
   battlePopupState = { roundIdx, matchIdx, dirty: false };
 
   document.getElementById('battle-round-label').textContent = roundLabel;
-  document.getElementById('battle-p1-name').textContent = p1?.name || 'TBD';
-  document.getElementById('battle-p2-name').textContent = p2?.name || 'TBD';
-  document.getElementById('battle-p1-unit').textContent = p1?.unit || '';
-  document.getElementById('battle-p2-unit').textContent = p2?.unit || '';
-  document.getElementById('battle-p1-rank').textContent = p1?.rank ? `HẠNG ${p1.rank}` : '';
-  document.getElementById('battle-p2-rank').textContent = p2?.rank ? `HẠNG ${p2.rank}` : '';
-  document.getElementById('battle-score-big').textContent = `${match?.s1 ?? '—'} : ${match?.s2 ?? '—'}`;
+  document.getElementById('battle-p1-name').textContent = p1.name || 'Chưa có';
+  document.getElementById('battle-p2-name').textContent = p2.name || 'Chưa có';
+  document.getElementById('battle-p1-unit').textContent = p1.unit || 'Chưa có';
+  document.getElementById('battle-p2-unit').textContent = p2.unit || 'Chưa có';
+  document.getElementById('battle-p1-rank').textContent = p1.rank ? `HẠNG ${p1.rank}` : '';
+  document.getElementById('battle-p2-rank').textContent = p2.rank ? `HẠNG ${p2.rank}` : '';
+  document.getElementById('battle-score-big').textContent = `${p1.score === '' ? '—' : p1.score} : ${p2.score === '' ? '—' : p2.score}`;
 
   const editWrap = document.getElementById('battle-edit-wrap');
   const roWrap = document.getElementById('battle-readonly-wrap');
   const saveBtn = document.getElementById('battle-save-btn');
 
   if (S.isAdmin) {
-    document.getElementById('battle-s1').value = match?.s1 ?? '';
-    document.getElementById('battle-s2').value = match?.s2 ?? '';
-    document.getElementById('battle-avg').value = m.avg ?? '';
-    document.getElementById('battle-hr').value = m.hr ?? '';
+    document.getElementById('battle-p1-score').value = p1.score ?? '';
+    document.getElementById('battle-p1-avg').value = p1.avg ?? '';
+    document.getElementById('battle-p1-hr').value = p1.hr ?? '';
+    document.getElementById('battle-p2-score').value = p2.score ?? '';
+    document.getElementById('battle-p2-avg').value = p2.avg ?? '';
+    document.getElementById('battle-p2-hr').value = p2.hr ?? '';
 
-    ['battle-s1','battle-s2','battle-avg','battle-hr'].forEach((id) => {
+    ['battle-p1-score','battle-p1-avg','battle-p1-hr','battle-p2-score','battle-p2-avg','battle-p2-hr'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.oninput = () => { battlePopupState.dirty = true; };
     });
@@ -5796,8 +5826,10 @@ function showBattlePopup(match, roundIdx, matchIdx) {
     editWrap.style.display = 'none';
     roWrap.style.display = 'flex';
     saveBtn.style.display = 'none';
-    document.getElementById('battle-avg-view').textContent = `AVG: ${m.avg || '—'}`;
-    document.getElementById('battle-hr-view').textContent = `HR: ${m.hr || '—'}`;
+    document.getElementById('battle-p1-avg-view').textContent = `P1 AVG: ${p1.avg || '—'}`;
+    document.getElementById('battle-p1-hr-view').textContent = `P1 HR: ${p1.hr || '—'}`;
+    document.getElementById('battle-p2-avg-view').textContent = `P2 AVG: ${p2.avg || '—'}`;
+    document.getElementById('battle-p2-hr-view').textContent = `P2 HR: ${p2.hr || '—'}`;
   }
 
   document.getElementById('battle-popup').classList.add('show');
@@ -5818,18 +5850,34 @@ async function saveBattlePopup() {
 
   try {
     pushHistory();
-    const s1Raw = document.getElementById('battle-s1').value;
-    const s2Raw = document.getElementById('battle-s2').value;
-    const avgRaw = document.getElementById('battle-avg').value;
-    const hrRaw = document.getElementById('battle-hr').value;
+    const p1ScoreRaw = document.getElementById('battle-p1-score').value;
+    const p1AvgRaw = document.getElementById('battle-p1-avg').value;
+    const p1HrRaw = document.getElementById('battle-p1-hr').value;
+    const p2ScoreRaw = document.getElementById('battle-p2-score').value;
+    const p2AvgRaw = document.getElementById('battle-p2-avg').value;
+    const p2HrRaw = document.getElementById('battle-p2-hr').value;
 
-    m.s1 = s1Raw === '' ? '' : Number(s1Raw);
-    m.s2 = s2Raw === '' ? '' : Number(s2Raw);
-    m.avg = avgRaw === '' ? '' : Number(avgRaw);
-    m.hr = hrRaw === '' ? '' : Number(hrRaw);
+    m.player1 = {
+      ...(m.player1 || {}),
+      name: m.p1?.name || 'Chưa có',
+      score: p1ScoreRaw === '' ? '' : Number(p1ScoreRaw),
+      avg: p1AvgRaw === '' ? '' : Number(p1AvgRaw),
+      hr: p1HrRaw === '' ? '' : Number(p1HrRaw),
+    };
 
-    const s1 = Number(m.s1);
-    const s2 = Number(m.s2);
+    m.player2 = {
+      ...(m.player2 || {}),
+      name: m.p2?.name || 'Chưa có',
+      score: p2ScoreRaw === '' ? '' : Number(p2ScoreRaw),
+      avg: p2AvgRaw === '' ? '' : Number(p2AvgRaw),
+      hr: p2HrRaw === '' ? '' : Number(p2HrRaw),
+    };
+
+    m.s1 = m.player1.score;
+    m.s2 = m.player2.score;
+
+    const s1 = Number(m.player1.score);
+    const s2 = Number(m.player2.score);
     const valid = Number.isFinite(s1) && Number.isFinite(s2) && s1 !== s2 && m.p1 && m.p2;
     if (valid) {
       const winnerKey = s1 > s2 ? 'p1' : 'p2';
