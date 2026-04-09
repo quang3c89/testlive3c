@@ -176,9 +176,9 @@ body {
 .tc-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
 .tc-meta .tc-row { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
 .featured-cover-badge { border-radius: var(--radius-badge); padding: 4px 10px; font-size: 11px; font-weight: 500; line-height: 1.2; border:1px solid transparent; }
-.badge-ongoing { background: rgba(22,163,74,0.09); color: #16a34a; border-color: rgba(22,163,74,0.25); }
-.badge-open { background: rgba(180,83,9,0.09); color: #b45309; border-color: rgba(180,83,9,0.25); }
-.badge-done { background: rgba(0,0,0,0.05); color: #a1a1aa; border-color: rgba(0,0,0,0.08); }
+.badge-ongoing { background: var(--green-soft); color: var(--green); border-color: rgba(22,163,74,0.25); }
+.badge-open { background: var(--amber-soft); color: var(--amber); border-color: rgba(180,83,9,0.25); }
+.badge-done { background: var(--gray-soft); color: var(--text-3); border-color: rgba(0,0,0,0.08); }
 
 .empty-state {
   text-align: center;
@@ -295,10 +295,8 @@ body { background: var(--bg); color: #ffffff; }
 </head>
 <body class="page-tournaments">
 
-<div id="toast-box"></div>
-
 <nav class="site-nav">
-  <a class="nav-logo" href="index.html"><span class="y">live</span><span class="r">3c</span><span class="w">.xyz</span></a>
+  <a class="nav-logo" href="index.html"><img src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/logo.png" alt="live3c.xyz" style="height:34px;width:auto;display:block;object-fit:contain"></a>
   <div class="breadcrumb nav-breadcrumb" aria-label="Breadcrumb">
     <a href="index.html">Trang chủ</a>
     <span class="breadcrumb-sep">/</span>
