@@ -4251,6 +4251,7 @@ function spinWheel() {
   const undrawn = getUndrawn();
   if (undrawn.length === 0) { showToast('🏁 Đã bốc hết!'); return; }
 
+  ensureDrawPlan();
   const planItem = consumeDrawPlanItem();
   if (!planItem) { showToast('🏆 Bracket đã đầy!'); return; }
   const slot = planItem.slot;
@@ -4545,19 +4546,29 @@ function buildDrawPlan() {
   return plan;
 }
 
+function slotOrderKey(slot) {
+  // top -> down (match index), left -> right (p1 then p2)
+  return (slot.m * 2) + (slot.pKey === 'p1' ? 0 : 1);
+}
+
 function ensureDrawPlan() {
   const undrawnIds = new Set(getUndrawn().map(p => p.id));
   const validQueue = drawPlanQueue.filter(item => undrawnIds.has(item.playerId));
+
   if (!validQueue.length) {
-    drawPlanQueue = buildDrawPlan();
+    const precomputed = buildDrawPlan();
+    // reveal order must follow layout order, not random order
+    drawPlanQueue = precomputed.sort((a, b) => slotOrderKey(a.slot) - slotOrderKey(b.slot));
   } else {
-    drawPlanQueue = validQueue;
+    // keep current remaining order by layout
+    drawPlanQueue = validQueue.sort((a, b) => slotOrderKey(a.slot) - slotOrderKey(b.slot));
   }
 }
 
 function consumeDrawPlanItem() {
   ensureDrawPlan();
   if (!drawPlanQueue.length) return null;
+
   while (drawPlanQueue.length) {
     const it = drawPlanQueue.shift();
     const p = S.players.find(x => x.id === it.playerId && !x.drawn);
