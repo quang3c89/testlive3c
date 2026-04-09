@@ -304,8 +304,10 @@ body { background: var(--bg); color: #ffffff; }
 </head>
 <body class="page-tournaments">
 
-<nav class="site-nav">
-  <a class="nav-logo" href="index.html"><img src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/logo.png" alt="live3c.xyz" style="height:34px;width:auto;display:block;object-fit:contain"></a>
+<nav class="site-nav" style="position:fixed;top:0;left:0;right:0;width:100%;z-index:9999;">
+  <a class="nav-logo" href="index.html" style="display:inline-flex;align-items:center;text-decoration:none;">
+    <video src="https://lfetbyxrxxmljqeiribi.supabase.co/storage/v1/object/public/tournament-media/intro.mp4" autoplay muted loop playsinline preload="metadata" style="width:52px;height:32px;display:block;border-radius:6px;object-fit:contain;"></video>
+  </a>
   <div class="breadcrumb nav-breadcrumb" aria-label="Breadcrumb">
     <a href="index.html">Trang chủ</a>
     <span class="breadcrumb-sep">/</span>
