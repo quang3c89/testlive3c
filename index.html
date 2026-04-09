@@ -96,7 +96,15 @@ section:not(.hero-shell), .section, .hero, .featured, .tournament-section, .list
 .featured-cover-badge.badge-ongoing { background:var(--green-soft); color:var(--green); border-color: rgba(22,163,74,0.25); }
 .featured-cover-badge.badge-open { background:var(--amber-soft); color:var(--amber); border-color: rgba(180,83,9,0.25); }
 .featured-cover-badge.badge-done { background:var(--gray-soft); color:var(--text-3); border-color: rgba(0,0,0,0.08); }
-#contact { max-width:1360px; margin:0 auto 80px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:14px 18px; color:#ffffff; }
+#contact { max-width:1360px; margin:0 auto 80px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--r); padding:8px 14px; color:#ffffff; }
+.contact-inner { display:flex; align-items:center; gap:16px; }
+.contact-inner .section-label, .contact-inner .section-h2, .contact-inner .contact-desc { display:none; }
+.contact-grid { display:flex !important; align-items:center; gap:12px; width:100%; }
+#contact-cards { display:flex !important; flex-wrap:nowrap; align-items:center; gap:10px !important; width:100%; }
+.contact-card { padding:6px 8px !important; border-bottom:none !important; min-width:0; }
+.contact-card .cc-text { display:flex; align-items:center; gap:6px; min-width:0; }
+.contact-card .cc-label { white-space:nowrap; }
+.contact-card .cc-val { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
 footer { border-top:1px solid var(--border); padding:24px 32px; font-size:13px; color:#ffffff; text-align:center; }
 #toast-box .toast {
   padding: 8px 12px !important;

@@ -291,6 +291,11 @@ body { background: var(--bg); color: #ffffff; }
 .filter-tab { color: #d0daef; border-color: rgba(255,255,255,0.18); }
 .filter-tab.active { color: #ffffff; background: rgba(91,91,214,0.22); border-color: rgba(91,91,214,0.5); }
 .filter-search { background: #1b2b44; color: #ffffff; border-color: rgba(255,255,255,0.18); }
+/* enforce same badge palette as index */
+.tournament-card .featured-cover-badge { font-size:11px; padding:4px 10px; border-radius:var(--r-pill, 100px); font-weight:500; line-height:1.2; border:1px solid transparent; }
+.tournament-card .featured-cover-badge.badge-ongoing { background: rgba(22,163,74,0.09) !important; color: #16a34a !important; border-color: rgba(22,163,74,0.25) !important; }
+.tournament-card .featured-cover-badge.badge-open { background: rgba(180,83,9,0.09) !important; color: #b45309 !important; border-color: rgba(180,83,9,0.25) !important; }
+.tournament-card .featured-cover-badge.badge-done { background: rgba(0,0,0,0.05) !important; color: #a1a1aa !important; border-color: rgba(0,0,0,0.08) !important; }
 </style>
 </head>
 <body class="page-tournaments">
