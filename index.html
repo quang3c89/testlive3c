@@ -241,7 +241,7 @@ footer { border-top:1px solid var(--border); height:50px; padding:0 16px; font-s
     <a href="tournaments.html" style="font-size:14px;color:var(--text-2);padding:0 14px;text-decoration:none">Giải đấu</a>
     <a href="#contact" style="font-size:14px;color:var(--text-2);padding:0 14px;text-decoration:none;display:flex;align-items:center;gap:6px">Liên hệ <span style="width:7px;height:7px;border-radius:50%;background:#d4d4d8;display:inline-block"></span></a>
     <a href="admin/login.html" style="font-size:14px;color:var(--text-2);padding:7px 14px;border:1px solid var(--border-md);border-radius:var(--r-sm);text-decoration:none;margin-left:8px">Đăng nhập</a>
-    <a href="admin/login.html?mode=register" style="font-size:14px;color:white;padding:7px 16px;border-radius:var(--r-sm);background:var(--accent);text-decoration:none;margin-left:6px">Đăng kí</a>
+    <a id="nav-register-link" href="admin/login.html?mode=register" style="font-size:14px;color:white;padding:7px 16px;border-radius:var(--r-sm);background:var(--accent);text-decoration:none;margin-left:6px">Đăng kí</a>
   </div>
 </nav>
 <div class="nav-drawer-overlay" id="nav-drawer-overlay"></div>
@@ -596,6 +596,14 @@ async function init() {
   const heroActions = document.getElementById('hero-actions');
   if (isAdmin()) {
     heroActions.insertAdjacentHTML('beforeend', `<a class="hero-cta sec" href="admin/create-tournament.html">Tạo giải đấu</a>`);
+  }
+
+  const regLink = document.getElementById('nav-register-link');
+  if (regLink) {
+    regLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      toast('Web đang trong giai đoạn demo, chưa mở đăng kí, liên hệ Admin nếu bạn cần hỗ trợ', 'info', { duration: 4200 });
+    });
   }
 
   await loadTournaments();
