@@ -132,14 +132,11 @@ body {
 
 .tournament-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(420px, 1fr));
   gap: 16px;
 }
-@media (min-width: 640px) {
-  .tournament-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 1024px) {
-  .tournament-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 980px) {
+  .tournament-grid { grid-template-columns: 1fr; }
 }
 
 .sk-card {
@@ -413,8 +410,10 @@ function render() {
       return `<div class="tournament-card tc-list-card fade-up">
         <a class="tc-card-overlay-link" href="${detailHref}"><span class="sr-only">Xem chi tiết ${t.name}</span></a>
         <div class="tc-body" style="padding-top:14px;">
-          <div class="tc-row"><span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span></div>
-          <div class="tc-name">${t.name}</div>
+          <div class="tc-head-row">
+            <div class="tc-name">${t.name}</div>
+            <span class="featured-cover-badge ${badgeClass}"><span class="badge-dot"></span>${badgeLabel}</span>
+          </div>
           <div class="tc-meta">
             ${t.date_str ? `<div class="tc-row"><span class="ico">📅</span>${t.date_str}</div>` : ''}
             ${t.location ? `<div class="tc-row"><span class="ico">📍</span>${t.location}</div>` : ''}
