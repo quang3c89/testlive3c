@@ -2533,9 +2533,10 @@ import {
 
 const RAW_TOURNAMENT_ID = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('id') || '';
 const TOURNAMENT_ID = /^[0-9a-fA-F-]{36}$/.test(String(RAW_TOURNAMENT_ID).trim()) ? String(RAW_TOURNAMENT_ID).trim() : '';
+let CURRENT_TOURNAMENT_ID = TOURNAMENT_ID;
 
 function tournamentsFetchPath() {
-  if (TOURNAMENT_ID) return `tournaments?id=eq.${TOURNAMENT_ID}&select=*`;
+  if (CURRENT_TOURNAMENT_ID) return `tournaments?id=eq.${CURRENT_TOURNAMENT_ID}&select=*`;
   return 'tournaments?order=created_at.desc&limit=1';
 }
 
@@ -2872,9 +2873,11 @@ async function supaLoad() {
     const tournaments = await supaFetch(tournamentsFetchPath(), 'GET');
     if (tournaments && tournaments.length) {
       applyTournamentRow(tournaments[0]);
+      if (!CURRENT_TOURNAMENT_ID && tournaments[0]?.id) CURRENT_TOURNAMENT_ID = tournaments[0].id;
     }
     setSyncProgress(60);
-    const players = await supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET');
+    if (!CURRENT_TOURNAMENT_ID) throw new Error('Không xác định được tournament_id để tải danh sách cơ thủ');
+    const players = await supaFetch(`tournament_players?tournament_id=eq.${CURRENT_TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET');
     if (players && Array.isArray(players)) {
       S.players = players.map(p => normalizePlayer(p));
     }
