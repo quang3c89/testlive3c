@@ -87,7 +87,8 @@ body.viewer-mode .pc .dx { display: none !important; }
 body.viewer-mode .hb-ctrl-btn { display: none !important; }
 body.viewer-mode #undo-btn,
 body.viewer-mode #redo-btn,
-body.viewer-mode .tb-right-actions, body.viewer-mode .sponsor-upload-btn { display: none !important; }
+body.viewer-mode .tb-right-actions { display: none !important; }
+body.viewer-mode .sponsor-upload-btn { opacity: .55; pointer-events: none; }
 
 /* ============ HEADER BANNER ============ */
 .header-banner {
@@ -2377,7 +2378,7 @@ body.fs-mode #bracket-style-toggle {
         <input class="cti-mini-color" id="cti-color-select" title="Màu chữ" type="color" onchange="setCtiColor(this.value)">
         <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
         <input class="cti-mini-color" id="cti-bg-select" title="Màu nền" type="color" onchange="setCtiBg(this.value)">
-        <button class="sponsor-upload-btn" type="button" title="Upload sponsor" onclick="document.getElementById('sponsor-upload-input').click()">⤴</button>
+        <button class="sponsor-upload-btn" type="button" title="Up Logo" onclick="document.getElementById('sponsor-upload-input').click()">UP LOGO</button>
         <input id="sponsor-upload-input" type="file" accept="image/*" multiple style="display:none" onchange="handleSponsorUpload(event)">
       </div>
     </div>
@@ -3803,7 +3804,8 @@ function renderSponsorMarquee() {
   const stage = document.getElementById('sponsor-stage');
   if (!stage) return;
   const logos = Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [];
-  stage.classList.toggle('snap-grid', !!S.sponsorSnap);
+  stage.classList.toggle('snap-grid', !!S.sponsorSnap && S.isAdmin);
+  stage.style.pointerEvents = S.isAdmin ? 'auto' : 'none';
   stage.innerHTML = '';
   const bw = stage.clientWidth || 1;
   const bh = stage.clientHeight || 1;
