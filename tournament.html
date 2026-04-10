@@ -2916,16 +2916,19 @@ async function supaPush() {
   setSyncProgress(20);
   try {
     const tourney = {
-      name:        S.tbVals[0] || '',
-      time:        S.tbVals[1] || '',
-      location:    S.tbVals[2] || '',
-      content:     S.tbVals[3] || '',
-      prize:       S.tbVals[4] || '',
-      video_url:   S.tbVals[5] || '',
+      name:          S.tbVals[0] || '',
+      date_str:      S.tbVals[1] || '',
+      location:      S.tbVals[2] || '',
+      format:        S.tbVals[3] || '',
+      prize:         S.tbVals[4] || '',
       bracket_state: JSON.stringify(S.bracket),
       bracket_size:  S.bracketSize,
-      theme:         S.theme,
-      title_font:    S.titleFont
+      // gom dữ liệu mở rộng vào settings để tránh lỗi thiếu cột
+      settings: {
+        theme: S.theme,
+        title_font: S.titleFont,
+        video_url: S.tbVals[5] || ''
+      }
     };
     await supaFetch(`tournaments?id=eq.${TOURNAMENT_ID}`, 'PATCH', tourney);
     setSyncProgress(50);
