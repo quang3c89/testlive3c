@@ -196,20 +196,24 @@ footer { border-top:1px solid var(--border); height:50px; padding:0 16px; font-s
   .tourney-card .tc-meta .tc-row { font-size: 12px; }
   .tourney-card .tc-footer { margin-top: 10px; padding-top: 10px; }
 
-  #contact { margin: 0 8px 14px; padding: 5px 6px; min-height: 54px; }
-  #contact-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px !important; }
-  .contact-card {
-    padding: 4px 2px !important;
-    gap: 4px;
-    justify-content: center;
-    border-radius: 9px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+  #contact { margin: 0 8px 14px; padding: 8px; min-height: 0; align-items: stretch; }
+  #contact-cards {
+    grid-template-columns: 1fr;
+    gap: 6px !important;
   }
-  .contact-card .cc-icon { width: 18px; height: 18px; font-size: 9px; }
-  .contact-card .cc-text { display: block; text-align: center; min-width: 0; }
-  .contact-card .cc-label { display: block; font-size: 9.5px; line-height: 1.05; }
-  .contact-card .cc-val { display: block; font-size: 9px; max-width: 100%; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; }
+  .contact-card {
+    width: 100%;
+    padding: 7px 10px !important;
+    gap: 8px;
+    justify-content: flex-start;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+  .contact-card .cc-icon { width: 22px; height: 22px; font-size: 10px; flex: 0 0 auto; }
+  .contact-card .cc-text { display: block; text-align: left; min-width: 0; }
+  .contact-card .cc-label { display: block; font-size: 10px; line-height: 1.1; }
+  .contact-card .cc-val { display: block; font-size: 10px; max-width: 100%; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; }
   .contact-card.zalo { order: 1; }
   .contact-card.facebook { order: 2; }
   .contact-card.phone { order: 3; }
