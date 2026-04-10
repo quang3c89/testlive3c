@@ -137,33 +137,42 @@ document.getElementById('create-form').addEventListener('submit', async (e) => {
       bracket_state: JSON.stringify([[{ p1:null,p2:null,s1:'',s2:'',winner:null },{ p1:null,p2:null,s1:'',s2:'',winner:null }],[{ p1:null,p2:null,s1:'',s2:'',winner:null }]]),
     };
 
-    const rows = await supaFetch('tournaments', 'POST', [payload]);
+    // Ưu tiên yêu cầu trả về id trực tiếp từ POST
+    const rows = await supaFetch('tournaments?select=id,name,created_at', 'POST', [payload]);
     let id = rows?.[0]?.id || rows?.id || null;
 
     // Fallback 1: tìm theo tên gần đúng
     if (!id) {
-      const safeName = (payload.name || '').replace(/[%*]/g, '').trim();
-      const fallbackRows = await supaFetch(
-        'tournaments',
-        'GET',
-        null,
-        `select=id,name,created_at&name=ilike.*${encodeURIComponent(safeName)}*&order=created_at.desc&limit=1`
-      );
-      id = fallbackRows?.[0]?.id || null;
+      try {
+        const safeName = (payload.name || '').replace(/[%*]/g, '').trim();
+        const fallbackRows = await supaFetch(
+          'tournaments',
+          'GET',
+          null,
+          `select=id,name,created_at&name=ilike.*${encodeURIComponent(safeName)}*&order=created_at.desc&limit=1`
+        );
+        id = fallbackRows?.[0]?.id || null;
+      } catch (_) {
+        // bỏ qua, thử fallback tiếp
+      }
     }
 
-    // Fallback 2: lấy bản ghi mới nhất (tránh fail do ký tự đặc biệt ở name)
+    // Fallback 2: lấy bản ghi mới nhất
     if (!id) {
-      const latestRows = await supaFetch(
-        'tournaments',
-        'GET',
-        null,
-        'select=id,name,created_at&order=created_at.desc&limit=1'
-      );
-      id = latestRows?.[0]?.id || null;
+      try {
+        const latestRows = await supaFetch(
+          'tournaments',
+          'GET',
+          null,
+          'select=id,name,created_at&order=created_at.desc&limit=1'
+        );
+        id = latestRows?.[0]?.id || null;
+      } catch (_) {
+        // bỏ qua để ném lỗi rõ ràng bên dưới
+      }
     }
 
-    if (!id) throw new Error('Không nhận được ID giải đấu mới');
+    if (!id) throw new Error('Không nhận được ID giải đấu mới (kiểm tra quyền INSERT/SELECT của bảng tournaments)');
     toast('✅ Tạo giải thành công', 'success', { containerId: 'toast-container', exitClass: 'out' });
     setTimeout(() => { window.location.href = `edit-tournament.html?id=${encodeURIComponent(id)}`; }, 250);
   } catch (err) {
