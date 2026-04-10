@@ -2485,7 +2485,7 @@ body.fs-mode #bracket-style-toggle {
     </div>
     <hr class="sep">
     <div class="mactions">
-      <button class="mbtn danger" onclick="if(confirm('Reset toàn bộ dữ liệu local?')){localStorage.clear();location.reload();}">🗑 Reset All</button>
+      <button class="mbtn danger" onclick="resetAllTournamentData()">🗑 Reset All</button>
     </div>
   </div>
 </div>
@@ -3917,6 +3917,45 @@ function saveSettings() {
   loadSettingsUI();
   closeModal('settings-modal');
   showToast('✅ Đã lưu cài đặt', 'success');
+}
+
+async function resetAllTournamentData() {
+  if (!confirm('Reset toàn bộ dữ liệu giải hiện tại trên cloud và local?')) return;
+  try {
+    if (!CURRENT_TOURNAMENT_ID) {
+      const latest = await supaFetch('tournaments?select=id&order=created_at.desc&limit=1', 'GET');
+      if (latest?.[0]?.id) CURRENT_TOURNAMENT_ID = latest[0].id;
+    }
+
+    if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
+      await supaFetch(`tournament_players?tournament_id=eq.${CURRENT_TOURNAMENT_ID}`, 'DELETE');
+      await supaFetch(`tournaments?id=eq.${CURRENT_TOURNAMENT_ID}`, 'PATCH', {
+        bracket_state: JSON.stringify(genBracket(S.bracketSize)),
+        settings: {
+          theme: DEFAULTS.theme,
+          title_font: DEFAULTS.titleFont,
+          bracket_colors: DEFAULTS.bracketColors,
+          video_url: ''
+        }
+      });
+    }
+
+    S.players = [];
+    S.bracket = genBracket(S.bracketSize);
+    S.theme = DEFAULTS.theme;
+    S.titleFont = DEFAULTS.titleFont;
+    S.bracketColors = { ...DEFAULTS.bracketColors };
+    S.tbVals = [...DEFAULTS.tbVals];
+
+    saveState();
+    renderAll();
+    setupTopBar();
+    updateBcName();
+    showToast('✅ Reset toàn bộ thành công', 'success');
+    closeModal('settings-modal');
+  } catch (err) {
+    showToast('❌ Reset thất bại: ' + (err?.message || err), 'error');
+  }
 }
 
 /* ================================================================
