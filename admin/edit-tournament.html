@@ -291,33 +291,18 @@ function getPlayerColumnsSample(list) {
 }
 
 async function loadPlayers() {
-  try {
-    const rows = await supaFetch('players', 'GET', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}&order=id.asc`);
-    state.players = (rows || []).map((p, idx) => ({
-      id: p.id ?? `tmp_${idx}_${Date.now()}`,
-      name: p.name || '',
-      unit: p.unit || '',
-      rank: p.rank || '',
-      drawn: !!p.drawn,
-      bracketSlot: p.bracket_slot || null,
-      tournament_id: p.tournament_id,
-    }));
-  } catch {
-    const rows = await supaFetch('players', 'GET', null, 'order=id.asc');
-    state.players = (rows || []).map((p, idx) => ({
-      id: p.id ?? `tmp_${idx}_${Date.now()}`,
-      name: p.name || '',
-      unit: p.unit || '',
-      rank: p.rank || '',
-      drawn: !!p.drawn,
-      bracketSlot: p.bracket_slot || null,
-      tournament_id: p.tournament_id,
-    }));
-    if (state.players.length) {
-      toast('⚠️ Không lọc được theo tournament_id. Đang dùng danh sách players chung.', 'error');
-      console.debug('players columns sample:', getPlayerColumnsSample(rows));
-    }
-  }
+  const rows = await supaFetch('tournament_players', 'GET', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}&order=stt.asc,id.asc`);
+  state.players = (rows || []).map((p, idx) => ({
+    id: p.id ?? `tmp_${idx}_${Date.now()}`,
+    stt: String(p.stt ?? (idx + 1)),
+    name: p.name || '',
+    unit: p.unit || '',
+    rank: p.rank || '',
+    drawn: !!p.drawn,
+    bracketSlot: p.bracket_slot || null,
+    tournament_id: p.tournament_id,
+    isSeed: !!p.is_seed,
+  }));
 }
 
 function ensureBracket() {
@@ -483,23 +468,21 @@ async function saveInfoOnly() {
 }
 
 async function replacePlayersRows() {
-  const rows = state.players.map((p) => ({
+  const rows = state.players.map((p, idx) => ({
+    stt: Number(p.stt || (idx + 1)),
     name: p.name || '',
     unit: p.unit || '',
     rank: p.rank || '',
+    is_seed: !!p.isSeed,
     drawn: !!p.drawn,
     bracket_slot: p.bracketSlot || null,
     tournament_id: TOURNAMENT_ID,
   }));
 
-  try {
-    await supaFetch('players', 'DELETE', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}`);
-  } catch {
-    // fallback: table không có tournament_id
-  }
+  await supaFetch('tournament_players', 'DELETE', null, `tournament_id=eq.${encodeURIComponent(TOURNAMENT_ID)}`);
 
   if (rows.length) {
-    await supaFetch('players', 'POST', rows, null, { Prefer: 'return=representation,resolution=merge-duplicates' });
+    await supaFetch('tournament_players', 'POST', rows, null, { Prefer: 'return=representation,resolution=merge-duplicates' });
   }
 }
 
@@ -596,7 +579,7 @@ function setupRealtime() {
       event: 'phx_join',
       payload: { config: { postgres_changes: [
         { event: '*', schema: 'public', table: 'tournaments' },
-        { event: '*', schema: 'public', table: 'players' },
+        { event: '*', schema: 'public', table: 'tournament_players' },
       ] } },
       ref: '1',
     }));

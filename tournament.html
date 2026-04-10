@@ -2872,7 +2872,7 @@ async function supaLoad() {
       applyTournamentRow(tournaments[0]);
     }
     setSyncProgress(60);
-    const players = await supaFetch('players?order=id', 'GET');
+    const players = await supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET');
     if (players && Array.isArray(players)) {
       S.players = players.map(p => normalizePlayer(p));
     }
@@ -2931,7 +2931,8 @@ async function supaPush() {
         return obj;
       });
       for (let i = 0; i < pData.length; i += 50) {
-        await supaFetch('players', 'POST', pData.slice(i, i+50), {'Prefer':'return=representation,resolution=merge-duplicates'});
+        const chunk = pData.slice(i, i+50).map(row => ({ ...row, tournament_id: TOURNAMENT_ID || null }));
+        await supaFetch('tournament_players', 'POST', chunk, {'Prefer':'return=representation,resolution=merge-duplicates'});
       }
     }
     setSyncProgress(100);
