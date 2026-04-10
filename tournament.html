@@ -2517,6 +2517,7 @@ body.fs-mode #bracket-style-toggle {
 
 <script type="module">
 import { isAdmin as authIsAdmin, logout as authLogout } from './assets/js/auth.js';
+import { resolveSupabaseClient } from './assets/js/supabase.js';
 import { toast as uiToast, setupRealtime as uiTableRealtime } from './assets/js/ui.js';
 /* uiTableRealtime: từ ui.js (landing); trang giải đấu giữ function setupRealtime() WebSocket cục bộ */
 import {
@@ -3091,7 +3092,7 @@ function saveSupaConfig() {
 async function init() {
   const loadTxt = document.getElementById('loading-txt');
 
-  // Parse Supabase credentials từ URL hash
+  // Parse Supabase credentials từ URL hash (legacy) + runtime env
   const hash = new URLSearchParams(window.location.hash.slice(1));
   const hashUrl = hash.get('supaUrl');
   const hashKey = hash.get('supaKey');
@@ -3100,6 +3101,10 @@ async function init() {
 
   loadTxt.textContent = 'ĐỌC DỮ LIỆU...';
   loadState();
+
+  const envClient = resolveSupabaseClient();
+  if (!S.supaUrl && envClient.baseUrl) S.supaUrl = envClient.baseUrl;
+  if (!S.supaKey && envClient.apiKey) S.supaKey = envClient.apiKey;
 
   loadTxt.textContent = 'ÁP DỤNG THEME...';
   applyTheme(S.theme);
