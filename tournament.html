@@ -3151,7 +3151,12 @@ async function supaLoadSilent() {
       if (themeChanged) {
         applyTheme(S.theme);
         setupTopBar();
-        renderBracket();
+        renderAll();
+        applyMobileBracketOverview();
+        if (document.body.classList.contains('tab-right')) {
+          switchBracketTab('register');
+          renderRegisterCards();
+        }
       }
 
       if (t.bracket_state) {
