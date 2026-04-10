@@ -2923,17 +2923,26 @@ async function supaPush() {
       theme:         S.theme,
       title_font:    S.titleFont
     };
-    await supaFetch('tournaments', 'POST', [tourney]);
+    await supaFetch(`tournaments?id=eq.${TOURNAMENT_ID}`, 'PATCH', tourney);
     setSyncProgress(50);
+
+    await supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}`, 'DELETE');
+
     if (S.players.length > 0) {
-      const pData = S.players.map(p => {
-        const obj = { name: p.name, unit: p.unit||'', rank: p.rank||'', drawn: p.drawn, bracket_slot: p.bracketSlot || null };
-        if (p.supaId) obj.id = p.supaId;
-        return obj;
-      });
+      const pData = S.players.map((p, idx) => ({
+        tournament_id: TOURNAMENT_ID,
+        stt: Number(p.stt || idx + 1),
+        name: p.name || '',
+        unit: p.unit || '',
+        rank: p.rank || '',
+        is_seed: !!p.isSeed,
+        drawn: !!p.drawn,
+        bracket_slot: p.bracketSlot || null
+      }));
+
       for (let i = 0; i < pData.length; i += 50) {
-        const chunk = pData.slice(i, i+50).map(row => ({ ...row, tournament_id: TOURNAMENT_ID || null }));
-        await supaFetch('tournament_players', 'POST', chunk, {'Prefer':'return=representation,resolution=merge-duplicates'});
+        const chunk = pData.slice(i, i + 50);
+        await supaFetch('tournament_players', 'POST', chunk);
       }
     }
     setSyncProgress(100);
@@ -2957,7 +2966,7 @@ async function supaLoadFull() {
   setSyncProgress(30);
   const [tournaments, players] = await Promise.all([
     supaFetch(tournamentsFetchPath(), 'GET'),
-    supaFetch('players?order=id', 'GET')
+    supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
   ]);
   setSyncProgress(70);
   if (tournaments && tournaments.length) {
@@ -2991,7 +3000,7 @@ function setupRealtime() {
       ws.send(JSON.stringify({
         topic: 'realtime:public', event: 'phx_join',
         payload: { config: { postgres_changes: [
-          { event: '*', schema: 'public', table: 'players' },
+          { event: '*', schema: 'public', table: 'tournament_players' },
           { event: '*', schema: 'public', table: 'tournaments' }
         ]}}, ref: '1'
       }));
@@ -3005,7 +3014,7 @@ function setupRealtime() {
         const msg = JSON.parse(evt.data);
         if (msg.event === 'postgres_changes' || (msg.payload && msg.payload.data && msg.payload.data.type)) {
           const change = msg.payload.data || msg.payload;
-          if (change.table === 'tournaments' || change.table === 'players') {
+          if (change.table === 'tournaments' || change.table === 'tournament_players') {
             await supaLoadSilent();
           }
         }
@@ -3024,7 +3033,7 @@ async function supaLoadSilent() {
   try {
     const [tournaments, players] = await Promise.all([
       supaFetch(tournamentsFetchPath(), 'GET'),
-      supaFetch('players?order=id', 'GET')
+      supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
     ]);
     if (tournaments && tournaments.length) {
       const t = tournaments[0];
