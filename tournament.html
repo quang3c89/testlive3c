@@ -2542,17 +2542,28 @@ function tournamentsFetchPath() {
 
 function applyTournamentRow(t) {
   if (!t) return;
+  const settings = (t.settings && typeof t.settings === 'object') ? t.settings : {};
+
   S.tbVals = [
     t.name || '',
     t.date_str || t.time || '',
     t.location || '',
     t.content || t.format || '',
     t.prize || '',
-    t.video_url || ''
+    settings.video_url || t.video_url || ''
   ];
+
   if (t.bracket_state) { try { S.bracket = JSON.parse(t.bracket_state); } catch (e) {} }
-  if (t.theme) S.theme = t.theme;
-  if (t.title_font) S.titleFont = t.title_font;
+
+  const nextTheme = t.theme || settings.theme;
+  const nextTitleFont = t.title_font || settings.title_font;
+  if (nextTheme) S.theme = nextTheme;
+  if (nextTitleFont) S.titleFont = nextTitleFont;
+
+  if (settings.bracket_colors && typeof settings.bracket_colors === 'object') {
+    S.bracketColors = { ...DEFAULTS.bracketColors, ...settings.bracket_colors };
+  }
+
   if (t.bracket_size) S.bracketSize = t.bracket_size;
 }
 
@@ -2927,7 +2938,8 @@ async function supaPush() {
       settings: {
         theme: S.theme,
         title_font: S.titleFont,
-        video_url: S.tbVals[5] || ''
+        video_url: S.tbVals[5] || '',
+        bracket_colors: S.bracketColors || DEFAULTS.bracketColors
       }
     };
     if (!CURRENT_TOURNAMENT_ID) {
