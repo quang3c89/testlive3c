@@ -47,9 +47,15 @@ export async function supaFetch(table, method = 'GET', body = null, filter = nul
   return ct.includes('json') ? res.json() : null;
 }
 
-export async function getTournaments(options = {}) {
-  const filter =
-    'order=created_at.desc&select=id,name,date_str,location,prize,format,status,cover_url,description,created_at';
+export async function getTournaments(clubId = null, options = {}) {
+  let filter =
+    'order=created_at.desc&select=id,name,date_str,location,prize,format,status,cover_url,description,created_at,club_id';
+
+  // Nếu có club_id thì chỉ lấy giải đấu của CLB đó
+  if (clubId) {
+    filter += `&club_id=eq.${encodeURIComponent(clubId)}`;
+  }
+
   return supaFetch('tournaments', 'GET', null, filter, options);
 }
 

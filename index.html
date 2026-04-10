@@ -562,6 +562,47 @@ function renderFilterTabs() {
   });
 }
 
+// ══════════════════════════════════
+// Nhận diện subdomain
+// ══════════════════════════════════
+function getSubdomain() {
+  const hostname = window.location.hostname
+  // localhost → không phải subdomain
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return null
+  const parts = hostname.split('.')
+  // hanoi.live3c.xyz → parts[0] = 'hanoi'
+  // live3c.xyz → parts.length = 2 → không phải subdomain
+  if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'admin') {
+    return parts[0]
+  }
+  return null
+}
+
+// ══════════════════════════════════
+// Load thông tin CLB theo subdomain
+// ══════════════════════════════════
+async function loadClubInfo(subdomain) {
+  const SUPABASE_URL = 'https://lmcxlveyfhfoccuujvki.supabase.co'
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtY3hsdmV5Zmhmb2NjdXVqdmtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTUzNjUsImV4cCI6MjA5MDM5MTM2NX0.kuKYrg2eHnN340wDsf2Cydhz7W2uHKuBaj_k-1EPZ08'
+  const { createClient } = supabase
+
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+  // Lấy thông tin CLB
+  const { data: club, error } = await db
+    .from('clubs')
+    .select('*')
+    .eq('subdomain', subdomain)
+    .single()
+
+  if (error || !club) {
+    // Subdomain không tồn tại → về trang chủ
+    window.location.href = 'https://live3c.xyz'
+    return null
+  }
+
+  return club
+}
 async function loadTournaments() {
   const { baseUrl, apiKey } = resolveSupabaseClient();
   if (!baseUrl || !apiKey) {
@@ -575,7 +616,7 @@ async function loadTournaments() {
     return;
   }
   try {
-    const data = await getTournaments();
+    const data = await getTournaments(window.__CLUB_ID__ || null);
     if (data && Array.isArray(data)) {
       allTournaments = data;
       setRT(true, { mode: 'landing' });
@@ -620,42 +661,65 @@ function renderContact() {
 }
 
 async function init() {
-  renderContact();
-  setupObserver();
+  // Kiểm tra subdomain
+  const subdomain = getSubdomain()
+  if (subdomain) {
+    const club = await loadClubInfo(subdomain)
+    if (!club) return
+
+    // Cập nhật tiêu đề trang theo CLB
+    document.title = club.name + ' — Live3C'
+
+    // Đổi màu accent theo CLB
+    if (club.theme_color) {
+      document.documentElement.style.setProperty('--accent', club.theme_color)
+    }
+
+    // Hiện tên CLB trên hero
+    const heroH1 = document.querySelector('.hero-shell h1')
+    if (heroH1) heroH1.textContent = club.name
+
+    // Lưu club_id để loadTournaments lọc đúng
+    window.__CLUB_ID__ = club.id
+    window.__CLUB_NAME__ = club.name
+  }
+
+  renderContact()
+  setupObserver()
 
   document.querySelectorAll('.hero-content .fade-up').forEach((el, i) => {
-    setTimeout(() => el.classList.add('in'), 600 + i * 120);
-  });
+    setTimeout(() => el.classList.add('in'), 600 + i * 120)
+  })
 
-  const heroActions = document.getElementById('hero-actions');
+  const heroActions = document.getElementById('hero-actions')
   if (isAdmin()) {
-    heroActions.insertAdjacentHTML('beforeend', `<a class="hero-cta sec" href="admin/create-tournament.html">Tạo giải đấu</a>`);
+    heroActions.insertAdjacentHTML('beforeend', `<a class="hero-cta sec" href="admin/create-tournament.html">Tạo giải đấu</a>`)
   }
 
-  const regLink = document.getElementById('nav-register-link');
+  const regLink = document.getElementById('nav-register-link')
   if (regLink) {
     regLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      toast('Web đang trong giai đoạn demo, chưa mở đăng kí, liên hệ Admin nếu bạn cần hỗ trợ', 'info', { duration: 4200 });
-    });
+      e.preventDefault()
+      toast('Web đang trong giai đoạn demo, chưa mở đăng kí, liên hệ Admin nếu bạn cần hỗ trợ', 'info', { duration: 4200 })
+    })
   }
 
-  await loadTournaments();
+  await loadTournaments()
 
-  const { baseUrl: supaUrl, apiKey: supaKey } = resolveSupabaseClient();
+  const { baseUrl: supaUrl, apiKey: supaKey } = resolveSupabaseClient()
   if (supaUrl && supaKey) {
     setupRealtime({
       supaUrl,
       supaKey,
       onUpdate: loadTournaments,
       setOnline: (online) => setRT(online, { mode: 'landing' }),
-    });
+    })
   }
 
-  setTimeout(() => hideSplash(), 1200);
+  setTimeout(() => hideSplash(), 1200)
 }
 
-window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', init)
 </script>
 </body>
 </html>
