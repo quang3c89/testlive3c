@@ -1,27 +1,12 @@
 /* Live3C — supabase.js */
-import {
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  LS_KEY_URL_LANDING,
-  LS_KEY_KEY_LANDING,
-  LS_KEY_URL_TOURNAMENT,
-  LS_KEY_KEY_TOURNAMENT,
-} from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
 /**
- * Đọc URL/key từ options, rồi localStorage (landing + tournament keys), rồi config.
+ * Đọc URL/key từ overrides rồi env runtime (không dùng localStorage).
  */
 export function resolveSupabaseClient(overrides = {}) {
-  const baseUrl =
-    overrides.baseUrl ??
-    localStorage.getItem(LS_KEY_URL_LANDING) ??
-    localStorage.getItem(LS_KEY_URL_TOURNAMENT) ??
-    SUPABASE_URL;
-  const apiKey =
-    overrides.apiKey ??
-    localStorage.getItem(LS_KEY_KEY_LANDING) ??
-    localStorage.getItem(LS_KEY_KEY_TOURNAMENT) ??
-    SUPABASE_KEY;
+  const baseUrl = overrides.baseUrl ?? SUPABASE_URL;
+  const apiKey = overrides.apiKey ?? SUPABASE_KEY;
   return { baseUrl: (baseUrl || '').trim(), apiKey: (apiKey || '').trim() };
 }
 
