@@ -491,6 +491,8 @@ body.export-static .bracket-tool-zone {
 }
 .sponsor-float:hover .sponsor-del,
 .sponsor-float:hover .sponsor-resize { opacity:1; }
+body.admin-mode .sponsor-del,
+body.admin-mode .sponsor-resize { opacity:1; }
 .bracket-tool-zone { display: none; }
 .bracket-color-tools {
   position: absolute;
@@ -550,7 +552,7 @@ body.viewer-mode #bracket-style-toggle { display: none !important; }
     opacity: 0;
   }
 }
-#bracket-lines { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; overflow: visible; }
+#bracket-lines { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 4; overflow: visible; display:block; opacity:1; }
 .bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; min-width: 100%; min-height: calc(100vh - 120px); }
 
 /* SYMMETRICAL BRACKET */
@@ -1248,6 +1250,15 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 @media (max-width: 768px) {
   body { overflow: auto; height: auto; min-height: 100vh; }
+
+  #bracket-lines { z-index: 6 !important; opacity: 1 !important; }
+  #bracket-lines .br-line-base { stroke-width: 2.2px !important; opacity: .95 !important; }
+  #bracket-lines .br-line-glow { stroke-width: 4.4px !important; opacity: .36 !important; }
+  #bracket-lines .br-line-flow {
+    stroke-width: 2.7px !important;
+    opacity: 1 !important;
+    animation: bracketFlow 1.35s linear infinite !important;
+  }
 
   body.mobile-bracket-overview .center {
     padding: 4px 4px 64px;
@@ -3813,13 +3824,16 @@ function renderSponsorMarquee() {
     const item = document.createElement('div');
     item.className = 'sponsor-float';
     item.dataset.idx = String(idx);
-    const pos = S.sponsorPos?.[idx] || { x: 20 + (idx % 6) * 90, y: 20 + Math.floor(idx / 6) * 90, xPct: 0.05, yPct: 0.08, w: 120, h: 120 };
-    const x = Number.isFinite(pos.xPct) ? pos.xPct * bw : pos.x;
+    const pos = S.sponsorPos?.[idx] || { x: 0, y: 0, xPct: 0.5, yPct: 0.06, w: 120, h: 120 };
+    const w = Math.max(40, pos.w || 120);
+    const h = Math.max(40, pos.h || 120);
+    const xBase = Number.isFinite(pos.xPct) ? pos.xPct * bw : pos.x;
     const y = Number.isFinite(pos.yPct) ? pos.yPct * bh : pos.y;
+    const x = xBase - (w / 2);
     item.style.left = `${x}px`;
     item.style.top = `${y}px`;
-    item.style.width = `${Math.max(40, pos.w || 120)}px`;
-    item.style.height = `${Math.max(40, pos.h || 120)}px`;
+    item.style.width = `${w}px`;
+    item.style.height = `${h}px`;
     item.innerHTML = `<img src="${src}" alt="sponsor">${S.isAdmin ? '<button class="sponsor-del" title="Xóa" onclick="removeSponsorLogo(event,' + idx + ')">×</button><span class="sponsor-resize" data-rs="1"></span>' : ''}`;
     if (S.isAdmin) {
       item.addEventListener('pointerdown', (ev) => {
