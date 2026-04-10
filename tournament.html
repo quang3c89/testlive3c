@@ -3546,6 +3546,10 @@ function applyTheme(key) {
     drawBracketLines: () => drawBracketLines(),
   });
   buildFontSelects();
+  setupTopBar();
+  renderAll();
+  applyMobileBracketOverview();
+  supaPushDebounced();
 }
 
 /* ================================================================
