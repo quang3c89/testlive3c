@@ -4198,6 +4198,7 @@ function renderRegisterCards() {
 
     card.onclick = () => {
       if (dragged) return;
+      if (!S.isAdmin) return;
       openEditPlayer(p.id);
     };
 
