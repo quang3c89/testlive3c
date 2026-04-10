@@ -582,26 +582,31 @@ function getSubdomain() {
 // Load thông tin CLB theo subdomain
 // ══════════════════════════════════
 async function loadClubInfo(subdomain) {
-  const SUPABASE_URL = 'https://lmcxlveyfhfoccuujvki.supabase.co'
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtY3hsdmV5Zmhmb2NjdXVqdmtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTUzNjUsImV4cCI6MjA5MDM5MTM2NX0.kuKYrg2eHnN340wDsf2Cydhz7W2uHKuBaj_k-1EPZ08'
-  const { createClient } = supabase
+  const SUPABASE_URL = 'https://lmcxlveyfhfoccuujvki.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtY3hsdmV5Zmhmb2NjdXVqdmtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTUzNjUsImV4cCI6MjA5MDM5MTM2NX0.kuKYrg2eHnN340wDsf2Cydhz7W2uHKuBaj_k-1EPZ08';
 
-  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  const url = `${SUPABASE_URL}/rest/v1/clubs?select=*&subdomain=eq.${encodeURIComponent(subdomain)}&limit=1`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+  });
 
-  // Lấy thông tin CLB
-  const { data: club, error } = await db
-    .from('clubs')
-    .select('*')
-    .eq('subdomain', subdomain)
-    .single()
-
-  if (error || !club) {
-    // Subdomain không tồn tại → về trang chủ
-    window.location.href = 'https://live3c.xyz'
-    return null
+  if (!res.ok) {
+    window.location.href = 'https://live3c.xyz';
+    return null;
   }
 
-  return club
+  const rows = await res.json();
+  const club = Array.isArray(rows) ? rows[0] : null;
+
+  if (!club) {
+    window.location.href = 'https://live3c.xyz';
+    return null;
+  }
+
+  return club;
 }
 async function loadTournaments() {
   const { baseUrl, apiKey } = resolveSupabaseClient();
