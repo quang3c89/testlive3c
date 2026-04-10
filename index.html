@@ -133,9 +133,20 @@ footer { border-top:1px solid var(--border); height:50px; padding:0 16px; font-s
 #splash .splash-logo .splash-live { color:#ef4444 !important; }
 #splash .splash-logo .splash-3c { color:#ffffff !important; }
 #splash .splash-logo .splash-xyz { color:#facc15 !important; }
-#splash .splash-sub .splash-b1 { color:#ef4444 !important; }
+#splash .splash-logo {
+  font-weight: 800 !important;
+  letter-spacing: -0.6px !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.08), 0 3px 18px rgba(0,0,0,0.32);
+}
+#splash .splash-sub .splash-b1 { color:#ff6b6b !important; }
 #splash .splash-sub .splash-b2 { color:#ffffff !important; }
-#splash .splash-sub .splash-b3 { color:#facc15 !important; }
+#splash .splash-sub .splash-b3 { color:#ffe082 !important; }
+#splash .splash-sub {
+  opacity: 1 !important;
+  font-weight: 600 !important;
+  letter-spacing: 2px !important;
+  text-shadow: 0 0 8px rgba(255,255,255,0.16), 0 1px 8px rgba(0,0,0,0.38);
+}
 @media (max-width:900px){ .hero-shell{ grid-template-columns:1fr; gap:24px; } }
 @media (max-width: 980px) {
   .site-nav { padding: 0 8px; height: 48px; }
