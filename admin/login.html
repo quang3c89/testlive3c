@@ -85,32 +85,69 @@
     </form>
   </main>
 
-<script type="module">
-import { login, isAdmin } from '../assets/js/auth.js';
-import { toast } from '../assets/js/ui.js';
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Kết nối Supabase
+  const SUPABASE_URL = 'https://lmcxlveyfhfoccuujvki.supabase.co'
+  const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtY3hsdmV5Zmhmb2NjdXVqdmtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTUzNjUsImV4cCI6MjA5MDM5MTM2NX0.kuKYrg2eHnN340wDsf2Cydhz7W2uHKuBaj_k-1EPZ08'
+  const { createClient } = supabase
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-if (isAdmin()) {
-  window.location.href = 'dashboard.html';
-}
-
-function handleLogin() {
-  const pwd = document.getElementById('password').value;
-  const err = document.getElementById('login-error');
-
-  if (login(pwd)) {
-    window.location.href = 'dashboard.html';
-  } else {
-    const msg = 'Mật khẩu không đúng';
-    err.textContent = msg;
-    toast(msg, 'error');
+  // Nếu đã đăng nhập rồi thì vào dashboard luôn
+  async function checkSession() {
+    const { data: { session } } = await db.auth.getSession()
+    if (session) {
+      window.location.href = 'dashboard.html'
+    }
   }
-}
+  checkSession()
 
-document.getElementById('login-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  document.getElementById('login-error').textContent = '';
-  handleLogin();
-});
+  // Xử lý đăng nhập
+  async function handleLogin(e) {
+    e.preventDefault()
+
+    const email = document.getElementById('username').value
+    const password = document.getElementById('password').value
+    const errEl = document.getElementById('login-error')
+    const btn = document.querySelector('.btn-pri')
+
+    // Disable nút khi đang xử lý
+    btn.textContent = 'Đang đăng nhập...'
+    btn.disabled = true
+    errEl.textContent = ''
+
+    const { data, error } = await db.auth.signInWithPassword({
+      email,
+      password
+    })
+
+    if (error) {
+      errEl.textContent = 'Email hoặc mật khẩu không đúng'
+      btn.textContent = 'Đăng nhập'
+      btn.disabled = false
+      return
+    }
+
+    // Kiểm tra role có phải super_admin không
+    const { data: userData } = await db
+      .from('users')
+      .select('role')
+      .eq('id', data.user.id)
+      .single()
+
+    if (!userData || userData.role !== 'super_admin') {
+      errEl.textContent = 'Tài khoản không có quyền truy cập admin'
+      await db.auth.signOut()
+      btn.textContent = 'Đăng nhập'
+      btn.disabled = false
+      return
+    }
+
+    // Thành công → vào dashboard
+    window.location.href = 'dashboard.html'
+  }
+
+  document.getElementById('login-form').addEventListener('submit', handleLogin)
 </script>
 </body>
 </html>
