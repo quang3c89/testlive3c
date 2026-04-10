@@ -2579,7 +2579,7 @@ function tournamentsFetchPath() {
 }
 
 function applyTournamentRow(t) {
-  if (!t) return;
+  if (!t) return { themeChanged: false };
   const settings = (t.settings && typeof t.settings === 'object') ? t.settings : {};
 
   S.tbVals = [
@@ -2592,6 +2592,10 @@ function applyTournamentRow(t) {
   ];
 
   if (t.bracket_state) { try { S.bracket = JSON.parse(t.bracket_state); } catch (e) {} }
+
+  const prevTheme = S.theme;
+  const prevTitleFont = S.titleFont;
+  const prevBracketColors = JSON.stringify(S.bracketColors || {});
 
   const nextTheme = t.theme || settings.theme;
   const nextTitleFont = t.title_font || settings.title_font;
@@ -2613,6 +2617,13 @@ function applyTournamentRow(t) {
   }
 
   if (t.bracket_size) S.bracketSize = t.bracket_size;
+
+  const themeChanged =
+    prevTheme !== S.theme ||
+    prevTitleFont !== S.titleFont ||
+    prevBracketColors !== JSON.stringify(S.bracketColors || {});
+
+  return { themeChanged };
 }
 
 function updateBcName() {
@@ -3116,56 +3127,28 @@ async function supaLoadSilent() {
       const t = tournaments[0];
       if (!CURRENT_TOURNAMENT_ID && t?.id) CURRENT_TOURNAMENT_ID = t.id;
 
-      const settings = (t.settings && typeof t.settings === 'object') ? t.settings : {};
-      const newVals = [
-        t.name || '',
-        t.date_str || t.time || '',
-        t.location || '',
-        t.content || t.format || '',
-        t.prize || '',
-        settings.video_url || t.video_url || ''
-      ];
-      if (JSON.stringify(newVals) !== JSON.stringify(S.tbVals)) {
-        S.tbVals = newVals;
-        setupTopBar();
-        updateBcName();
-      }
+      const beforeTheme = S.theme;
+      const beforeFont = S.titleFont;
+      const beforeColors = JSON.stringify(S.bracketColors || {});
 
-      const remoteTheme = t.theme || settings.theme;
-      const remoteTitleFont = t.title_font || settings.title_font;
-      const remoteBracketColors = settings.bracket_colors || null;
+      const applied = applyTournamentRow(t);
 
-      let themeChanged = false;
-      if (remoteTheme && remoteTheme !== S.theme) {
-        S.theme = remoteTheme;
-        themeChanged = true;
-      }
-      if (remoteTitleFont && remoteTitleFont !== S.titleFont) {
-        S.titleFont = remoteTitleFont;
-        themeChanged = true;
-      }
-      if (remoteBracketColors && JSON.stringify(remoteBracketColors) !== JSON.stringify(S.bracketColors)) {
-        S.bracketColors = { ...DEFAULTS.bracketColors, ...remoteBracketColors };
-        themeChanged = true;
-      }
+      setupTopBar();
+      updateBcName();
+
+      const themeChanged = !!applied?.themeChanged ||
+        beforeTheme !== S.theme ||
+        beforeFont !== S.titleFont ||
+        beforeColors !== JSON.stringify(S.bracketColors || {});
+
       if (themeChanged) {
         applyTheme(S.theme);
-        setupTopBar();
         renderAll();
         applyMobileBracketOverview();
         if (document.body.classList.contains('tab-right')) {
           switchBracketTab('register');
           renderRegisterCards();
         }
-      }
-
-      if (t.bracket_state) {
-        try {
-          const nb = JSON.parse(t.bracket_state);
-          if (JSON.stringify(nb) !== JSON.stringify(S.bracket)) {
-            S.bracket = nb; renderBracket();
-          }
-        } catch(e) {}
       }
     }
     if (players && Array.isArray(players)) {
