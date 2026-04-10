@@ -2930,14 +2930,20 @@ async function supaPush() {
         video_url: S.tbVals[5] || ''
       }
     };
-    await supaFetch(`tournaments?id=eq.${TOURNAMENT_ID}`, 'PATCH', tourney);
+    if (!CURRENT_TOURNAMENT_ID) {
+      const latest = await supaFetch('tournaments?select=id&order=created_at.desc&limit=1', 'GET');
+      if (latest?.[0]?.id) CURRENT_TOURNAMENT_ID = latest[0].id;
+    }
+    if (!CURRENT_TOURNAMENT_ID) throw new Error('Không xác định được tournament_id để lưu dữ liệu');
+
+    await supaFetch(`tournaments?id=eq.${CURRENT_TOURNAMENT_ID}`, 'PATCH', tourney);
     setSyncProgress(50);
 
-    await supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}`, 'DELETE');
+    await supaFetch(`tournament_players?tournament_id=eq.${CURRENT_TOURNAMENT_ID}`, 'DELETE');
 
     if (S.players.length > 0) {
       const pData = S.players.map((p, idx) => ({
-        tournament_id: TOURNAMENT_ID,
+        tournament_id: CURRENT_TOURNAMENT_ID,
         stt: Number(p.stt || idx + 1),
         name: p.name || '',
         unit: p.unit || '',
