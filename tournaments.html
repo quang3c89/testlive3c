@@ -242,9 +242,27 @@ footer.footer-lite {
   .site-nav .nav-login, .site-nav .nav-register { padding: 5px 10px; font-size: 12px; }
   .tournaments-inner { padding: 0 16px 56px; }
   .tournaments-header { padding: 24px 16px 20px; }
-  .filter-bar { gap: 10px; }
-  .filter-search-wrap { width: 100%; }
+
+  .filter-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    align-items: center;
+  }
+  .filter-tab {
+    width: 100%;
+    padding: 5px 4px;
+    font-size: 10.5px;
+    line-height: 1.1;
+    white-space: nowrap;
+    border-radius: 999px;
+  }
+  .filter-search-wrap {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
   .filter-search { max-width: 100%; }
+
   .tournament-grid { grid-template-columns: 1fr; gap: 12px; }
   .tournament-card { padding: 14px 14px; }
   .tournament-card .tc-head-row { grid-template-columns: minmax(0,1fr) auto; column-gap: 8px; }
