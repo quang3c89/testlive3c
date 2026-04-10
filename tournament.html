@@ -2529,10 +2529,11 @@ import {
 } from './assets/js/tournament.js';
 /* advanceWinner: import theo spec; trang vẫn dùng setWinner() nội bộ */
 
-const TOURNAMENT_ID = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('id') || '';
+const RAW_TOURNAMENT_ID = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('id') || '';
+const TOURNAMENT_ID = /^[0-9a-fA-F-]{36}$/.test(String(RAW_TOURNAMENT_ID).trim()) ? String(RAW_TOURNAMENT_ID).trim() : '';
 
 function tournamentsFetchPath() {
-  if (TOURNAMENT_ID) return `tournaments?id=eq.${encodeURIComponent(TOURNAMENT_ID)}&select=*`;
+  if (TOURNAMENT_ID) return `tournaments?id=eq.${TOURNAMENT_ID}&select=*`;
   return 'tournaments?order=created_at.desc&limit=1';
 }
 
