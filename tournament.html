@@ -3058,23 +3058,50 @@ async function supaLoadSilent() {
   try {
     const [tournaments, players] = await Promise.all([
       supaFetch(tournamentsFetchPath(), 'GET'),
-      supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
+      supaFetch(`tournament_players?tournament_id=eq.${CURRENT_TOURNAMENT_ID || TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
     ]);
     if (tournaments && tournaments.length) {
       const t = tournaments[0];
+      if (!CURRENT_TOURNAMENT_ID && t?.id) CURRENT_TOURNAMENT_ID = t.id;
+
+      const settings = (t.settings && typeof t.settings === 'object') ? t.settings : {};
       const newVals = [
         t.name || '',
         t.date_str || t.time || '',
         t.location || '',
         t.content || t.format || '',
         t.prize || '',
-        t.video_url || ''
+        settings.video_url || t.video_url || ''
       ];
       if (JSON.stringify(newVals) !== JSON.stringify(S.tbVals)) {
         S.tbVals = newVals;
         setupTopBar();
         updateBcName();
       }
+
+      const remoteTheme = t.theme || settings.theme;
+      const remoteTitleFont = t.title_font || settings.title_font;
+      const remoteBracketColors = settings.bracket_colors || null;
+
+      let themeChanged = false;
+      if (remoteTheme && remoteTheme !== S.theme) {
+        S.theme = remoteTheme;
+        themeChanged = true;
+      }
+      if (remoteTitleFont && remoteTitleFont !== S.titleFont) {
+        S.titleFont = remoteTitleFont;
+        themeChanged = true;
+      }
+      if (remoteBracketColors && JSON.stringify(remoteBracketColors) !== JSON.stringify(S.bracketColors)) {
+        S.bracketColors = { ...DEFAULTS.bracketColors, ...remoteBracketColors };
+        themeChanged = true;
+      }
+      if (themeChanged) {
+        applyTheme(S.theme);
+        setupTopBar();
+        renderBracket();
+      }
+
       if (t.bracket_state) {
         try {
           const nb = JSON.parse(t.bracket_state);
