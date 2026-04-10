@@ -2602,6 +2602,16 @@ function applyTournamentRow(t) {
     S.bracketColors = { ...DEFAULTS.bracketColors, ...settings.bracket_colors };
   }
 
+  if (Array.isArray(settings.sponsor_logos)) {
+    S.sponsorLogos = settings.sponsor_logos;
+  }
+  if (Array.isArray(settings.sponsor_pos)) {
+    S.sponsorPos = settings.sponsor_pos;
+  }
+  if (typeof settings.sponsor_snap === 'boolean') {
+    S.sponsorSnap = settings.sponsor_snap;
+  }
+
   if (t.bracket_size) S.bracketSize = t.bracket_size;
 }
 
@@ -2817,6 +2827,7 @@ function setAdminMode(isAdminVal) {
   }
 
   syncAdminEditButton();
+  renderSponsorLogos();
 }
 
 function doLogout() {
@@ -2977,7 +2988,10 @@ async function supaPush() {
         theme: S.theme,
         title_font: S.titleFont,
         video_url: S.tbVals[5] || '',
-        bracket_colors: S.bracketColors || DEFAULTS.bracketColors
+        bracket_colors: S.bracketColors || DEFAULTS.bracketColors,
+        sponsor_logos: Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [],
+        sponsor_pos: Array.isArray(S.sponsorPos) ? S.sponsorPos : [],
+        sponsor_snap: !!S.sponsorSnap
       }
     };
     if (!CURRENT_TOURNAMENT_ID) {
