@@ -3170,7 +3170,7 @@ async function init() {
 
   if (S.supaUrl && S.supaKey) setupRealtime();
 
-  if (window.innerWidth <= 768) switchTab('left');
+  if (window.innerWidth <= 768) switchTab('center');
 }
 
 function hexToHsl(hex) {
@@ -6397,6 +6397,9 @@ document.addEventListener('keydown', e => {
 });
 
 function switchTab(tab) {
+  // Mobile: ẩn tab Bốc Thăm, map left -> center
+  if (window.innerWidth <= 768 && tab === 'left') tab = 'center';
+
   document.body.classList.remove('tab-left','tab-center','tab-right');
   document.body.classList.add('tab-' + tab);
   document.querySelectorAll('.m-tab').forEach(b => {
@@ -6437,9 +6440,8 @@ Object.assign(globalThis, {
 </script>
 
   <div class="mobile-tabs" id="mobile-tabs">
-    <button class="m-tab active" data-tab="left" onclick="switchTab('left')">👥 Bốc Thăm</button>
-    <button class="m-tab" data-tab="center" onclick="switchTab('center')">🎯 Sơ Đồ Thi Đấu</button>
-    <button class="m-tab" data-tab="right" onclick="switchTab('right')">📋 Cơ Thủ</button>
+    <button class="m-tab active" data-tab="center" onclick="switchTab('center')">🎯 Sơ Đồ Thi Đấu</button>
+    <button class="m-tab" data-tab="right" onclick="switchTab('right')">📋 Danh Sách Đăng Kí</button>
   </div>
 </body>
 </html>
