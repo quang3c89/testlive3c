@@ -697,11 +697,37 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 
 /* Bracket lines */
 .aline {
-  stroke-dasharray: 6; animation: flowl 1.5s linear infinite; opacity: 0.4;
+  stroke-dasharray: 6;
+  animation: flowl 1.5s linear infinite;
+  opacity: 0.4;
   filter: drop-shadow(0 0 3px currentColor);
 }
 .aline-idle { opacity: 0.1; stroke-dasharray: 4 4; }
 @keyframes flowl { to { stroke-dashoffset: -12; } }
+
+.br-line-base {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .9;
+}
+.br-line-glow {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .28;
+  filter: blur(1.8px);
+}
+.br-line-flow {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .95;
+  stroke-dasharray: 14 26;
+  animation: bracketFlow 2.2s linear infinite;
+  filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 12px color-mix(in srgb, currentColor 45%, transparent));
+}
+@keyframes bracketFlow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -120; }
+}
 
 /* ============ RIGHT PANEL ============ */
 .right {
@@ -5345,26 +5371,40 @@ function drawBracketLines() {
   }
 
   function makePath(d, winner) {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('fill', 'none');
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     const lineColor = getComputedStyle(document.documentElement).getPropertyValue('--line-color').trim() || '#fff6d9';
-    path.setAttribute('stroke', lineColor);
-    path.setAttribute('stroke-linecap', 'round');
-    path.setAttribute('stroke-linejoin', 'round');
+
+    const base = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    base.setAttribute('d', d);
+    base.setAttribute('fill', 'none');
+    base.setAttribute('stroke', lineColor);
+    base.setAttribute('stroke-width', winner ? '3.3' : '2.8');
+    base.setAttribute('class', 'br-line-base');
+
+    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glow.setAttribute('d', d);
+    glow.setAttribute('fill', 'none');
+    glow.setAttribute('stroke', lineColor);
+    glow.setAttribute('stroke-width', winner ? '6.5' : '5.2');
+    glow.setAttribute('class', 'br-line-glow');
+
+    const flow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    flow.setAttribute('d', d);
+    flow.setAttribute('fill', 'none');
+    flow.setAttribute('stroke', lineColor);
+    flow.setAttribute('stroke-width', winner ? '2.8' : '2.4');
+    flow.setAttribute('class', 'br-line-flow');
+
     if (winner) {
-      path.setAttribute('stroke-width', '3.2');
-      path.setAttribute('opacity', '1');
-      path.setAttribute('stroke-dasharray', '');
-      path.style.animation = 'none';
-      path.style.filter = `drop-shadow(0 0 4px ${lineColor})`;
-    } else {
-      path.setAttribute('stroke-width', '2.6');
-      path.setAttribute('opacity', '1');
-      path.setAttribute('stroke-dasharray', '');
-      path.style.filter = `drop-shadow(0 0 3px ${lineColor})`;
+      flow.style.opacity = '1';
+      flow.style.animationDuration = '1.6s';
+      glow.style.opacity = '.4';
     }
-    return path;
+
+    group.appendChild(glow);
+    group.appendChild(base);
+    group.appendChild(flow);
+    return group;
   }
 
   // For each round r (0..rounds-2), connect each match to its parent in round r+1
