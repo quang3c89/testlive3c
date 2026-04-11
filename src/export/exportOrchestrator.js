@@ -7,44 +7,20 @@ export async function exportBracket(type) {
 
     const tourney = document.querySelector('#tourney-bar');
     const center  = document.querySelector('#center-panel');
-
     if (!center) throw new Error('#center-panel not found');
 
-    // Wrap header + center into a temporary container
     const wrap = document.createElement('div');
-    wrap.style.cssText = [
-      'position:fixed',
-      'left:-99999px',
-      'top:0',
-      'z-index:-1',
-      'display:flex',
-      'flex-direction:column',
-      'background:#1a0a00',
-    ].join(';');
+    wrap.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;display:flex;flex-direction:column;background:#1a0a00;';
 
     if (tourney) wrap.appendChild(tourney.cloneNode(true));
 
     const centerClone = center.cloneNode(true);
-    // Make sure all content is visible, no scroll clipping
-    centerClone.style.cssText = [
-      'position:relative',
-      'width:100%',
-      'overflow:visible',
-      'height:auto',
-      'max-height:none',
-      'min-height:0',
-      'opacity:1',
-    ].join(';') + ';';
-    
-    // Also fix all child scroll containers
+    centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;min-height:0;opacity:1;';
     centerClone.querySelectorAll('*').forEach(el => {
-      const cs = window.getComputedStyle(el);
-      if (cs.overflow === 'hidden' || cs.overflow === 'scroll' || cs.overflow === 'auto') {
-        el.style.overflow = 'visible';
-        el.style.height = 'auto';
-        el.style.maxHeight = 'none';
-      }
-    }); += ';overflow:visible;height:auto;max-height:none;';
+      el.style.overflow = 'visible';
+      el.style.height = 'auto';
+      el.style.maxHeight = 'none';
+    });
     wrap.appendChild(centerClone);
 
     document.body.appendChild(wrap);
@@ -56,7 +32,6 @@ export async function exportBracket(type) {
     const H = Math.max(wrap.scrollHeight, wrap.offsetHeight);
     wrap.style.width = W + 'px';
     wrap.style.height = H + 'px';
-
     void wrap.offsetWidth;
     await new Promise(r => requestAnimationFrame(r));
 
@@ -93,15 +68,12 @@ export async function exportBracket(type) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-
     } else {
       const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
       if (!jsPDF) throw new Error('jsPDF not loaded');
-
       const img = new Image();
       img.src = dataUrl;
       await new Promise(r => img.onload = r);
-
       const orientation = W > H ? 'landscape' : 'portrait';
       const pdf = new jsPDF({ orientation, unit: 'px', format: [W, H] });
       pdf.addImage(dataUrl, 'PNG', 0, 0, W, H);
