@@ -5800,13 +5800,17 @@ async function buildBracketExportCanvas() {
   }
 }
 
-function downloadCanvasPNG(canvas, baseName = 'bracket') {
+async function downloadCanvasPNG(canvas, baseName = 'bracket') {
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('Không thể tạo PNG');
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.download = `live3c_${baseName}_${Date.now()}.png`;
-  a.href = canvas.toDataURL('image/png');
+  a.href = url;
   document.body.appendChild(a);
   a.click();
   a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1200);
 }
 
 async function exportBracketPNG() {
@@ -5814,7 +5818,7 @@ async function exportBracketPNG() {
   setBracketExportLoading(true);
   try {
     const canvas = await buildBracketExportCanvas();
-    downloadCanvasPNG(canvas, 'bracket');
+    await downloadCanvasPNG(canvas, 'bracket');
     showToast('✅ Đã xuất PNG bracket', 'success');
   } catch (err) {
     showToast('❌ Xuất PNG thất bại: ' + (err?.message || err), 'error');
