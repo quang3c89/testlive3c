@@ -3139,17 +3139,24 @@ function supaPushDebounced() {
 async function supaLoadFull() {
   if (!S.supaUrl || !S.supaKey) return;
   setSyncProgress(30);
-  const [tournaments, players] = await Promise.all([
-    supaFetch(tournamentsFetchPath(), 'GET'),
-    supaFetch(`tournament_players?tournament_id=eq.${CURRENT_TOURNAMENT_ID || TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
-  ]);
-  setSyncProgress(70);
+
+  const tournaments = await supaFetch(tournamentsFetchPath(), 'GET');
   if (tournaments && tournaments.length) {
     applyTournamentRow(tournaments[0]);
+    if (!CURRENT_TOURNAMENT_ID && tournaments[0]?.id) CURRENT_TOURNAMENT_ID = tournaments[0].id;
   }
+
+  const tId = CURRENT_TOURNAMENT_ID || TOURNAMENT_ID;
+  const players = tId
+    ? await supaFetch(`tournament_players?tournament_id=eq.${tId}&order=stt.asc,id.asc`, 'GET')
+    : [];
+
+  setSyncProgress(70);
   if (players && Array.isArray(players)) {
     S.players = players.map(p => normalizePlayer(p));
   }
+  hydratePlayersFromBracketIfEmpty();
+
   setSyncProgress(100);
   saveState();
   updateSyncTime();
@@ -5800,20 +5807,39 @@ async function buildBracketExportCanvas() {
       logging: false,
       foreignObjectRendering: false,
       imageTimeout: 0,
+      ignoreElements: (el) => {
+        const id = el.id || '';
+        const cls = el.className || '';
+        return id === 'bracket-bg-layer' || id === 'sponsor-stage' || String(cls).includes('bracket-bg-');
+      },
       onclone: (doc) => {
         doc.body.classList.add('export-static');
 
-        // html2canvas không parse ổn color()/color-mix() trên một số browser
-        const all = doc.querySelectorAll('*');
-        all.forEach((el) => {
-          const s = el.style;
-          ['color','background','backgroundColor','borderColor','boxShadow','textShadow','filter'].forEach((k) => {
-            const v = s[k];
-            if (typeof v === 'string' && /color\(|color-mix\(/i.test(v)) {
-              s[k] = '';
-            }
-          });
-        });
+        // fallback màu an toàn cho html2canvas
+        const rt = doc.documentElement;
+        rt.style.setProperty('--bg', '#ffffff');
+        rt.style.setProperty('--card', '#ffffff');
+        rt.style.setProperty('--text', '#111827');
+        rt.style.setProperty('--border', '#d1d5db');
+        rt.style.setProperty('--primary', '#2563eb');
+        rt.style.setProperty('--accent', '#2563eb');
+
+        const style = doc.createElement('style');
+        style.textContent = `
+          * { filter: none !important; text-shadow: none !important; box-shadow: none !important; }
+          .mp, .register-item, .schedule-root, .schedule-columns, .schedule-column, .sched-match {
+            background: #ffffff !important;
+            border-color: #cfd8e3 !important;
+            color: #111827 !important;
+          }
+          .mn, .mp-unit, .round-title, .register-title, .f-name, .f-unit, .f-rank, .sched-name, .sched-side-unit {
+            color: #111827 !important;
+          }
+          #bracket-lines path, #bracket-lines line, #bracket-lines polyline {
+            stroke: #2563eb !important;
+          }
+        `;
+        doc.head.appendChild(style);
       },
     });
 
