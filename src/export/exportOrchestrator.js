@@ -10,25 +10,57 @@ export async function exportBracket(type) {
     if (!center) throw new Error('#center-panel not found');
 
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;display:flex;flex-direction:column;background:#1a0a00;';
+    wrap.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;display:flex;flex-direction:column;background:#3d0000;min-width:1400px;';
 
-    if (tourney) wrap.appendChild(tourney.cloneNode(true));
+    if (tourney) {
+      const t = tourney.cloneNode(true);
+      t.style.cssText += ';width:100%;flex-shrink:0;';
+      wrap.appendChild(t);
+    }
 
     const centerClone = center.cloneNode(true);
-    centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;min-height:0;opacity:1;';
+
+    // Fix all elements — remove overflow clipping, restore colors
     centerClone.querySelectorAll('*').forEach(el => {
+      el.style.removeProperty('overflow');
+      el.style.removeProperty('max-height');
       el.style.overflow = 'visible';
-      el.style.height = 'auto';
       el.style.maxHeight = 'none';
+      // Fix muted/transparent colors
+      const cs = window.getComputedStyle(el);
+      if (cs.opacity && parseFloat(cs.opacity) < 0.5) {
+        el.style.opacity = '1';
+      }
     });
+
+    centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;background:#3d0000;';
     wrap.appendChild(centerClone);
+
+    // Inject color fix stylesheet
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      * { opacity: 1 !important; }
+      [class*="player"], [class*="register"], [class*="item"], 
+      [class*="row"], [class*="card"], [class*="cell"] {
+        color: #ffffff !important;
+        background-color: #001E5C !important;
+      }
+      [class*="schedule"], [class*="match"], [class*="game"] {
+        color: #ffffff !important;
+        background-color: #002878 !important;
+        display: block !important;
+        visibility: visible !important;
+      }
+    `;
+    wrap.appendChild(styleEl);
 
     document.body.appendChild(wrap);
     void wrap.offsetWidth;
     await new Promise(r => requestAnimationFrame(r));
     await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => setTimeout(r, 300));
 
-    const W = Math.max(wrap.scrollWidth, wrap.offsetWidth);
+    const W = Math.max(wrap.scrollWidth, wrap.offsetWidth, 1400);
     const H = Math.max(wrap.scrollHeight, wrap.offsetHeight);
     wrap.style.width = W + 'px';
     wrap.style.height = H + 'px';
@@ -38,24 +70,16 @@ export async function exportBracket(type) {
     console.log('[Export] capturing', W, 'x', H);
 
     const dataUrl = await domtoimage.toPng(wrap, {
-      width: W,
-      height: H,
+      width: W, height: H,
       filter: node => {
-        if (!node.id && !node.classList) return true;
+        if (!node.classList) return true;
         if (node.id === 'bracket-export-btn') return false;
-        if (node.id === 'export-menu') return false;
         if (node.classList?.contains('export-menu')) return false;
         if (node.classList?.contains('bracket-export-menu')) return false;
         if (node.classList?.contains('bracket-tools')) return false;
         if (node.classList?.contains('zoom-controls')) return false;
         if (node.classList?.contains('mobile-tabs')) return false;
         return true;
-      },
-      style: {
-        '--c-surface': '#001E5C',
-        '--c-surface2': '#002878',
-        '--c-ink': '#FFFFFF',
-        '--c-ink2': 'rgba(255,255,255,0.85)',
       }
     });
 
