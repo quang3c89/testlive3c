@@ -3,57 +3,79 @@ export async function exportBracket(type) {
   if (btn) { btn.disabled = true; btn.classList.add('loading'); }
 
   try {
-    // Find the center panel that contains everything visible
-    const target = 
-      document.querySelector('#center-panel') ||
-      document.querySelector('.center-panel') ||
-      document.querySelector('#bracket-container') ||
-      document.querySelector('.bracket-wrapper') ||
-      document.body;
+    if (typeof domtoimage === 'undefined') throw new Error('dom-to-image-more not loaded');
 
-    console.log('[Export] target:', target?.id || target?.className);
-    console.log('[Export] size:', target?.scrollWidth, 'x', target?.scrollHeight);
+    const tourney = document.querySelector('#tourney-bar');
+    const center  = document.querySelector('#center-panel');
 
-    const W = Math.max(target.scrollWidth, target.offsetWidth, window.innerWidth);
-    const H = Math.max(target.scrollHeight, target.offsetHeight, window.innerHeight);
+    if (!center) throw new Error('#center-panel not found');
 
-    // Use dom-to-image-more directly on live element
-    if (typeof domtoimage === 'undefined') {
-      throw new Error('dom-to-image-more not loaded');
-    }
+    // Wrap header + center into a temporary container
+    const wrap = document.createElement('div');
+    wrap.style.cssText = [
+      'position:fixed',
+      'left:-99999px',
+      'top:0',
+      'z-index:-1',
+      'display:flex',
+      'flex-direction:column',
+      'background:#1a0a00',
+    ].join(';');
 
-    const dataUrl = await domtoimage.toPng(target, {
+    if (tourney) wrap.appendChild(tourney.cloneNode(true));
+
+    const centerClone = center.cloneNode(true);
+    // Make sure all content is visible, no scroll clipping
+    centerClone.style.cssText += ';overflow:visible;height:auto;max-height:none;';
+    wrap.appendChild(centerClone);
+
+    document.body.appendChild(wrap);
+    void wrap.offsetWidth;
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(r));
+
+    const W = Math.max(wrap.scrollWidth, wrap.offsetWidth);
+    const H = Math.max(wrap.scrollHeight, wrap.offsetHeight);
+    wrap.style.width = W + 'px';
+    wrap.style.height = H + 'px';
+
+    void wrap.offsetWidth;
+    await new Promise(r => requestAnimationFrame(r));
+
+    console.log('[Export] capturing', W, 'x', H);
+
+    const dataUrl = await domtoimage.toPng(wrap, {
       width: W,
       height: H,
-      bgcolor: null,
-      filter: (node) => {
-        // Skip export button itself
+      filter: node => {
+        if (!node.classList) return true;
         if (node.id === 'bracket-export-btn') return false;
-        if (node.classList?.contains('export-menu')) return false;
+        if (node.classList.contains('export-menu')) return false;
+        if (node.classList.contains('mobile-tabs')) return false;
         return true;
       }
     });
+
+    wrap.remove();
 
     if (type === 'png') {
       const a = document.createElement('a');
       a.download = 'bracket.png';
       a.href = dataUrl;
+      document.body.appendChild(a);
       a.click();
+      a.remove();
+
     } else {
-      // PDF
-      if (typeof jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
-        throw new Error('jsPDF not loaded');
-      }
-      const jsPDF = window.jsPDF || jspdf.jsPDF;
+      const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
+      if (!jsPDF) throw new Error('jsPDF not loaded');
+
       const img = new Image();
       img.src = dataUrl;
       await new Promise(r => img.onload = r);
-      
-      const pdf = new jsPDF({ 
-        orientation: W > H ? 'landscape' : 'portrait',
-        unit: 'px', 
-        format: [W, H] 
-      });
+
+      const orientation = W > H ? 'landscape' : 'portrait';
+      const pdf = new jsPDF({ orientation, unit: 'px', format: [W, H] });
       pdf.addImage(dataUrl, 'PNG', 0, 0, W, H);
       pdf.save('bracket.pdf');
     }
@@ -62,7 +84,8 @@ export async function exportBracket(type) {
     console.error('[Export] Failed:', err);
     alert('Export lỗi: ' + err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    const btn2 = document.querySelector('#bracket-export-btn');
+    if (btn2) { btn2.disabled = false; btn2.classList.remove('loading'); }
     if (typeof globalThis.closeExportMenu === 'function') globalThis.closeExportMenu();
     if (typeof globalThis.closeBracketExportMenu === 'function') globalThis.closeBracketExportMenu();
   }
