@@ -528,7 +528,9 @@ body.admin-mode .sponsor-resize { opacity:1; }
   pointer-events: auto;
 }
 body.viewer-mode .bracket-color-tools,
-body.viewer-mode #bracket-style-toggle { display: none !important; }
+body.viewer-mode #bracket-style-toggle,
+body.viewer-mode #bracket-export-wrap,
+body.viewer-mode #bracket-export-btn { display: none !important; }
 .bct-item { position: relative; }
 .bct-btn {
   width: 18px; height: 18px;
@@ -2874,9 +2876,11 @@ function updateSyncTime() {
    ADMIN MODE
    ================================================================ */
 function setAdminMode(isAdminVal) {
-  S.isAdmin = isAdminVal;
-  document.body.classList.toggle('admin-mode', isAdminVal);
-  document.body.classList.toggle('viewer-mode', !isAdminVal);
+  // Ưu tiên auth runtime để tránh bị rơi về viewer sai sau F5/subdomain
+  const runtimeAdmin = !!authIsAdmin();
+  S.isAdmin = runtimeAdmin || !!isAdminVal;
+  document.body.classList.toggle('admin-mode', S.isAdmin);
+  document.body.classList.toggle('viewer-mode', !S.isAdmin);
   ['tb-v0','tb-v1','tb-v2','tb-v3','tb-v4','tb-v5'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.contentEditable = isAdminVal ? 'true' : 'false';
