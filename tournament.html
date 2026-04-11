@@ -9,6 +9,7 @@
 <title>Live3C Tournament Manager</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Public+Sans:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Mulish:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/variables.css">
 <link rel="stylesheet" href="assets/css/base.css">
@@ -439,7 +440,18 @@ body.export-static *::before,
 body.export-static *::after {
   animation: none !important;
   transition: none !important;
+  transform: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
   transform-style: flat !important;
+}
+body.export-static #center-panel,
+body.export-static #bracket-container,
+body.export-static .bracket-wrap,
+body.export-static .bracket-cols {
+  background: #fff !important;
 }
 body.export-static .bracket-bg-particles,
 body.export-static .bracket-bg-glow,
@@ -448,7 +460,10 @@ body.export-static #spin-popup,
 body.export-static #winner-popup,
 body.export-static #battle-popup,
 body.export-static .bracket-color-tools,
-body.export-static .bracket-tool-zone {
+body.export-static .bracket-tool-zone,
+body.export-static .mobile-tabs,
+body.export-static .tourney-bar,
+body.export-static .bracket-tab-bar {
   display: none !important;
 }
 .bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; justify-content: flex-start; z-index: 2; }
@@ -2404,6 +2419,8 @@ body.fs-mode #bracket-style-toggle {
       <button class="btab active" id="btab-schedule" onclick="switchBracketTab('schedule')" title="Lịch thi đấu">☰</button>
       <span class="bracket-tab-spacer"></span>
       <button class="bracket-full-btn" id="bracket-style-toggle" onclick="toggleBracketStyleTools(event)" title="Tùy chỉnh bracket">⚙</button>
+      <button class="bracket-full-btn" id="bracket-export-btn" onclick="exportBracketPNG()" title="Xuất PNG">📷</button>
+      <button class="bracket-full-btn" id="bracket-export-pdf-btn" onclick="exportBracketPDF()" title="Xuất PDF">⬇</button>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
@@ -5648,6 +5665,139 @@ async function exportImage(elementId, filename) {
     return true;
   } finally {
     if (isBracketShot) document.body.classList.remove('export-static');
+  }
+}
+
+function setBracketExportLoading(isLoading) {
+  const ids = ['bracket-export-btn', 'bracket-export-pdf-btn'];
+  ids.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = !!isLoading;
+    btn.classList.toggle('loading', !!isLoading);
+  });
+}
+
+async function buildBracketExportCanvas() {
+  const panel = document.getElementById('center-panel');
+  const container = document.getElementById('bracket-container');
+  if (!panel || !container) throw new Error('Không tìm thấy vùng bracket để xuất');
+  if (typeof html2canvas === 'undefined') throw new Error('Thiếu html2canvas');
+
+  const prevTab = currentBracketTab;
+  const prevScrollLeft = panel.scrollLeft;
+  const prevScrollTop = panel.scrollTop;
+
+  document.body.classList.add('export-static');
+  if (prevTab !== 'bracket') switchBracketTab('bracket');
+
+  try {
+    drawBracketLines();
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch (_) {}
+    }
+    await waitPaint(3);
+
+    const width = Math.max(container.scrollWidth, container.clientWidth);
+    const height = Math.max(container.scrollHeight, container.clientHeight);
+
+    const canvas = await html2canvas(container, {
+      backgroundColor: '#ffffff',
+      scale: 3,
+      useCORS: true,
+      width,
+      height,
+      windowWidth: width,
+      windowHeight: height,
+      scrollX: 0,
+      scrollY: 0,
+      removeContainer: true,
+      logging: false,
+      foreignObjectRendering: false,
+      imageTimeout: 0,
+      onclone: (doc) => {
+        doc.body.classList.add('export-static');
+      },
+    });
+
+    return canvas;
+  } finally {
+    document.body.classList.remove('export-static');
+    panel.scrollLeft = prevScrollLeft;
+    panel.scrollTop = prevScrollTop;
+    if (prevTab && prevTab !== 'bracket') switchBracketTab(prevTab);
+  }
+}
+
+function downloadCanvasPNG(canvas, baseName = 'bracket') {
+  const a = document.createElement('a');
+  a.download = `live3c_${baseName}_${Date.now()}.png`;
+  a.href = canvas.toDataURL('image/png');
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function exportBracketPNG() {
+  setBracketExportLoading(true);
+  try {
+    const canvas = await buildBracketExportCanvas();
+    downloadCanvasPNG(canvas, 'bracket');
+    showToast('✅ Đã xuất PNG bracket', 'success');
+  } catch (err) {
+    showToast('❌ Xuất PNG thất bại: ' + (err?.message || err), 'error');
+  } finally {
+    setBracketExportLoading(false);
+  }
+}
+
+async function exportBracketPDF() {
+  setBracketExportLoading(true);
+  try {
+    const canvas = await buildBracketExportCanvas();
+    if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('Thiếu jsPDF');
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 8;
+    const usableW = pageWidth - margin * 2;
+    const usableH = pageHeight - margin * 2;
+
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+    const scale = usableW / imgW;
+    const pageSlicePx = Math.floor(usableH / scale);
+
+    let offsetY = 0;
+    let pageIndex = 0;
+
+    while (offsetY < imgH) {
+      const sliceH = Math.min(pageSlicePx, imgH - offsetY);
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = imgW;
+      pageCanvas.height = sliceH;
+      const ctx = pageCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, offsetY, imgW, sliceH, 0, 0, imgW, sliceH);
+
+      const imgData = pageCanvas.toDataURL('image/png');
+      const renderH = sliceH * scale;
+
+      if (pageIndex > 0) pdf.addPage('a4', 'p');
+      pdf.addImage(imgData, 'PNG', margin, margin, usableW, renderH, undefined, 'FAST');
+
+      offsetY += sliceH;
+      pageIndex += 1;
+    }
+
+    pdf.save(`live3c_bracket_${Date.now()}.pdf`);
+    showToast('✅ Đã xuất PDF bracket', 'success');
+  } catch (err) {
+    showToast('❌ Xuất PDF thất bại: ' + (err?.message || err), 'error');
+  } finally {
+    setBracketExportLoading(false);
   }
 }
 
