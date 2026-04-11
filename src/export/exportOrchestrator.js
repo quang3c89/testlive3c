@@ -1,98 +1,70 @@
-import { resolveExportColors, buildExportStylesheet } from './exportUtils.js';
-import { createOffscreenLayer, destroyOffscreenLayer } from './offscreenLayer.js';
-import { captureOffscreenLayer } from './captureEngine.js';
-import { downloadAsPNG } from './pngExporter.js';
-import { downloadAsPDF } from './pdfExporter.js';
-
-/**
- * Shows export error using existing app hook if present.
- * Falls back to alert() for compatibility.
- *
- * @param {string} message
- * @returns {void}
- */
-function showExportErrorSafe(message) {
-  if (typeof globalThis.showExportError === 'function') {
-    globalThis.showExportError(message);
-    return;
-  }
-  alert(message || 'Export failed');
-}
-
-/**
- * Closes export submenu using existing app hook if present.
- *
- * @returns {void}
- */
-function closeExportMenuSafe() {
-  if (typeof globalThis.closeExportMenu === 'function') {
-    globalThis.closeExportMenu();
-    return;
-  }
-  if (typeof globalThis.closeBracketExportMenu === 'function') {
-    globalThis.closeBracketExportMenu();
-  }
-}
-
-/**
- * Exports bracket as PNG or PDF from an offscreen render layer.
- *
- * NOTE:
- * contentW/contentH is currently derived from scroll/client box metrics.
- * This may be inaccurate if the live container uses overflow clipping.
- * TODO: switch to data-driven sizing from bracket model in future task.
- *
- * @param {'png'|'pdf'} type
- * @returns {Promise<void>}
- */
 export async function exportBracket(type) {
-  if (type !== 'png' && type !== 'pdf') {
-    throw new Error("Invalid export type. Expected 'png' or 'pdf'");
-  }
-
-  const exportBtn = document.querySelector('#bracket-export-btn');
-  if (exportBtn instanceof HTMLButtonElement) {
-    exportBtn.disabled = true;
-    exportBtn.classList.add('loading');
-  }
+  const btn = document.querySelector('#bracket-export-btn');
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
 
   try {
-    const source = document.querySelector('#bracket-container');
-    if (!(source instanceof HTMLElement)) {
-      throw new Error('Bracket container not found: #bracket-container');
+    // Find the center panel that contains everything visible
+    const target = 
+      document.querySelector('#center-panel') ||
+      document.querySelector('.center-panel') ||
+      document.querySelector('#bracket-container') ||
+      document.querySelector('.bracket-wrapper') ||
+      document.body;
+
+    console.log('[Export] target:', target?.id || target?.className);
+    console.log('[Export] size:', target?.scrollWidth, 'x', target?.scrollHeight);
+
+    const W = Math.max(target.scrollWidth, target.offsetWidth, window.innerWidth);
+    const H = Math.max(target.scrollHeight, target.offsetHeight, window.innerHeight);
+
+    // Use dom-to-image-more directly on live element
+    if (typeof domtoimage === 'undefined') {
+      throw new Error('dom-to-image-more not loaded');
     }
 
-    // PHASE 1 — data snapshot
-    const colors = resolveExportColors(source);
-    const stylesheet = buildExportStylesheet(colors);
-    const contentW = Math.max(source.scrollWidth || 0, source.clientWidth || 0);
-    const contentH = Math.max(source.scrollHeight || 0, source.clientHeight || 0);
+    const dataUrl = await domtoimage.toPng(target, {
+      width: W,
+      height: H,
+      bgcolor: null,
+      filter: (node) => {
+        // Skip export button itself
+        if (node.id === 'bracket-export-btn') return false;
+        if (node.classList?.contains('export-menu')) return false;
+        return true;
+      }
+    });
 
-   
-
-    // PHASE 2 — offscreen render
-    const offscreen = createOffscreenLayer({ contentW, contentH }, colors, stylesheet);
-
-    // PHASE 3 — capture
-    const canvas = await captureOffscreenLayer(offscreen);
-
-    // PHASE 4 — output
     if (type === 'png') {
-      await downloadAsPNG(canvas);
+      const a = document.createElement('a');
+      a.download = 'bracket.png';
+      a.href = dataUrl;
+      a.click();
     } else {
-      await downloadAsPDF(canvas);
+      // PDF
+      if (typeof jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+        throw new Error('jsPDF not loaded');
+      }
+      const jsPDF = window.jsPDF || jspdf.jsPDF;
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise(r => img.onload = r);
+      
+      const pdf = new jsPDF({ 
+        orientation: W > H ? 'landscape' : 'portrait',
+        unit: 'px', 
+        format: [W, H] 
+      });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, W, H);
+      pdf.save('bracket.pdf');
     }
-  } catch (err) {
-    console.error('[BracketExport] Failed:', err);
-    const message = err instanceof Error ? err.message : String(err);
-    showExportErrorSafe(message);
+
+  } catch(err) {
+    console.error('[Export] Failed:', err);
+    alert('Export lỗi: ' + err.message);
   } finally {
-    destroyOffscreenLayer();
-    if (exportBtn instanceof HTMLButtonElement) {
-      exportBtn.disabled = false;
-      exportBtn.classList.remove('loading');
-    }
-    closeExportMenuSafe();
+    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    if (typeof globalThis.closeExportMenu === 'function') globalThis.closeExportMenu();
+    if (typeof globalThis.closeBracketExportMenu === 'function') globalThis.closeBracketExportMenu();
   }
 }
 
