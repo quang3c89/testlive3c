@@ -2858,11 +2858,15 @@ function updateRTIndicator(online) {
   const sdot = document.getElementById('supa-rt-dot');
   const stxt = document.getElementById('supa-status-txt');
   if (online) {
-    dot.classList.remove('offline'); label.textContent = 'LIVE';
-    sdot.style.background = '#22c55e'; stxt.textContent = 'Kết nối — Realtime active';
+    if (dot) dot.classList.remove('offline');
+    if (label) label.textContent = 'LIVE';
+    if (sdot) sdot.style.background = '#22c55e';
+    if (stxt) stxt.textContent = 'Kết nối — Realtime active';
   } else {
-    dot.classList.add('offline'); label.textContent = 'OFFLINE';
-    sdot.style.background = '#ef4444'; stxt.textContent = 'Chưa kết nối';
+    if (dot) dot.classList.add('offline');
+    if (label) label.textContent = 'OFFLINE';
+    if (sdot) sdot.style.background = '#ef4444';
+    if (stxt) stxt.textContent = 'Chưa kết nối';
   }
 }
 
@@ -2876,9 +2880,10 @@ function updateSyncTime() {
    ADMIN MODE
    ================================================================ */
 function setAdminMode(isAdminVal) {
-  // Ưu tiên auth runtime để tránh bị rơi về viewer sai sau F5/subdomain
+  // Ưu tiên cờ local để không phụ thuộc host/domain cookie
+  const localAdmin = localStorage.getItem('live3c_admin') === 'true';
   const runtimeAdmin = !!authIsAdmin();
-  S.isAdmin = runtimeAdmin || !!isAdminVal;
+  S.isAdmin = localAdmin || runtimeAdmin || !!isAdminVal;
   document.body.classList.toggle('admin-mode', S.isAdmin);
   document.body.classList.toggle('viewer-mode', !S.isAdmin);
   ['tb-v0','tb-v1','tb-v2','tb-v3','tb-v4','tb-v5'].forEach(id => {
