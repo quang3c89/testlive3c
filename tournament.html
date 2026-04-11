@@ -1528,6 +1528,36 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   color: var(--accent);
   background: rgba(240,165,0,0.12);
 }
+.bracket-export-wrap { position: relative; display: inline-flex; }
+.bracket-export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: none;
+  flex-direction: column;
+  min-width: 112px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  overflow: hidden;
+  z-index: 20;
+}
+.bracket-export-wrap.open .bracket-export-menu { display: flex; }
+.bracket-export-menu button {
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.bracket-export-menu button:last-child { border-bottom: 0; }
+.bracket-export-menu button:hover { background: rgba(255,255,255,.08); }
+.bracket-export-btn.loading { opacity: .6; pointer-events: none; }
 /* Nút cài đặt bracket: luôn click được, chỉ nổi rõ khi rê sát nút */
 #bracket-style-toggle {
   opacity: 0.26;
@@ -2419,8 +2449,13 @@ body.fs-mode #bracket-style-toggle {
       <button class="btab active" id="btab-schedule" onclick="switchBracketTab('schedule')" title="Lịch thi đấu">☰</button>
       <span class="bracket-tab-spacer"></span>
       <button class="bracket-full-btn" id="bracket-style-toggle" onclick="toggleBracketStyleTools(event)" title="Tùy chỉnh bracket">⚙</button>
-      <button class="bracket-full-btn" id="bracket-export-btn" onclick="exportBracketPNG()" title="Xuất PNG">📷</button>
-      <button class="bracket-full-btn" id="bracket-export-pdf-btn" onclick="exportBracketPDF()" title="Xuất PDF">⬇</button>
+      <div class="bracket-export-wrap" id="bracket-export-wrap">
+        <button class="bracket-full-btn" id="bracket-export-btn" onclick="toggleBracketExportMenu(event)" title="Xuất bracket">📷</button>
+        <div class="bracket-export-menu" id="bracket-export-menu">
+          <button type="button" onclick="exportBracketPNG()">Xuất PNG</button>
+          <button type="button" onclick="exportBracketPDF()">Xuất PDF</button>
+        </div>
+      </div>
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
@@ -5669,14 +5704,29 @@ async function exportImage(elementId, filename) {
 }
 
 function setBracketExportLoading(isLoading) {
-  const ids = ['bracket-export-btn', 'bracket-export-pdf-btn'];
-  ids.forEach((id) => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    btn.disabled = !!isLoading;
-    btn.classList.toggle('loading', !!isLoading);
-  });
+  const btn = document.getElementById('bracket-export-btn');
+  if (!btn) return;
+  btn.disabled = !!isLoading;
+  btn.classList.toggle('loading', !!isLoading);
 }
+
+function toggleBracketExportMenu(ev) {
+  ev?.stopPropagation?.();
+  const wrap = document.getElementById('bracket-export-wrap');
+  if (!wrap) return;
+  wrap.classList.toggle('open');
+}
+
+function closeBracketExportMenu() {
+  const wrap = document.getElementById('bracket-export-wrap');
+  if (wrap) wrap.classList.remove('open');
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('bracket-export-wrap');
+  if (!wrap || !wrap.classList.contains('open')) return;
+  if (!wrap.contains(e.target)) closeBracketExportMenu();
+});
 
 async function buildBracketExportCanvas() {
   const panel = document.getElementById('center-panel');
@@ -5739,6 +5789,7 @@ function downloadCanvasPNG(canvas, baseName = 'bracket') {
 }
 
 async function exportBracketPNG() {
+  closeBracketExportMenu();
   setBracketExportLoading(true);
   try {
     const canvas = await buildBracketExportCanvas();
@@ -5752,6 +5803,7 @@ async function exportBracketPNG() {
 }
 
 async function exportBracketPDF() {
+  closeBracketExportMenu();
   setBracketExportLoading(true);
   try {
     const canvas = await buildBracketExportCanvas();
