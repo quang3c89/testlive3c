@@ -93,10 +93,19 @@
   const { createClient } = supabase
   const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+  function setAdminMarker(enabled) {
+    try {
+      localStorage.setItem('live3c_admin', enabled ? 'true' : 'false');
+    } catch (_) {}
+    const expires = enabled ? 'Fri, 31 Dec 9999 23:59:59 GMT' : 'Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = `live3c_admin=${enabled ? 'true' : ''}; Path=/; Domain=.live3c.xyz; Expires=${expires}; SameSite=Lax`;
+  }
+
   // Nếu đã đăng nhập rồi thì vào dashboard luôn
   async function checkSession() {
     const { data: { session } } = await db.auth.getSession()
     if (session) {
+      setAdminMarker(true)
       window.location.href = 'dashboard.html'
     }
   }
@@ -143,7 +152,8 @@
       return
     }
 
-    // Thành công → vào dashboard
+    // Thành công → set marker admin cho toàn site rồi vào dashboard
+    setAdminMarker(true)
     window.location.href = 'dashboard.html'
   }
 
