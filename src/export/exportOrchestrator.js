@@ -26,7 +26,25 @@ export async function exportBracket(type) {
 
     const centerClone = center.cloneNode(true);
     // Make sure all content is visible, no scroll clipping
-    centerClone.style.cssText += ';overflow:visible;height:auto;max-height:none;';
+    centerClone.style.cssText = [
+      'position:relative',
+      'width:100%',
+      'overflow:visible',
+      'height:auto',
+      'max-height:none',
+      'min-height:0',
+      'opacity:1',
+    ].join(';') + ';';
+    
+    // Also fix all child scroll containers
+    centerClone.querySelectorAll('*').forEach(el => {
+      const cs = window.getComputedStyle(el);
+      if (cs.overflow === 'hidden' || cs.overflow === 'scroll' || cs.overflow === 'auto') {
+        el.style.overflow = 'visible';
+        el.style.height = 'auto';
+        el.style.maxHeight = 'none';
+      }
+    }); += ';overflow:visible;height:auto;max-height:none;';
     wrap.appendChild(centerClone);
 
     document.body.appendChild(wrap);
@@ -48,11 +66,21 @@ export async function exportBracket(type) {
       width: W,
       height: H,
       filter: node => {
-        if (!node.classList) return true;
+        if (!node.id && !node.classList) return true;
         if (node.id === 'bracket-export-btn') return false;
-        if (node.classList.contains('export-menu')) return false;
-        if (node.classList.contains('mobile-tabs')) return false;
+        if (node.id === 'export-menu') return false;
+        if (node.classList?.contains('export-menu')) return false;
+        if (node.classList?.contains('bracket-export-menu')) return false;
+        if (node.classList?.contains('bracket-tools')) return false;
+        if (node.classList?.contains('zoom-controls')) return false;
+        if (node.classList?.contains('mobile-tabs')) return false;
         return true;
+      },
+      style: {
+        '--c-surface': '#001E5C',
+        '--c-surface2': '#002878',
+        '--c-ink': '#FFFFFF',
+        '--c-ink2': 'rgba(255,255,255,0.85)',
       }
     });
 
