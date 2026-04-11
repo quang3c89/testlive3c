@@ -97,3 +97,5 @@ export async function exportBracket(type) {
     closeExportMenuSafe();
   }
 }
+
+window.exportBracket = exportBracket;
