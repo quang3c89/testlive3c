@@ -51,6 +51,28 @@ export async function captureOffscreenLayer(containerElement) {
   }
 
   const scale = computeSafeScale(width, height, 2);
+  // Nuclear patch: walk entire clone and strip color() from ALL computed styles
+// Chrome on some displays converts colors to color() format which html2canvas rejects
+const allEls = containerElement.querySelectorAll('*');
+allEls.forEach(el => {
+  try {
+    const computed = window.getComputedStyle(el);
+    const colorProps = [
+      'color','background-color','border-color','border-top-color',
+      'border-bottom-color','border-left-color','border-right-color',
+      'outline-color','text-decoration-color','column-rule-color',
+      'fill','stroke'
+    ];
+    colorProps.forEach(prop => {
+      try {
+        const val = computed.getPropertyValue(prop);
+        if (val && val.includes('color(')) {
+          el.style.setProperty(prop, '#000000', 'important');
+        }
+      } catch(_) {}
+    });
+  } catch(_) {}
+});
 
   const canvas = await globalThis.html2canvas(containerElement, {
     scale,
