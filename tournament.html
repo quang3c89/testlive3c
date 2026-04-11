@@ -3013,6 +3013,7 @@ async function supaLoad() {
     if (players && Array.isArray(players)) {
       S.players = players.map(p => normalizePlayer(p));
     }
+    hydratePlayersFromBracketIfEmpty();
     setSyncProgress(90);
     saveState();
     updateSyncTime();
@@ -3041,6 +3042,31 @@ function normalizePlayer(p) {
     drawn: p.drawn || false,
     bracketSlot: p.bracket_slot || null
   };
+}
+
+function hydratePlayersFromBracketIfEmpty() {
+  if (Array.isArray(S.players) && S.players.length) return;
+  const r0 = S.bracket?.[0] || [];
+  const seen = new Set();
+  const recovered = [];
+  r0.forEach((m) => {
+    [m?.p1, m?.p2].forEach((p) => {
+      if (!p || p.isBye) return;
+      const key = p.id || `${p.name || ''}__${p.unit || ''}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      recovered.push({
+        id: p.id || 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+        name: p.name || '',
+        unit: p.unit || '',
+        rank: p.rank || '',
+        drawn: true,
+        isSeed: !!p.isSeed,
+        stt: String(recovered.length + 1),
+      });
+    });
+  });
+  if (recovered.length) S.players = recovered;
 }
 
 async function supaPush() {
