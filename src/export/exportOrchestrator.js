@@ -68,9 +68,7 @@ export async function exportBracket(type) {
     const contentW = Math.max(source.scrollWidth || 0, source.clientWidth || 0);
     const contentH = Math.max(source.scrollHeight || 0, source.clientHeight || 0);
 
-    if (!contentW || !contentH) {
-      throw new Error('Bracket dimensions are invalid for export');
-    }
+   
 
     // PHASE 2 — offscreen render
     const offscreen = createOffscreenLayer({ contentW, contentH }, colors, stylesheet);
