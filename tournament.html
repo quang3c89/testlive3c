@@ -3115,7 +3115,7 @@ async function supaLoadFull() {
   setSyncProgress(30);
   const [tournaments, players] = await Promise.all([
     supaFetch(tournamentsFetchPath(), 'GET'),
-    supaFetch(`tournament_players?tournament_id=eq.${TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
+    supaFetch(`tournament_players?tournament_id=eq.${CURRENT_TOURNAMENT_ID || TOURNAMENT_ID}&order=stt.asc,id.asc`, 'GET')
   ]);
   setSyncProgress(70);
   if (tournaments && tournaments.length) {
@@ -5776,6 +5776,18 @@ async function buildBracketExportCanvas() {
       imageTimeout: 0,
       onclone: (doc) => {
         doc.body.classList.add('export-static');
+
+        // html2canvas không parse ổn color()/color-mix() trên một số browser
+        const all = doc.querySelectorAll('*');
+        all.forEach((el) => {
+          const s = el.style;
+          ['color','background','backgroundColor','borderColor','boxShadow','textShadow','filter'].forEach((k) => {
+            const v = s[k];
+            if (typeof v === 'string' && /color\(|color-mix\(/i.test(v)) {
+              s[k] = '';
+            }
+          });
+        });
       },
     });
 
