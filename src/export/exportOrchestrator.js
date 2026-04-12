@@ -25,13 +25,21 @@ export async function exportBracket(type) {
     const centerClone = center.cloneNode(true);
 
     if (isBracket) {
-      centerClone.style.cssText = 'position:relative;width:2400px;overflow:visible;height:auto;max-height:none;flex:1;';
+      centerClone.style.cssText = 'position:relative;width:2400px;overflow:visible;height:auto;max-height:none;flex:1;background:transparent;';
+      centerClone.querySelectorAll('*').forEach(el => {
+        const cs = window.getComputedStyle(el);
+        const bg = cs.backgroundColor;
+        if (bg === 'rgb(54, 75, 124)' || bg === 'rgb(0, 56, 141)' || bg === 'rgb(0, 30, 92)') {
+          el.style.backgroundColor = 'transparent';
+        }
+      });
       const bc = centerClone.querySelector('#bracket-container, .bracket-wrap, .bracket-container');
       if (bc) {
         bc.style.width = '2400px';
         bc.style.minWidth = '2400px';
         bc.style.overflow = 'visible';
         bc.style.transform = 'none';
+        bc.style.background = 'transparent';
       }
     } else {
       centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
