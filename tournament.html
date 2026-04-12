@@ -2289,6 +2289,27 @@ body.fs-mode #bracket-style-toggle {
     color: #ffd447 !important;
     -webkit-text-fill-color: #ffd447 !important;
   }
+  .sched-name-fallback {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 11px;
+    line-height: 1.2;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: 0 1px 1px rgba(0,0,0,.45);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sched-side-name.right .sched-name-fallback {
+    color: #ffd447 !important;
+    -webkit-text-fill-color: #ffd447 !important;
+    text-align: right;
+  }
+  .sched-side-name .sched-name {
+    display: none !important;
+  }
   .sched-name.name-sm { font-size: 10.5px; }
   .sched-name.name-xs { font-size: 10px; }
   .sched-side-unit {
@@ -6321,6 +6342,7 @@ function renderSchedule() {
 
             <div class="sched-side-name left">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
+              <span class="sched-name-fallback">${hasP1 ? p1.name : 'TBD'}</span>
             </div>
 
             <div class="sched-center-pack">
@@ -6343,6 +6365,7 @@ function renderSchedule() {
 
             <div class="sched-side-name right">
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : '\u00A0'}</span>
+              <span class="sched-name-fallback">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
 
             <div class="sched-side-unit right" title="${hasP2 ? (getPlayerUnit(p2) || p2Meta || '') : ''}">${hasP2 ? (getPlayerUnit(p2) || '—') : '—'}</div>
