@@ -2669,8 +2669,12 @@ function applyTournamentRow(t) {
 
   const nextTheme = t.theme || settings.theme;
   const nextTitleFont = t.title_font || settings.title_font;
+  const nextTbBg = settings.tb_bg || '';
+  const nextTbFont = settings.tb_font || '';
   if (nextTheme) S.theme = nextTheme;
   if (nextTitleFont) S.titleFont = nextTitleFont;
+  if (nextTbBg) S.tbBg = nextTbBg;
+  if (nextTbFont) S.tbFont = nextTbFont;
 
   if (settings.bracket_colors && typeof settings.bracket_colors === 'object') {
     S.bracketColors = { ...DEFAULTS.bracketColors, ...settings.bracket_colors };
@@ -3107,6 +3111,8 @@ async function supaPush() {
       settings: {
         theme: S.theme,
         title_font: S.titleFont,
+        tb_bg: S.tbBg || '',
+        tb_font: S.tbFont || S.titleFont || '',
         video_url: S.tbVals[5] || '',
         bracket_colors: S.bracketColors || DEFAULTS.bracketColors,
         sponsor_logos: Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [],
@@ -3254,13 +3260,22 @@ async function supaLoadSilent() {
       setupTopBar();
       updateBcName();
 
+      const tbChanged = !!(t?.settings && (
+        Object.prototype.hasOwnProperty.call(t.settings, 'tb_bg') ||
+        Object.prototype.hasOwnProperty.call(t.settings, 'tb_font') ||
+        Object.prototype.hasOwnProperty.call(t.settings, 'cti') ||
+        Object.prototype.hasOwnProperty.call(t.settings, 'cti_snap')
+      ));
+
       const themeChanged = !!applied?.themeChanged ||
         beforeTheme !== S.theme ||
         beforeFont !== S.titleFont ||
-        beforeColors !== JSON.stringify(S.bracketColors || {});
+        beforeColors !== JSON.stringify(S.bracketColors || {}) ||
+        tbChanged;
 
       if (themeChanged) {
         applyTheme(S.theme);
+        setupTopBar();
         renderAll();
         applyMobileBracketOverview();
         if (document.body.classList.contains('tab-right')) {
