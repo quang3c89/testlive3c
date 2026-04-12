@@ -2685,6 +2685,12 @@ function applyTournamentRow(t) {
   if (typeof settings.sponsor_snap === 'boolean') {
     S.sponsorSnap = settings.sponsor_snap;
   }
+  if (settings.cti && typeof settings.cti === 'object') {
+    S.cti = { ...DEFAULTS.cti, ...(S.cti || {}), ...settings.cti };
+  }
+  if (typeof settings.cti_snap === 'boolean') {
+    S.ctiSnap = settings.cti_snap;
+  }
 
   if (t.bracket_size) S.bracketSize = t.bracket_size;
 
@@ -3105,7 +3111,9 @@ async function supaPush() {
         bracket_colors: S.bracketColors || DEFAULTS.bracketColors,
         sponsor_logos: Array.isArray(S.sponsorLogos) ? S.sponsorLogos : [],
         sponsor_pos: Array.isArray(S.sponsorPos) ? S.sponsorPos : [],
-        sponsor_snap: !!S.sponsorSnap
+        sponsor_snap: !!S.sponsorSnap,
+        cti: S.cti || DEFAULTS.cti,
+        cti_snap: !!S.ctiSnap
       }
     };
     if (!CURRENT_TOURNAMENT_ID) {
