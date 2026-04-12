@@ -25,7 +25,14 @@ export async function exportBracket(type) {
     const centerClone = center.cloneNode(true);
 
     if (isBracket) {
-      centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
+      centerClone.style.cssText = 'position:relative;width:2400px;overflow:visible;height:auto;max-height:none;flex:1;';
+      const bc = centerClone.querySelector('#bracket-container, .bracket-wrap, .bracket-container');
+      if (bc) {
+        bc.style.width = '2400px';
+        bc.style.minWidth = '2400px';
+        bc.style.overflow = 'visible';
+        bc.style.transform = 'none';
+      }
     } else {
       centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
       centerClone.querySelectorAll('*').forEach(el => {
@@ -57,7 +64,10 @@ export async function exportBracket(type) {
     console.log('[Export] bracket:', isBracket, 'size:', W, 'x', H);
 
     const dataUrl = await domtoimage.toPng(wrap, {
-      width: W, height: H,
+      width: W,
+      height: H,
+      imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+      cacheBust: true,
       filter: node => {
         if (!node.classList) return true;
         if (node.id === 'bracket-export-btn') return false;
