@@ -2914,18 +2914,17 @@ function updateSyncTime() {
    ADMIN MODE
    ================================================================ */
 function setAdminMode(isAdminVal) {
-  // Ưu tiên cờ local để không phụ thuộc host/domain cookie
-  const localAdmin = localStorage.getItem('live3c_admin') === 'true';
+  // Chỉ tin auth runtime để viewer không bị kẹt quyền admin từ localStorage cũ
   const runtimeAdmin = !!authIsAdmin();
-  S.isAdmin = localAdmin || runtimeAdmin || !!isAdminVal;
+  S.isAdmin = runtimeAdmin && !!isAdminVal;
   document.body.classList.toggle('admin-mode', S.isAdmin);
   document.body.classList.toggle('viewer-mode', !S.isAdmin);
   ['tb-v0','tb-v1','tb-v2','tb-v3','tb-v4','tb-v5'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.contentEditable = isAdminVal ? 'true' : 'false';
+    if (el) el.contentEditable = S.isAdmin ? 'true' : 'false';
   });
   const tools = document.getElementById('bracket-color-tools');
-  if (tools) tools.style.display = isAdminVal ? 'flex' : 'none';
+  if (tools) tools.style.display = S.isAdmin ? 'flex' : 'none';
 
   const registerPanel = document.getElementById('register-panel');
   if (registerPanel && currentBracketTab !== 'register') {
@@ -3170,6 +3169,7 @@ async function supaPush() {
 }
 
 function supaPushDebounced() {
+  if (!S.isAdmin) return;
   clearTimeout(pushDebounceTimer);
   pushDebounceTimer = setTimeout(() => supaPush(), 1200);
 }
