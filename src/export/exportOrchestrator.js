@@ -9,71 +9,24 @@ export async function exportBracket(type) {
     const center  = document.querySelector('#center-panel');
     if (!center) throw new Error('#center-panel not found');
 
-    const isBracket = center.classList.contains('bracket-active') ||
-                      !!center.querySelector('#bracket-container, .bracket-container, [id*="bracket-wrap"]');
+    // Chụp thẳng từng phần riêng rồi ghép lại
+    // Bước 1: chụp header
+    // Bước 2: chụp center panel  
+    // Bước 3: ghép canvas
 
-    const bgColor = isBracket ? '#3d0000' : 'transparent';
-    const wrap = document.createElement('div');
-    wrap.style.cssText = `position:fixed;left:-99999px;top:0;z-index:-1;display:flex;flex-direction:column;min-width:1400px;background:${bgColor};`;
-
+    // Chụp header
+    let headerCanvas = null;
     if (tourney) {
-      const t = tourney.cloneNode(true);
-      t.style.cssText += ';position:relative;width:100%;flex-shrink:0;';
-      wrap.appendChild(t);
-    }
-
-    const centerClone = center.cloneNode(true);
-
-    if (isBracket) {
-      centerClone.style.cssText = 'position:relative;width:2400px;overflow:visible;height:auto;max-height:none;flex:1;background:transparent;';
-      centerClone.querySelectorAll('*').forEach(el => {
-        const cs = window.getComputedStyle(el);
-        const bg = cs.backgroundColor;
-        if (bg === 'rgb(54, 75, 124)' || bg === 'rgb(0, 56, 141)' || bg === 'rgb(0, 30, 92)') {
-          el.style.backgroundColor = 'transparent';
-        }
-      });
-      const bc = centerClone.querySelector('#bracket-container, .bracket-wrap, .bracket-container');
-      if (bc) {
-        bc.style.width = '2400px';
-        bc.style.minWidth = '2400px';
-        bc.style.overflow = 'visible';
-        bc.style.transform = 'none';
-        bc.style.background = 'transparent';
-      }
-    } else {
-      centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
-      centerClone.querySelectorAll('*').forEach(el => {
-        const cs = window.getComputedStyle(el);
-        if (cs.overflowY === 'scroll' || cs.overflowY === 'auto' ||
-            cs.overflow === 'scroll' || cs.overflow === 'auto') {
-          el.style.overflow = 'visible';
-          el.style.height = 'auto';
-          el.style.maxHeight = 'none';
-        }
+      headerCanvas = await domtoimage.toCanvas(tourney, {
+        imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+        cacheBust: true,
       });
     }
 
-    wrap.appendChild(centerClone);
-    document.body.appendChild(wrap);
-
-    void wrap.offsetWidth;
-    await new Promise(r => requestAnimationFrame(r));
-    await new Promise(r => requestAnimationFrame(r));
-    await new Promise(r => setTimeout(r, 400));
-
-    const W = Math.max(wrap.scrollWidth, wrap.offsetWidth, 1400);
-    const H = Math.max(wrap.scrollHeight, wrap.offsetHeight, 800);
-    wrap.style.width = W + 'px';
-    wrap.style.height = H + 'px';
-    void wrap.offsetWidth;
-    await new Promise(r => requestAnimationFrame(r));
-
-    console.log('[Export] bracket:', isBracket, 'size:', W, 'x', H);
-
-    const dataUrl = await domtoimage.toPng(wrap, {
-      width: W,
-      height: H,
+    // Chụp center panel (live DOM, không clone)
+    const centerCanvas = await domtoimage.toCanvas(center, {
+      width: Math.max(center.scrollWidth, center.offsetWidth),
+      height: Math.max(center.scrollHeight, center.offsetHeight),
       imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
       cacheBust: true,
       filter: node => {
@@ -88,21 +41,40 @@ export async function exportBracket(type) {
       }
     });
 
-    wrap.remove();
+    // Ghép header + center vào 1 canvas
+    const W = Math.max(
+      headerCanvas ? headerCanvas.width : 0,
+      centerCanvas.width
+    );
+    const headerH = headerCanvas ? headerCanvas.height : 0;
+    const H = headerH + centerCanvas.height;
 
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = W;
+    finalCanvas.height = H;
+    const ctx = finalCanvas.getContext('2d');
+
+    if (headerCanvas) {
+      ctx.drawImage(headerCanvas, 0, 0, W, headerH);
+    }
+    ctx.drawImage(centerCanvas, 0, headerH, W, centerCanvas.height);
+
+    // Export
     if (type === 'png') {
-      const a = document.createElement('a');
-      a.download = 'bracket.png';
-      a.href = dataUrl;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      finalCanvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.download = 'bracket.png';
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }, 'image/png');
     } else {
       const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
       if (!jsPDF) throw new Error('jsPDF not loaded');
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise(r => img.onload = r);
+      const dataUrl = finalCanvas.toDataURL('image/png');
       const orientation = W > H ? 'landscape' : 'portrait';
       const pdf = new jsPDF({ orientation, unit: 'px', format: [W, H] });
       pdf.addImage(dataUrl, 'PNG', 0, 0, W, H);
