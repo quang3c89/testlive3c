@@ -9,24 +9,33 @@ export async function exportBracket(type) {
     const center  = document.querySelector('#center-panel');
     if (!center) throw new Error('#center-panel not found');
 
-    // Chụp thẳng từng phần riêng rồi ghép lại
-    // Bước 1: chụp header
-    // Bước 2: chụp center panel  
-    // Bước 3: ghép canvas
+    // Read true content dimensions before any manipulation
+    const trueW = Math.max(center.scrollWidth, center.offsetWidth);
+    const trueH = Math.max(center.scrollHeight, center.offsetHeight);
 
-    // Chụp header
+    // Temporarily expand center to show full content
+    const origOverflow = center.style.overflow;
+    const origWidth    = center.style.width;
+    const origHeight   = center.style.height;
+    center.style.overflow = 'visible';
+    center.style.width    = trueW + 'px';
+    center.style.height   = trueH + 'px';
+    void center.offsetWidth;
+    await new Promise(r => requestAnimationFrame(r));
+
+    // Capture header
     let headerCanvas = null;
     if (tourney) {
       headerCanvas = await domtoimage.toCanvas(tourney, {
         imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
         cacheBust: true,
-      });
+      }).catch(() => null);
     }
 
-    // Chụp center panel (live DOM, không clone)
+    // Capture center with full width
     const centerCanvas = await domtoimage.toCanvas(center, {
-      width: Math.max(center.scrollWidth, center.offsetWidth),
-      height: Math.max(center.scrollHeight, center.offsetHeight),
+      width: trueW,
+      height: trueH,
       imagePlaceholder: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
       cacheBust: true,
       filter: node => {
@@ -41,25 +50,23 @@ export async function exportBracket(type) {
       }
     });
 
-    // Ghép header + center vào 1 canvas
-    const W = Math.max(
-      headerCanvas ? headerCanvas.width : 0,
-      centerCanvas.width
-    );
+    // Restore original styles immediately after capture
+    center.style.overflow = origOverflow;
+    center.style.width    = origWidth;
+    center.style.height   = origHeight;
+
+    // Merge header + center
+    const W = Math.max(headerCanvas ? headerCanvas.width : 0, centerCanvas.width);
     const headerH = headerCanvas ? headerCanvas.height : 0;
     const H = headerH + centerCanvas.height;
 
     const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = W;
+    finalCanvas.width  = W;
     finalCanvas.height = H;
     const ctx = finalCanvas.getContext('2d');
-
-    if (headerCanvas) {
-      ctx.drawImage(headerCanvas, 0, 0, W, headerH);
-    }
+    if (headerCanvas) ctx.drawImage(headerCanvas, 0, 0, W, headerH);
     ctx.drawImage(centerCanvas, 0, headerH, W, centerCanvas.height);
 
-    // Export
     if (type === 'png') {
       finalCanvas.toBlob(blob => {
         const url = URL.createObjectURL(blob);
