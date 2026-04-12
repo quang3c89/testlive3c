@@ -3820,9 +3820,12 @@ function renderTopInfo() {
   const time = S.tbVals?.[1] || 'Thời gian';
   meta.textContent = S.cti.metaText || `${loc} · ${time}`;
 
-  title.style.left = '300px';
+  const boxW = box.clientWidth || 0;
+  const sidePad = boxW > 900 ? 300 : boxW > 640 ? 180 : 10;
+
+  title.style.left = `${sidePad}px`;
   title.style.top = '8px';
-  meta.style.right = '300px';
+  meta.style.right = `${sidePad}px`;
   meta.style.left = 'auto';
   meta.style.top = '10px';
 
