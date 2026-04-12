@@ -9,30 +9,38 @@ export async function exportBracket(type) {
     const center  = document.querySelector('#center-panel');
     if (!center) throw new Error('#center-panel not found');
 
+    // Detect current active tab
+    const isBracket = center.classList.contains('bracket-active') ||
+                      !!center.querySelector('#bracket-container, .bracket-container, [id*="bracket-wrap"]');
+
     const wrap = document.createElement('div');
     wrap.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;display:flex;flex-direction:column;min-width:1400px;';
 
-    // Clone tourney bar
+    // Clone tourney bar (header)
     if (tourney) {
       const t = tourney.cloneNode(true);
       t.style.cssText += ';position:relative;width:100%;flex-shrink:0;';
       wrap.appendChild(t);
     }
 
-    // Clone center panel
     const centerClone = center.cloneNode(true);
-    centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
 
-    // Only fix overflow on scroll containers, do NOT touch colors
-    centerClone.querySelectorAll('*').forEach(el => {
-      const cs = window.getComputedStyle(el);
-      if (cs.overflowY === 'scroll' || cs.overflowY === 'auto' ||
-          cs.overflowX === 'scroll' || cs.overflowX === 'auto') {
-        el.style.overflow = 'visible';
-        el.style.height = 'auto';
-        el.style.maxHeight = 'none';
-      }
-    });
+    if (isBracket) {
+      // BRACKET: keep layout intact, only remove scroll on outer container
+      centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
+    } else {
+      // LIST/SCHEDULE: expand all scroll containers so full content shows
+      centerClone.style.cssText = 'position:relative;width:100%;overflow:visible;height:auto;max-height:none;flex:1;';
+      centerClone.querySelectorAll('*').forEach(el => {
+        const cs = window.getComputedStyle(el);
+        if (cs.overflowY === 'scroll' || cs.overflowY === 'auto' ||
+            cs.overflow === 'scroll' || cs.overflow === 'auto') {
+          el.style.overflow = 'visible';
+          el.style.height = 'auto';
+          el.style.maxHeight = 'none';
+        }
+      });
+    }
 
     wrap.appendChild(centerClone);
     document.body.appendChild(wrap);
@@ -40,21 +48,19 @@ export async function exportBracket(type) {
     void wrap.offsetWidth;
     await new Promise(r => requestAnimationFrame(r));
     await new Promise(r => requestAnimationFrame(r));
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 400));
 
     const W = Math.max(wrap.scrollWidth, wrap.offsetWidth, 1400);
     const H = Math.max(wrap.scrollHeight, wrap.offsetHeight, 800);
     wrap.style.width = W + 'px';
     wrap.style.height = H + 'px';
-
     void wrap.offsetWidth;
     await new Promise(r => requestAnimationFrame(r));
 
-    console.log('[Export] capturing', W, 'x', H);
+    console.log('[Export] bracket:', isBracket, 'size:', W, 'x', H);
 
     const dataUrl = await domtoimage.toPng(wrap, {
-      width: W,
-      height: H,
+      width: W, height: H,
       filter: node => {
         if (!node.classList) return true;
         if (node.id === 'bracket-export-btn') return false;
