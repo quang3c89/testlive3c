@@ -2665,6 +2665,10 @@ function applyTournamentRow(t) {
 
   const prevTheme = S.theme;
   const prevTitleFont = S.titleFont;
+  const prevTbBg = S.tbBg || '';
+  const prevTbFont = S.tbFont || '';
+  const prevCti = JSON.stringify(S.cti || {});
+  const prevCtiSnap = !!S.ctiSnap;
   const prevBracketColors = JSON.stringify(S.bracketColors || {});
 
   const nextTheme = t.theme || settings.theme;
@@ -2701,6 +2705,10 @@ function applyTournamentRow(t) {
   const themeChanged =
     prevTheme !== S.theme ||
     prevTitleFont !== S.titleFont ||
+    prevTbBg !== (S.tbBg || '') ||
+    prevTbFont !== (S.tbFont || '') ||
+    prevCti !== JSON.stringify(S.cti || {}) ||
+    prevCtiSnap !== !!S.ctiSnap ||
     prevBracketColors !== JSON.stringify(S.bracketColors || {});
 
   return { themeChanged };
@@ -3096,6 +3104,7 @@ function hydratePlayersFromBracketIfEmpty() {
 }
 
 async function supaPush() {
+  if (!S.isAdmin) return;
   if (!S.supaUrl || !S.supaKey) { showToast('⚠️ Chưa cài Supabase', 'error'); return; }
   setSyncProgress(20);
   try {
