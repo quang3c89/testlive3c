@@ -331,7 +331,8 @@ body.viewer-mode #fs-mini-wheel { display: none !important; }
 }
 
 /* ============ CENTER PANEL (BRACKET) ============ */
-.center { flex: 1; position: relative; overflow-x: auto; overflow-y: auto; padding: 0; background: var(--bracket-bg, var(--bg)); isolation: isolate; }
+.center { flex: 1; position: relative; overflow-x: auto; overflow-y: auto; padding: 0; background: var(--bracket-bg, var(--bg)); background-color: var(--bracket-bg, var(--bg)); isolation: isolate; }
+#center-panel { background: var(--bracket-bg, var(--bg)); background-color: var(--bracket-bg, var(--bg)); }
 .center-top-info {
   position: relative;
   z-index: 8;
@@ -5497,6 +5498,10 @@ function drawBracketLines() {
     bgLayer.style.minHeight = `${bgH}px`;
     bgLayer.style.backgroundRepeat = 'no-repeat';
     bgLayer.style.backgroundSize = `${bgW}px ${bgH}px`;
+
+    // Đồng bộ nền toàn vùng center để không hở mảng trống khi bracket lớn
+    center.style.background = 'var(--bracket-bg, var(--bg))';
+    center.style.backgroundColor = 'var(--bracket-bg, var(--bg))';
   }
 
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f0a500';
