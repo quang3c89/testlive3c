@@ -575,7 +575,9 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
 #bracket-container {
   position: relative;
   min-width: max-content;
+  width: max-content;
   min-height: 100%;
+  height: max-content;
   background: var(--bracket-bg, var(--bg));
 }
 .bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; min-width: 100%; min-height: calc(100vh - 120px); }
@@ -5468,13 +5470,20 @@ function drawBracketLines() {
   // Cache line geometry for export pipeline (bracketCloner prerequisite)
   const exportLines = [];
 
-  const cw = Math.max(cont.scrollWidth, cont.clientWidth, center?.clientWidth || 0);
-  const ch = Math.max(cont.scrollHeight, cont.clientHeight, center?.clientHeight || 0);
+  const cols = document.getElementById('bracket-columns');
+  const colsW = cols ? Math.max(cols.scrollWidth, cols.offsetWidth, cols.clientWidth) : 0;
+  const colsH = cols ? Math.max(cols.scrollHeight, cols.offsetHeight, cols.clientHeight) : 0;
+
+  const cw = Math.max(cont.scrollWidth, cont.clientWidth, colsW, center?.clientWidth || 0);
+  const ch = Math.max(cont.scrollHeight, cont.clientHeight, colsH, center?.clientHeight || 0);
   svg.setAttribute('width', cw);
   svg.setAttribute('height', ch);
   svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
 
-  // Đảm bảo container bracket luôn cao ít nhất bằng nội dung để nền không bị hở đáy
+  // Đảm bảo container bracket bám full theo content thực (không hở nền)
+  cont.style.width = `${cw}px`;
+  cont.style.minWidth = `${cw}px`;
+  cont.style.height = `${ch}px`;
   cont.style.minHeight = `${ch}px`;
 
   if (bgLayer && center) {
