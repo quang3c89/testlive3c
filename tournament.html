@@ -1946,8 +1946,13 @@ body.fs-mode #bracket-style-toggle {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%);
-  opacity: 0.5;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 42%);
+  opacity: 0.16;
+  z-index: 1;
+}
+.sched-match > * {
+  position: relative;
+  z-index: 2;
 }
 .sched-match:hover {
   transform: translateY(-1px);
