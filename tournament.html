@@ -5862,6 +5862,10 @@ function toggleBracketFullscreen() {
   const target = document.getElementById('center-panel');
   if (!target) return;
 
+  // Đảm bảo đang ở tab bracket trước khi vào full màn hình
+  switchTab('center');
+  switchBracketTab('bracket');
+
   if (!document.fullscreenElement) {
     const req = target.requestFullscreen || target.webkitRequestFullscreen || target.msRequestFullscreen;
     if (req) req.call(target);
