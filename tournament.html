@@ -2258,20 +2258,6 @@ body.fs-mode #bracket-style-toggle {
   .sched-side-unit.right { grid-column: 3; grid-row: 2; text-align: right; }
   .sched-player-inline.left { grid-column: 1 / -1; grid-row: 1 / span 2; }
 
-  .sched-name {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    font-size: 11px;
-    line-height: 1.2;
-    color: #ffffff !important;
-    text-shadow: 0 1px 1px rgba(0,0,0,.45);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sched-name.name-sm { font-size: 10.5px; }
-  .sched-name.name-xs { font-size: 10px; }
   .sched-side-name,
   .sched-side-name.left,
   .sched-side-name.right {
@@ -2280,17 +2266,44 @@ body.fs-mode #bracket-style-toggle {
     opacity: 1 !important;
     min-width: 0;
     overflow: hidden;
+    position: relative;
+    z-index: 3;
   }
+  .sched-side-name .sched-name,
+  .sched-name {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 3;
+    font-size: 11px;
+    line-height: 1.2;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: 0 1px 1px rgba(0,0,0,.45);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sched-name.right-name {
+    color: #ffd447 !important;
+    -webkit-text-fill-color: #ffd447 !important;
+  }
+  .sched-name.name-sm { font-size: 10.5px; }
+  .sched-name.name-xs { font-size: 10px; }
   .sched-side-unit {
     display: block !important;
     visibility: visible !important;
     opacity: 0.95 !important;
     color: rgba(255,255,255,.86) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.86) !important;
     font-size: 8px;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    position: relative;
+    z-index: 3;
   }
   .sched-outcome-inline { gap: 1px; padding: 1px 2px; }
   .sched-score { min-width: 8px; font-size: 8px; height: 13px; padding: 0 2px; }
