@@ -1942,17 +1942,7 @@ body.fs-mode #bracket-style-toggle {
     0 0 16px color-mix(in srgb, var(--accent, #f0a500) 20%, transparent);
 }
 .sched-match::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 42%);
-  opacity: 0.16;
-  z-index: 1;
-}
-.sched-match > * {
-  position: relative;
-  z-index: 2;
+  content: none !important;
 }
 .sched-match:hover {
   transform: translateY(-1px);
@@ -6347,7 +6337,6 @@ function renderSchedule() {
 
             <div class="sched-side-name left">
               <span class="sched-name ${p1NameCls}" title="${hasP1 ? p1.name : 'TBD'}">${hasP1 ? p1.name : 'TBD'}</span>
-              <span class="sched-name-fallback">${hasP1 ? p1.name : 'TBD'}</span>
             </div>
 
             <div class="sched-center-pack">
@@ -6370,7 +6359,6 @@ function renderSchedule() {
 
             <div class="sched-side-name right">
               <span class="sched-name ${p2NameCls}" title="${hasP2 ? p2.name : 'TBD'}">${hasP2 ? p2.name : '\u00A0'}</span>
-              <span class="sched-name-fallback">${hasP2 ? p2.name : 'TBD'}</span>
             </div>
 
             <div class="sched-side-unit right" title="${hasP2 ? (getPlayerUnit(p2) || p2Meta || '') : ''}">${hasP2 ? (getPlayerUnit(p2) || '—') : '—'}</div>
