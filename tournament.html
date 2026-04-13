@@ -2046,6 +2046,10 @@ body.fs-mode #bracket-style-toggle {
   color: #22c55e;
   opacity: 0.7;
 }
+.sched-match-status.playing {
+  color: #f59e0b;
+  opacity: 0.95;
+}
 
 /* Match body cố định 1 hàng: unit trái | tên trái | logo+score | tên phải | unit phải */
 .sched-match-body {
@@ -4478,6 +4482,22 @@ function reorderPlayersByIds(orderedIds) {
   S.players = next;
 }
 
+function getMatchLiveStatus(match) {
+  const hasWinner = !!match?.winner?.id;
+  if (hasWinner) return 'done';
+
+  const p1 = match?.p1;
+  const p2 = match?.p2;
+  const hasP1 = !!(p1 && !p1.isBye);
+  const hasP2 = !!(p2 && !p2.isBye);
+  if (!(hasP1 && hasP2)) return 'waiting';
+
+  const s1Raw = match?.player1?.score ?? match?.s1;
+  const s2Raw = match?.player2?.score ?? match?.s2;
+  const hasAnyScore = String(s1Raw ?? '').trim() !== '' || String(s2Raw ?? '').trim() !== '';
+  return hasAnyScore ? 'playing' : 'waiting';
+}
+
 function getPlayerStatusMap() {
   /** @type {Record<string, 'waiting'|'playing'|'done'>} */
   const map = {};
@@ -4485,32 +4505,11 @@ function getPlayerStatusMap() {
 
   bracket.forEach((round) => {
     (round || []).forEach((match) => {
+      const status = getMatchLiveStatus(match);
       const p1 = match?.p1;
       const p2 = match?.p2;
-      const p1Id = p1?.id;
-      const p2Id = p2?.id;
-      const hasP1 = !!(p1Id && !p1?.isBye);
-      const hasP2 = !!(p2Id && !p2?.isBye);
-      if (!hasP1 && !hasP2) return;
-
-      const hasWinner = !!match?.winner?.id;
-      const s1Raw = match?.player1?.score ?? match?.s1;
-      const s2Raw = match?.player2?.score ?? match?.s2;
-      const hasAnyScore = String(s1Raw ?? '').trim() !== '' || String(s2Raw ?? '').trim() !== '';
-
-      if (hasWinner) {
-        if (hasP1) map[p1Id] = 'done';
-        if (hasP2) map[p2Id] = 'done';
-      } else if (hasP1 && hasP2 && hasAnyScore) {
-        if (map[p1Id] !== 'done') map[p1Id] = 'playing';
-        if (map[p2Id] !== 'done') map[p2Id] = 'playing';
-      } else if (hasP1 && hasP2) {
-        if (!map[p1Id]) map[p1Id] = 'waiting';
-        if (!map[p2Id]) map[p2Id] = 'waiting';
-      } else {
-        if (hasP1 && !map[p1Id]) map[p1Id] = 'waiting';
-        if (hasP2 && !map[p2Id]) map[p2Id] = 'waiting';
-      }
+      if (p1?.id && !p1?.isBye) map[p1.id] = status;
+      if (p2?.id && !p2?.isBye) map[p2.id] = status;
     });
   });
 
@@ -6436,6 +6435,7 @@ function renderSchedule() {
     const p1 = m.p1, p2 = m.p2;
     const hasP1 = !!p1, hasP2 = !!p2;
     const hasWinner = !!m.winner;
+    const liveStatus = getMatchLiveStatus(m);
     const p1IsWinner = hasWinner && p1 && m.winner.id === p1.id;
     const p2IsWinner = hasWinner && p2 && m.winner.id === p2.id;
     const p1IsLoser = hasWinner && hasP1 && !p1IsWinner;
@@ -6501,7 +6501,7 @@ function renderSchedule() {
       <div class="sched-match${hasWinner ? ' has-winner' : ''}" style="animation-delay:${animDelay}ms" data-round="${roundIdx}" data-match="${matchIdx}" data-playable="${(hasP1 && hasP2 && !p1?.isBye && !p2?.isBye) ? '1' : '0'}" draggable="${(hasP1 && hasP2 && !p1?.isBye && !p2?.isBye) ? 'true' : 'false'}">
         <div class="sched-match-header">
           <span class="sched-match-num">${byeCase ? '' : `T${matchNum}`}</span>
-          <span class="sched-match-status${hasWinner ? ' done' : ''}">${byeCase ? '' : (hasWinner ? '✓ KẾT THÚC' : 'CHỜ THI ĐẤU')}</span>
+          <span class="sched-match-status${liveStatus === 'done' ? ' done' : liveStatus === 'playing' ? ' playing' : ''}">${byeCase ? '' : (liveStatus === 'done' ? '✓ KẾT THÚC' : liveStatus === 'playing' ? 'ĐANG THI ĐẤU' : 'CHỜ THI ĐẤU')}</span>
           <span class="sched-seq"></span>
         </div>
         <div class="sched-match-body">
