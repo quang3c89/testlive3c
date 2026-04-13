@@ -1734,6 +1734,32 @@ body.fs-mode #bracket-style-toggle {
   color: var(--register-title-color, var(--label-contrast, #ffffff));
   text-shadow: 0 0 10px color-mix(in srgb, var(--register-title-color, #fff) 24%, transparent);
 }
+.register-search-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 8px;
+}
+.register-search-input {
+  width: min(100%, 360px);
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, rgba(255,255,255,0.15));
+  background: color-mix(in srgb, var(--card) 90%, #000 10%);
+  color: var(--text);
+  font-family: var(--font-main);
+  font-size: 12px;
+  padding: 0 12px;
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.03) inset;
+}
+.register-search-input::placeholder {
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+.register-search-input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), 0 4px 12px rgba(0,0,0,0.2);
+}
 #register-list {
   width: 100%;
   flex: 1 1 auto;
@@ -1804,9 +1830,9 @@ body.fs-mode #bracket-style-toggle {
   box-shadow: 0 10px 22px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.07) inset;
 }
 .register-item.drawn { opacity: .5; filter: grayscale(42%); }
-.register-item.cols-2 { grid-template-columns: 56px 1fr; }
-.register-item.cols-3 { grid-template-columns: 56px 1fr minmax(70px,auto); }
-.register-item.cols-4 { grid-template-columns: 56px 1fr minmax(150px,1fr) minmax(70px,auto); }
+.register-item.cols-2 { grid-template-columns: 56px 1fr auto; }
+.register-item.cols-3 { grid-template-columns: 56px 1fr minmax(70px,auto) auto; }
+.register-item.cols-4 { grid-template-columns: 56px 1fr minmax(150px,1fr) minmax(70px,auto) auto; }
 .register-item .f-stt,
 .register-item .f-rank {
   text-align: center;
@@ -1830,6 +1856,57 @@ body.fs-mode #bracket-style-toggle {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.register-item .f-status {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.register-item .f-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.register-item .f-status.waiting {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.16);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+.register-item .f-status.waiting .f-status-dot {
+  background: #94a3b8;
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.45);
+}
+.register-item .f-status.playing {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.38);
+  animation: statusPulse 1.5s infinite;
+}
+.register-item .f-status.playing .f-status-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+}
+.register-item .f-status.done {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.36);
+}
+.register-item .f-status.done .f-status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.55);
+}
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.08); }
 }
 @keyframes registerFadeIn {
   from { opacity: 0; transform: translateY(6px) scale(.985); }
@@ -2594,6 +2671,15 @@ body.fs-mode #bracket-style-toggle {
         <div class="register-header">
           <div class="register-title">DANH SÁCH ĐĂNG KÍ</div>
           <button class="export-btn" onclick="captureRegisterImage()">📸</button>
+        </div>
+        <div class="register-search-wrap">
+          <input
+            id="register-search-input"
+            class="register-search-input"
+            type="text"
+            placeholder="Tìm Cơ Thủ, CLB..."
+            oninput="onRegisterSearchInput(this.value)"
+          >
         </div>
         <div id="register-list"></div>
       </div>
@@ -4398,6 +4484,8 @@ function getUndrawn() { return S.players.filter(p => !p.drawn); }
 
 let currentBracketTab = 'schedule';
 let registerDragPlayerId = null;
+let registerSearchKeyword = '';
+let registerSearchTimer = null;
 
 function reorderPlayersByIds(orderedIds) {
   const byId = new Map((S.players || []).map(p => [p.id, p]));
@@ -4417,17 +4505,69 @@ function reorderPlayersByIds(orderedIds) {
   S.players = next;
 }
 
+function getPlayerStatusMap() {
+  /** @type {Record<string, 'waiting'|'playing'|'done'>} */
+  const map = {};
+  const bracket = Array.isArray(S.bracket) ? S.bracket : [];
+
+  bracket.forEach((round) => {
+    (round || []).forEach((match) => {
+      const p1 = match?.p1;
+      const p2 = match?.p2;
+      if (!p1?.id && !p2?.id) return;
+
+      const hasP1 = !!(p1 && !p1.isBye);
+      const hasP2 = !!(p2 && !p2.isBye);
+      const hasWinner = !!match?.winner?.id;
+
+      if (hasWinner) {
+        if (p1?.id) map[p1.id] = 'done';
+        if (p2?.id) map[p2.id] = 'done';
+      } else if (hasP1 && hasP2) {
+        if (p1?.id && map[p1.id] !== 'done') map[p1.id] = 'playing';
+        if (p2?.id && map[p2.id] !== 'done') map[p2.id] = 'playing';
+      } else {
+        if (p1?.id && !map[p1.id]) map[p1.id] = 'waiting';
+        if (p2?.id && !map[p2.id]) map[p2.id] = 'waiting';
+      }
+    });
+  });
+
+  (S.players || []).forEach((p) => {
+    if (p?.id && !map[p.id]) map[p.id] = 'waiting';
+  });
+
+  return map;
+}
+
+function onRegisterSearchInput(value) {
+  clearTimeout(registerSearchTimer);
+  registerSearchTimer = setTimeout(() => {
+    registerSearchKeyword = String(value || '').trim().toLowerCase();
+    renderRegisterCards();
+  }, 250);
+}
+
 function renderRegisterCards() {
   const table = document.getElementById('register-list');
   if (!table) return;
 
-  const players = Array.isArray(S.players) ? S.players : [];
+  const allPlayers = Array.isArray(S.players) ? S.players : [];
+  const keyword = String(registerSearchKeyword || '').trim().toLowerCase();
+  const players = !keyword
+    ? allPlayers
+    : allPlayers.filter((p) =>
+        String(p?.name || '').toLowerCase().includes(keyword) ||
+        String(p?.unit || p?.club || '').toLowerCase().includes(keyword)
+      );
+
   const total = players.length;
+  const statusMap = getPlayerStatusMap();
 
   table.innerHTML = '';
 
   if (!total) {
-    table.innerHTML = '<div class="register-empty">Chưa có danh sách đăng kí</div>';
+    table.innerHTML = '<div class="register-empty">Không tìm thấy cơ thủ phù hợp</div>';
     return;
   }
 
@@ -4513,9 +4653,13 @@ function renderRegisterCards() {
       openEditPlayer(p.id);
     };
 
+    const status = statusMap[p.id] || 'waiting';
+    const statusText = status === 'playing' ? 'Đang Thi Đấu' : status === 'done' ? 'Kết Thúc' : 'Chờ Thi Đấu';
+
     const nodes = [`<span class="f-stt">${stt}</span>`, `<span class="f-name" title="${p.name || ''}">${p.name || ''}</span>`];
     if (hasAnyUnit) nodes.push(`<span class="f-unit" title="${p.unit || ''}">${p.unit || ''}</span>`);
     if (hasAnyRank) nodes.push(`<span class="f-rank">${p.rank || ''}</span>`);
+    nodes.push(`<span class="f-status ${status}" title="${statusText}"><span class="f-status-dot"></span>${statusText}</span>`);
     card.innerHTML = nodes.join('');
 
     if (!useTwoCols || idx < splitAt) leftCol.appendChild(card);
@@ -5646,10 +5790,13 @@ function drawBracketLines() {
   svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
 
   // Khóa container bám full panel, tránh tự giãn bất thường khi admin thao tác
+  // Không set height:100% vì sẽ tạo feedback layout khi redraw nhiều lần.
+  const panelH = Math.max((center?.clientHeight || 0), 480);
   cont.style.width = '100%';
   cont.style.minWidth = '100%';
-  cont.style.height = '100%';
-  cont.style.minHeight = `${Math.max(center?.clientHeight || 0, 480)}px`;
+  cont.style.height = 'auto';
+  cont.style.maxHeight = 'none';
+  cont.style.minHeight = `${panelH}px`;
 
   if (bgLayer && center) {
     // Không set kích thước px quá lớn cho bg-layer (absolute) vì có thể làm tăng

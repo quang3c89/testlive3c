@@ -2,10 +2,10 @@
  * Downloads a canvas as multi-page A4 PDF.
  *
  * @param {HTMLCanvasElement} canvas
- * @param {string} [filename='bracket.pdf']
+ * @param {string} [filename='sema.live3c.pdf']
  * @returns {Promise<void>}
  */
-export async function downloadAsPDF(canvas, filename = 'bracket.pdf') {
+export async function downloadAsPDF(canvas, filename = 'sema.live3c.pdf') {
   if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
     throw new Error('Invalid canvas provided for PDF export');
   }

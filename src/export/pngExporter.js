@@ -17,10 +17,10 @@ function shouldUseMobileFallback() {
  * Downloads a canvas as PNG, with mobile-safe fallback behavior.
  *
  * @param {HTMLCanvasElement} canvas
- * @param {string} [filename='bracket.png']
+ * @param {string} [filename='sema.live3c.png']
  * @returns {Promise<{ success: true, size: number }>}
  */
-export async function downloadAsPNG(canvas, filename = 'bracket.png') {
+export async function downloadAsPNG(canvas, filename = 'sema.live3c.png') {
   if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
     throw new Error('Invalid canvas provided for PNG export');
   }
