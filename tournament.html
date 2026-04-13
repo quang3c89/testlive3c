@@ -4483,7 +4483,6 @@ function getPlayerStatusMap() {
   const map = {};
   const bracket = Array.isArray(S.bracket) ? S.bracket : [];
 
-  // Source of truth giống lịch thi đấu: xét winner/score trước.
   bracket.forEach((round) => {
     (round || []).forEach((match) => {
       const p1 = match?.p1;
@@ -4494,20 +4493,20 @@ function getPlayerStatusMap() {
       const hasP2 = !!(p2Id && !p2?.isBye);
       if (!hasP1 && !hasP2) return;
 
-      const s1 = Number(match?.s1);
-      const s2 = Number(match?.s2);
-      const hasScores = Number.isFinite(s1) && Number.isFinite(s2);
       const hasWinner = !!match?.winner?.id;
+      const s1Raw = match?.player1?.score ?? match?.s1;
+      const s2Raw = match?.player2?.score ?? match?.s2;
+      const hasAnyScore = String(s1Raw ?? '').trim() !== '' || String(s2Raw ?? '').trim() !== '';
 
-      if (hasWinner || hasScores) {
+      if (hasWinner) {
         if (hasP1) map[p1Id] = 'done';
         if (hasP2) map[p2Id] = 'done';
-        return;
-      }
-
-      if (hasP1 && hasP2) {
+      } else if (hasP1 && hasP2 && hasAnyScore) {
         if (map[p1Id] !== 'done') map[p1Id] = 'playing';
         if (map[p2Id] !== 'done') map[p2Id] = 'playing';
+      } else if (hasP1 && hasP2) {
+        if (!map[p1Id]) map[p1Id] = 'waiting';
+        if (!map[p2Id]) map[p2Id] = 'waiting';
       } else {
         if (hasP1 && !map[p1Id]) map[p1Id] = 'waiting';
         if (hasP2 && !map[p2Id]) map[p2Id] = 'waiting';
@@ -4939,8 +4938,29 @@ function showSpinPopup(player) {
   document.getElementById('popup-name').textContent = player.name;
   document.getElementById('popup-unit').textContent = player.unit || '';
   const rankWrap = document.getElementById('popup-rank-wrap');
-  rankWrap.innerHTML = player.rank
-    ? `<span class="spin-popup-rank">${player.rank}</span>` : '';
+
+  const findPlayerStats = () => {
+    const byId = player?.id ? (S.players || []).find((p) => p?.id === player.id) : null;
+    const byName = !byId
+      ? (S.players || []).find((p) => String(p?.name || '').trim().toLowerCase() === String(player?.name || '').trim().toLowerCase())
+      : null;
+    const src = byId || byName || player || {};
+    return {
+      avg: src?.avg ?? '',
+      hr: src?.hr ?? '',
+      rank: src?.rank ?? player?.rank ?? '',
+    };
+  };
+
+  const stats = findPlayerStats();
+  const avgTxt = stats.avg !== '' && stats.avg != null ? String(stats.avg) : '';
+  const hrTxt = stats.hr !== '' && stats.hr != null ? String(stats.hr) : '';
+
+  rankWrap.innerHTML = `
+    ${stats.rank ? `<span class="spin-popup-rank">${stats.rank}</span>` : ''}
+    ${avgTxt ? `<span class="spin-popup-rank">AVG ${avgTxt}</span>` : ''}
+    ${hrTxt ? `<span class="spin-popup-rank">HR ${hrTxt}</span>` : ''}
+  `;
 
   const emojis = ['🎉','🎊','🎯','⭐','🔥','💥','🎱','✨'];
   document.getElementById('popup-emoji').textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -6714,6 +6734,25 @@ function normalizeBattlePlayers(match) {
 function showBattlePopup(match, roundIdx, matchIdx) {
   const { p1, p2 } = normalizeBattlePlayers(match);
   const roundLabel = `${getRoundName(roundIdx, S.bracket.length).toUpperCase()} · STAR BATTLE`;
+
+  const syncAvgHrToPlayers = () => {
+    const p1Id = match?.p1?.id;
+    const p2Id = match?.p2?.id;
+    if (!p1Id && !p2Id) return;
+
+    (S.players || []).forEach((pl) => {
+      if (!pl?.id) return;
+      if (p1Id && pl.id === p1Id) {
+        if (p1.avg !== '' && p1.avg != null) pl.avg = p1.avg;
+        if (p1.hr !== '' && p1.hr != null) pl.hr = p1.hr;
+      }
+      if (p2Id && pl.id === p2Id) {
+        if (p2.avg !== '' && p2.avg != null) pl.avg = p2.avg;
+        if (p2.hr !== '' && p2.hr != null) pl.hr = p2.hr;
+      }
+    });
+  };
+  syncAvgHrToPlayers();
 
   const p2Node = document.getElementById('battle-p2-name');
   if (p2Node) {
