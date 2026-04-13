@@ -2519,12 +2519,12 @@ body.fs-mode #bracket-style-toggle {
 
       <div id="battle-readonly-wrap" class="battle-readonly">
         <div class="battle-metric-col">
-          <span class="battle-metric" id="battle-p1-avg-view">P1 AVG: —</span>
-          <span class="battle-metric" id="battle-p1-hr-view">P1 HR: —</span>
+          <span class="battle-metric" id="battle-p1-avg-view">AVG: —</span>
+          <span class="battle-metric" id="battle-p1-hr-view">HR: —</span>
         </div>
         <div class="battle-metric-col">
-          <span class="battle-metric" id="battle-p2-avg-view">P2 AVG: —</span>
-          <span class="battle-metric" id="battle-p2-hr-view">P2 HR: —</span>
+          <span class="battle-metric" id="battle-p2-avg-view">AVG: —</span>
+          <span class="battle-metric" id="battle-p2-hr-view">HR: —</span>
         </div>
       </div>
 
@@ -4502,25 +4502,41 @@ function getPlayerStatusMap() {
   /** @type {Record<string, 'waiting'|'playing'|'done'>} */
   const map = {};
   const bracket = Array.isArray(S.bracket) ? S.bracket : [];
-  const priority = { waiting: 1, done: 2, playing: 3 };
+  const statusPriority = { waiting: 1, done: 2, playing: 3 };
 
-  const applyStatus = (playerId, nextStatus) => {
+  /** @type {Record<string, { round:number, status:'waiting'|'playing'|'done' }>} */
+  const tracker = {};
+
+  const applyStatus = (playerId, nextStatus, roundIdx) => {
     if (!playerId) return;
-    const cur = map[playerId] || 'waiting';
-    if ((priority[nextStatus] || 0) >= (priority[cur] || 0)) {
-      map[playerId] = nextStatus;
+    const prev = tracker[playerId];
+    if (!prev) {
+      tracker[playerId] = { round: roundIdx, status: nextStatus };
+      return;
+    }
+
+    // Ưu tiên trạng thái ở vòng xa hơn (mới hơn).
+    // Nếu cùng vòng thì ưu tiên playing > done > waiting.
+    if (roundIdx > prev.round) {
+      tracker[playerId] = { round: roundIdx, status: nextStatus };
+      return;
+    }
+    if (roundIdx === prev.round && (statusPriority[nextStatus] || 0) >= (statusPriority[prev.status] || 0)) {
+      tracker[playerId] = { round: roundIdx, status: nextStatus };
     }
   };
 
-  bracket.forEach((round) => {
+  bracket.forEach((round, roundIdx) => {
     (round || []).forEach((match) => {
       const status = getMatchLiveStatus(match);
       const p1 = match?.p1;
       const p2 = match?.p2;
-      if (p1?.id && !p1?.isBye) applyStatus(p1.id, status);
-      if (p2?.id && !p2?.isBye) applyStatus(p2.id, status);
+      if (p1?.id && !p1?.isBye) applyStatus(p1.id, status, roundIdx);
+      if (p2?.id && !p2?.isBye) applyStatus(p2.id, status, roundIdx);
     });
   });
+
+  Object.entries(tracker).forEach(([pid, v]) => { map[pid] = v.status; });
 
   (S.players || []).forEach((p) => {
     if (p?.id && !map[p.id]) map[p.id] = 'waiting';
@@ -6821,10 +6837,10 @@ function showBattlePopup(match, roundIdx, matchIdx) {
     editWrap.style.display = 'none';
     roWrap.style.display = 'flex';
     saveBtn.style.display = 'none';
-    document.getElementById('battle-p1-avg-view').textContent = `P1 AVG: ${p1.avg || '—'}`;
-    document.getElementById('battle-p1-hr-view').textContent = `P1 HR: ${p1.hr || '—'}`;
-    document.getElementById('battle-p2-avg-view').textContent = `P2 AVG: ${p2.avg || '—'}`;
-    document.getElementById('battle-p2-hr-view').textContent = `P2 HR: ${p2.hr || '—'}`;
+    document.getElementById('battle-p1-avg-view').textContent = `AVG: ${p1.avg || '—'}`;
+    document.getElementById('battle-p1-hr-view').textContent = `HR: ${p1.hr || '—'}`;
+    document.getElementById('battle-p2-avg-view').textContent = `AVG: ${p2.avg || '—'}`;
+    document.getElementById('battle-p2-hr-view').textContent = `HR: ${p2.hr || '—'}`;
   }
 
   document.getElementById('battle-popup').classList.add('show');
