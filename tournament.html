@@ -2920,6 +2920,9 @@ let S = {
 let realtimeChannel = null;
 let pushDebounceTimer = null;
 let lastSyncTime = null;
+let isApplyingRemote = false;
+let isPushingNow = false;
+let silentLoadTimer = null;
 let pendingSpinPlayer = null;
 let pendingSpinSlot = null;
 let autoSpinEnabled = false;
@@ -3207,10 +3210,11 @@ function hydratePlayersFromBracketIfEmpty() {
   if (recovered.length) S.players = recovered;
 }
 
-async function supaPush() {
-  if (!S.isAdmin) return;
+async function supaPush(showSuccessToast = true) {
+  if (!S.isAdmin || isApplyingRemote) return;
   if (!S.supaUrl || !S.supaKey) { showToast('⚠️ Chưa cài Supabase', 'error'); return; }
   setSyncProgress(20);
+  isPushingNow = true;
   try {
     const tourney = {
       name:          S.tbVals[0] || '',
@@ -3265,18 +3269,20 @@ async function supaPush() {
     }
     setSyncProgress(100);
     updateSyncTime();
-    showToast('✅ Đã đẩy lên Supabase', 'success');
+    if (showSuccessToast) showToast('✅ Đã đẩy lên Supabase', 'success');
     setTimeout(() => setSyncProgress(0), 500);
   } catch(err) {
     setSyncProgress(0);
     showToast('❌ Push thất bại: ' + err.message, 'error');
+  } finally {
+    isPushingNow = false;
   }
 }
 
 function supaPushDebounced() {
-  if (!S.isAdmin) return;
+  if (!S.isAdmin || isApplyingRemote) return;
   clearTimeout(pushDebounceTimer);
-  pushDebounceTimer = setTimeout(() => supaPush(), 1200);
+  pushDebounceTimer = setTimeout(() => supaPush(false), 1200);
 }
 
 // supaLoadFull: dùng khi init, load sạch từ Supabase không render giữa chừng
@@ -3337,11 +3343,15 @@ function setupRealtime() {
     };
     ws.onmessage = async (evt) => {
       try {
+        if (isPushingNow) return;
         const msg = JSON.parse(evt.data);
         if (msg.event === 'postgres_changes' || (msg.payload && msg.payload.data && msg.payload.data.type)) {
           const change = msg.payload.data || msg.payload;
           if (change.table === 'tournaments' || change.table === 'tournament_players') {
-            await supaLoadSilent();
+            clearTimeout(silentLoadTimer);
+            silentLoadTimer = setTimeout(() => {
+              supaLoadSilent();
+            }, 500);
           }
         }
       } catch(e){}
@@ -3356,6 +3366,7 @@ function setupRealtime() {
 
 async function supaLoadSilent() {
   if (!S.supaUrl || !S.supaKey) return;
+  isApplyingRemote = true;
   try {
     const [tournaments, players] = await Promise.all([
       supaFetch(tournamentsFetchPath(), 'GET'),
@@ -3405,7 +3416,9 @@ async function supaLoadSilent() {
       }
     }
     saveState(); updateSyncTime();
-  } catch(e){}
+  } catch(e){} finally {
+    isApplyingRemote = false;
+  }
 }
 
 function saveSupaConfig() {
@@ -5837,15 +5850,18 @@ function handleExcel(e) {
     const headerNorm = header.map(normalize);
 
     const idxStt = headerNorm.findIndex(h => h === 'stt' || h === 'sothutu');
-    const idxName = headerNorm.findIndex(h => h === 'ten' || h === 'tencothu' || h === 'tencothu');
+    const idxName = headerNorm.findIndex(h => h === 'ten' || h === 'tencothu');
     const idxUnit = headerNorm.findIndex(h => h === 'donvi');
     const idxRank = headerNorm.findIndex(h => h === 'hang');
 
     const useHeaderMap = idxName !== -1;
+    const startRow = useHeaderMap ? 1 : 0;
 
     pushHistory();
-    rows.slice(1).forEach((row, idx) => {
-      const rowLooksLikeFourCols = !useHeaderMap && Array.isArray(row) && row.length >= 4;
+    rows.slice(startRow).forEach((row, idx) => {
+      if (!Array.isArray(row) || row.length === 0) return;
+
+      const rowLooksLikeFourCols = !useHeaderMap && row.length >= 4;
 
       const sttCell = useHeaderMap
         ? (idxStt !== -1 ? row[idxStt] : idx + 1)
@@ -5860,17 +5876,18 @@ function handleExcel(e) {
         ? (idxRank !== -1 ? row[idxRank] : '')
         : (rowLooksLikeFourCols ? row[3] : row[2]);
 
-      if (nameCell) {
-        S.players.push({
-          id: 'p_'+Date.now()+'_'+Math.random().toString(36).substr(2,6),
-          stt: sttCell !== undefined && sttCell !== null && String(sttCell).trim() !== '' ? String(sttCell).trim() : String(idx + 1),
-          name: String(nameCell).trim(),
-          unit: unitCell ? String(unitCell).trim() : '',
-          rank: rankCell ? String(rankCell).trim() : '',
-          drawn: false
-        });
-        added++;
-      }
+      const nameText = nameCell !== undefined && nameCell !== null ? String(nameCell).trim() : '';
+      if (!nameText) return;
+
+      S.players.push({
+        id: 'p_'+Date.now()+'_'+Math.random().toString(36).substr(2,6),
+        stt: sttCell !== undefined && sttCell !== null && String(sttCell).trim() !== '' ? String(sttCell).trim() : String(idx + 1),
+        name: nameText,
+        unit: unitCell ? String(unitCell).trim() : '',
+        rank: rankCell ? String(rankCell).trim() : '',
+        drawn: false
+      });
+      added++;
     });
     document.getElementById('import-excel').value = '';
     saveAndRender();
