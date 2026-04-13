@@ -2357,7 +2357,7 @@ body.fs-mode #bracket-style-toggle {
     text-align: right;
   }
   .sched-side-name .sched-name {
-    display: none !important;
+    display: block !important;
   }
   .sched-name.name-sm { font-size: 10.5px; }
   .sched-name.name-xs { font-size: 10px; }
@@ -4502,14 +4502,23 @@ function getPlayerStatusMap() {
   /** @type {Record<string, 'waiting'|'playing'|'done'>} */
   const map = {};
   const bracket = Array.isArray(S.bracket) ? S.bracket : [];
+  const priority = { waiting: 1, done: 2, playing: 3 };
+
+  const applyStatus = (playerId, nextStatus) => {
+    if (!playerId) return;
+    const cur = map[playerId] || 'waiting';
+    if ((priority[nextStatus] || 0) >= (priority[cur] || 0)) {
+      map[playerId] = nextStatus;
+    }
+  };
 
   bracket.forEach((round) => {
     (round || []).forEach((match) => {
       const status = getMatchLiveStatus(match);
       const p1 = match?.p1;
       const p2 = match?.p2;
-      if (p1?.id && !p1?.isBye) map[p1.id] = status;
-      if (p2?.id && !p2?.isBye) map[p2.id] = status;
+      if (p1?.id && !p1?.isBye) applyStatus(p1.id, status);
+      if (p2?.id && !p2?.isBye) applyStatus(p2.id, status);
     });
   });
 
@@ -6707,14 +6716,24 @@ function normalizeBattlePlayers(match) {
     };
   };
 
+  const findPlayerMeta = (base, fallbackName) => {
+    const byId = base?.id ? (S.players || []).find((x) => x?.id === base.id) : null;
+    if (byId) return byId;
+    const key = cleanText(base?.name || fallbackName).toLowerCase();
+    if (!key) return null;
+    return (S.players || []).find((x) => cleanText(x?.name).toLowerCase() === key) || null;
+  };
+
   const p1Src = normFrom(p1Base, cleanText(match?.player1?.name, 'Chưa có'));
   const p2Src = normFrom(p2Base, cleanText(match?.player2?.name, 'Chưa có'));
+  const p1Meta = findPlayerMeta(p1Base, p1Src.name);
+  const p2Meta = findPlayerMeta(p2Base, p2Src.name);
 
   const p1 = {
     name: p1Src.name,
     score: match?.player1?.score ?? match?.s1 ?? '',
-    avg: match?.player1?.avg ?? '',
-    hr: match?.player1?.hr ?? '',
+    avg: match?.player1?.avg ?? p1Meta?.avg ?? '',
+    hr: match?.player1?.hr ?? p1Meta?.hr ?? '',
     unit: p1Src.unit,
     rank: p1Src.rank
   };
@@ -6722,8 +6741,8 @@ function normalizeBattlePlayers(match) {
   const p2 = {
     name: p2Src.name,
     score: match?.player2?.score ?? match?.s2 ?? '',
-    avg: match?.player2?.avg ?? '',
-    hr: match?.player2?.hr ?? '',
+    avg: match?.player2?.avg ?? p2Meta?.avg ?? '',
+    hr: match?.player2?.hr ?? p2Meta?.hr ?? '',
     unit: p2Src.unit,
     rank: p2Src.rank
   };
