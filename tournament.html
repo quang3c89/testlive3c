@@ -4677,7 +4677,11 @@ function stopSpinSound() {
 }
 
 function startAutoSpin() {
-  autoSpinEnabled = true;
+  if (!S.isAdmin) return;
+
+  // Chỉ bật auto chain khi thực sự ở chế độ Bốc Nhanh.
+  // Chế độ thường (one) phải chỉ quay 1 lượt mỗi lần bấm SPIN.
+  autoSpinEnabled = (S.drawMode === 'fast');
   autoSpinStopRequested = false;
 
   if (S.drawMode === 'fast') {
