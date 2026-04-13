@@ -5652,20 +5652,22 @@ function drawBracketLines() {
   cont.style.minHeight = `${Math.max(center?.clientHeight || 0, 480)}px`;
 
   if (bgLayer && center) {
-    const bgW = Math.max(cw, center.clientWidth);
-    const bgH = Math.max(ch, center.clientHeight);
+    // Không set kích thước px quá lớn cho bg-layer (absolute) vì có thể làm tăng
+    // vùng scroll của center trong admin mode khi redraw nhiều lần.
     bgLayer.style.left = '0px';
     bgLayer.style.top = '0px';
-    bgLayer.style.width = `${bgW}px`;
-    bgLayer.style.minWidth = `${bgW}px`;
-    bgLayer.style.height = `${bgH}px`;
-    bgLayer.style.minHeight = `${bgH}px`;
+    bgLayer.style.width = '100%';
+    bgLayer.style.minWidth = '100%';
+    bgLayer.style.height = '100%';
+    bgLayer.style.minHeight = '100%';
     bgLayer.style.backgroundRepeat = 'no-repeat';
-    bgLayer.style.backgroundSize = `${bgW}px ${bgH}px`;
+    bgLayer.style.backgroundSize = 'cover';
 
-    // Đồng bộ nền toàn vùng center để không hở mảng trống khi bracket lớn
+    // Đồng bộ nền toàn vùng center để không hở mảng trống
     center.style.background = 'var(--bracket-bg, var(--bg))';
     center.style.backgroundColor = 'var(--bracket-bg, var(--bg))';
+    center.style.overflowX = 'auto';
+    center.style.overflowY = 'auto';
   }
 
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f0a500';
