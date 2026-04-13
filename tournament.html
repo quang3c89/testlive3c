@@ -2525,7 +2525,7 @@ body.fs-mode #bracket-style-toggle {
       <div class="wheel-wrap">
         <div class="wheel-ptr">▼</div>
         <div class="wheel-inner"><canvas id="wheel-canvas" width="500" height="500"></canvas></div>
-        <button id="spin-btn" class="spin-btn" onclick="spinWheel()">SPIN</button>
+        <button id="spin-btn" class="spin-btn" onclick="startAutoSpin()">SPIN</button>
         <button id="stop-auto-spin" class="stop-spin-btn" onclick="stopAutoSpin()" title="Dừng auto spin">⏹</button>
       </div>
 
@@ -4679,16 +4679,17 @@ function stopSpinSound() {
 function startAutoSpin() {
   if (!S.isAdmin) return;
 
-  // Chỉ bật auto chain khi thực sự ở chế độ Bốc Nhanh.
-  // Chế độ thường (one) phải chỉ quay 1 lượt mỗi lần bấm SPIN.
-  autoSpinEnabled = (S.drawMode === 'fast');
   autoSpinStopRequested = false;
 
+  // Chế độ Bốc Nhanh: bốc tự động đến khi đầy bracket
   if (S.drawMode === 'fast') {
+    autoSpinEnabled = true;
     fastDrawAll();
     return;
   }
 
+  // Chế độ thường: chỉ quay 1 lượt mỗi lần bấm SPIN
+  autoSpinEnabled = false;
   spinWheel();
 }
 
@@ -4744,6 +4745,7 @@ function stopAutoSpin() {
 function spinWheel() {
   if (S.isSpinning) return;
   if (!S.isAdmin) return;
+  if (S.drawMode !== 'fast') autoSpinEnabled = false;
   const undrawn = getUndrawn();
   if (undrawn.length === 0) { showToast('🏁 Đã bốc hết!'); return; }
 
