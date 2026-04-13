@@ -4681,15 +4681,15 @@ function startAutoSpin() {
 
   autoSpinStopRequested = false;
 
-  // Chế độ Bốc Nhanh: bốc tự động đến khi đầy bracket
+  // Cả 2 chế độ đều auto quay đến khi đầy bracket.
+  // Khác nhau ở tốc độ: fast thì dùng fastDrawAll, one thì quay từng lượt có animation.
+  autoSpinEnabled = true;
+
   if (S.drawMode === 'fast') {
-    autoSpinEnabled = true;
     fastDrawAll();
     return;
   }
 
-  // Chế độ thường: chỉ quay 1 lượt mỗi lần bấm SPIN
-  autoSpinEnabled = false;
   spinWheel();
 }
 
@@ -5642,11 +5642,12 @@ function drawBracketLines() {
   svg.setAttribute('height', ch);
   svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
 
-  // Đảm bảo container bracket bám full theo content thực (không hở nền)
-  cont.style.width = `${cw}px`;
-  cont.style.minWidth = `${cw}px`;
-  cont.style.height = `${ch}px`;
-  cont.style.minHeight = `${ch}px`;
+  // Không ép width/height cứng cho container để tránh tự giãn bất thường khi auto-spin nhanh
+  // Chỉ giữ min-height theo viewport để nền không hụt.
+  cont.style.width = '';
+  cont.style.minWidth = 'max-content';
+  cont.style.height = '';
+  cont.style.minHeight = `${Math.max(ch, center?.clientHeight || 0)}px`;
 
   if (bgLayer && center) {
     const bgW = Math.max(cw, center.clientWidth);
@@ -5826,6 +5827,7 @@ function updateBracketSize() {
   syncRound1ByesToRound2();
 
   saveState();
+  supaPushDebounced();
   renderAll();
   switchBracketTab('bracket');
   checkBracketTabVisibility();
