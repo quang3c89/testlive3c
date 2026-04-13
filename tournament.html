@@ -4483,25 +4483,34 @@ function getPlayerStatusMap() {
   const map = {};
   const bracket = Array.isArray(S.bracket) ? S.bracket : [];
 
+  // Source of truth giống lịch thi đấu: xét winner/score trước.
   bracket.forEach((round) => {
     (round || []).forEach((match) => {
       const p1 = match?.p1;
       const p2 = match?.p2;
-      if (!p1?.id && !p2?.id) return;
+      const p1Id = p1?.id;
+      const p2Id = p2?.id;
+      const hasP1 = !!(p1Id && !p1?.isBye);
+      const hasP2 = !!(p2Id && !p2?.isBye);
+      if (!hasP1 && !hasP2) return;
 
-      const hasP1 = !!(p1 && !p1.isBye);
-      const hasP2 = !!(p2 && !p2.isBye);
+      const s1 = Number(match?.s1);
+      const s2 = Number(match?.s2);
+      const hasScores = Number.isFinite(s1) && Number.isFinite(s2);
       const hasWinner = !!match?.winner?.id;
 
-      if (hasWinner) {
-        if (p1?.id) map[p1.id] = 'done';
-        if (p2?.id) map[p2.id] = 'done';
-      } else if (hasP1 && hasP2) {
-        if (p1?.id && map[p1.id] !== 'done') map[p1.id] = 'playing';
-        if (p2?.id && map[p2.id] !== 'done') map[p2.id] = 'playing';
+      if (hasWinner || hasScores) {
+        if (hasP1) map[p1Id] = 'done';
+        if (hasP2) map[p2Id] = 'done';
+        return;
+      }
+
+      if (hasP1 && hasP2) {
+        if (map[p1Id] !== 'done') map[p1Id] = 'playing';
+        if (map[p2Id] !== 'done') map[p2Id] = 'playing';
       } else {
-        if (p1?.id && !map[p1.id]) map[p1.id] = 'waiting';
-        if (p2?.id && !map[p2.id]) map[p2.id] = 'waiting';
+        if (hasP1 && !map[p1Id]) map[p1Id] = 'waiting';
+        if (hasP2 && !map[p2Id]) map[p2Id] = 'waiting';
       }
     });
   });
@@ -4515,10 +4524,11 @@ function getPlayerStatusMap() {
 
 function onRegisterSearchInput(value) {
   clearTimeout(registerSearchTimer);
+  const nextKeyword = String(value || '').trim().toLowerCase();
   registerSearchTimer = setTimeout(() => {
-    registerSearchKeyword = String(value || '').trim().toLowerCase();
+    registerSearchKeyword = nextKeyword;
     renderRegisterCards();
-  }, 250);
+  }, 200);
 }
 
 function renderRegisterCards() {
@@ -6957,7 +6967,7 @@ function switchTab(tab) {
 }
 
 Object.assign(globalThis, {
-  openModal, closeModal, undo, redo, spinWheel, switchBracketTab, exportImage,
+  openModal, closeModal, undo, redo, spinWheel, switchBracketTab, exportImage, onRegisterSearchInput,
   addPlayer, updateBracketSize, applyTitleFont, saveSettings, resetAllTournamentData, supaLoad, supaPush,
   saveSupaConfig, switchTab, removePlayer, downloadTemplate, supaPushDebounced,
   closeSpinPopup, closeSpinPopupAndSpin, closeWinnerPopup, closeBattlePopup, saveBattlePopup, handleExcel, handleVideoUpload,
