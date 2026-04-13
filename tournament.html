@@ -2525,7 +2525,7 @@ body.fs-mode #bracket-style-toggle {
       <div class="wheel-wrap">
         <div class="wheel-ptr">▼</div>
         <div class="wheel-inner"><canvas id="wheel-canvas" width="500" height="500"></canvas></div>
-        <button id="spin-btn" class="spin-btn" onclick="startAutoSpin()">SPIN</button>
+        <button id="spin-btn" class="spin-btn" onclick="spinWheel()">SPIN</button>
         <button id="stop-auto-spin" class="stop-spin-btn" onclick="stopAutoSpin()" title="Dừng auto spin">⏹</button>
       </div>
 
@@ -5143,10 +5143,10 @@ function flyPlayer(player, slot, spinAgain = false) {
     // Không có target hợp lệ → commit ngay không bay
     commitPlayer(player, slot);
     flyLock = false;
-    if (spinAgain || (autoSpinEnabled && !autoSpinStopRequested)) {
+    if (spinAgain || (S.drawMode === 'fast' && autoSpinEnabled && !autoSpinStopRequested)) {
       S.isSpinning = false;
       document.getElementById('spin-btn').disabled = false;
-      setTimeout(spinWheel, S.drawMode === 'fast' ? 80 : 420);
+      setTimeout(spinWheel, 80);
     } else {
       resetWheel();
     }
@@ -5195,10 +5195,10 @@ function flyPlayer(player, slot, spinAgain = false) {
 
     flyLock = false;
 
-    if (spinAgain || (autoSpinEnabled && !autoSpinStopRequested)) {
+    if (spinAgain || (S.drawMode === 'fast' && autoSpinEnabled && !autoSpinStopRequested)) {
       S.isSpinning = false;
       document.getElementById('spin-btn').disabled = false;
-      setTimeout(spinWheel, S.drawMode === 'fast' ? 80 : 420);
+      setTimeout(spinWheel, 80);
     } else {
       resetWheel();
     }
