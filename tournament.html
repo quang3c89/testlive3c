@@ -5636,8 +5636,11 @@ function drawBracketLines() {
   const colsW = cols ? Math.max(cols.scrollWidth, cols.offsetWidth, cols.clientWidth) : 0;
   const colsH = cols ? Math.max(cols.scrollHeight, cols.offsetHeight, cols.clientHeight) : 0;
 
-  const cw = Math.max(cont.scrollWidth, cont.clientWidth, colsW, center?.clientWidth || 0);
-  const ch = Math.max(cont.scrollHeight, cont.clientHeight, colsH, center?.clientHeight || 0);
+  // Chỉ đo theo content bracket thật + viewport center.
+  // Không dùng cont.scrollWidth/scrollHeight để tránh vòng lặp tự giãn
+  // do bg-layer/SVG vừa được set kích thước ở lần render trước.
+  const cw = Math.max(colsW, center?.clientWidth || 0);
+  const ch = Math.max(colsH, center?.clientHeight || 0);
   svg.setAttribute('width', cw);
   svg.setAttribute('height', ch);
   svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
