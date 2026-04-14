@@ -2720,6 +2720,45 @@ body.fs-mode #bracket-style-toggle {
   </div>
 </div>
 
+<div id="large-admin-modal" class="modal">
+  <div class="modal-c">
+    <h2>🏆 Cấu hình Giải Lớn</h2>
+    <p style="font-size:11px;opacity:0.72;font-family:var(--font-main);margin-bottom:10px;">Section 1: Cấu hình cơ bản</p>
+
+    <div class="field-group"><label>Tổng VĐV</label><input class="minput" type="number" id="large-total-players" min="65" value="80" oninput="applyLargeTournamentAutoSplit()"></div>
+    <div class="field-group"><label>Giới hạn người/bảng</label><input class="minput" type="number" id="large-max-per-group" min="8" value="20" oninput="applyLargeTournamentAutoSplit()"></div>
+    <div class="field-group"><label>Số ngày</label>
+      <input type="hidden" id="large-total-days" value="3">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="mbtn" data-large-day-pill="2" onclick="pickLargeTournamentDay(2)">2</button>
+        <button type="button" class="mbtn" data-large-day-pill="3" onclick="pickLargeTournamentDay(3)">3</button>
+        <button type="button" class="mbtn" data-large-day-pill="4" onclick="pickLargeTournamentDay(4)">4</button>
+        <button type="button" class="mbtn" data-large-day-pill="5" onclick="pickLargeTournamentDay(5)">5</button>
+      </div>
+    </div>
+    <div class="field-group"><label>Top bao nhiêu người/bảng vào bracket chính?</label><input class="minput" type="number" id="large-advance-per-group" min="1" max="8" value="4" oninput="applyLargeTournamentAutoSplit()"></div>
+
+    <div class="mactions" style="justify-content:flex-start;">
+      <button class="mbtn" type="button" onclick="applyLargeTournamentAutoSplit()">Tự động chia đều</button>
+    </div>
+
+    <hr class="sep">
+    <p style="font-size:11px;opacity:0.72;font-family:var(--font-main);margin-bottom:8px;">Section 2: Phân bổ bảng (preview)</p>
+    <div id="large-admin-preview" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto;"></div>
+
+    <hr class="sep">
+    <p style="font-size:11px;opacity:0.72;font-family:var(--font-main);margin-bottom:8px;">Section 3: Advance setting (preview)</p>
+    <div id="large-admin-main-preview" style="font-size:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);"></div>
+
+    <hr class="sep">
+    <div class="mactions">
+      <button class="mbtn pri" onclick="applyLargeTournamentConfig()">Áp dụng cấu hình</button>
+      <button class="mbtn" onclick="resetLargeTournamentConfigDefaults()">Reset về mặc định</button>
+      <button class="mbtn" onclick="closeModal('large-admin-modal')">Hủy</button>
+    </div>
+  </div>
+</div>
+
 <div id="edit-player-modal" class="modal">
   <div class="modal-c">
     <h2>✏️ Sửa cơ thủ</h2>
@@ -6003,6 +6042,118 @@ function handleBracketSizeValidation() {
   }
 }
 
+function renderLargeTournamentAdminPreview() {
+  const root = document.getElementById('large-admin-preview');
+  const summary = document.getElementById('large-admin-main-preview');
+  if (!root || !summary) return;
+
+  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  if (!state) return;
+
+  root.innerHTML = state.groups.map((g) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.08);border-radius:10px;background:rgba(255,255,255,0.02);">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <b style="font-size:12px;">${g.name}</b>
+        <span style="font-size:11px;opacity:0.8;">${g.playerCount} VĐV · Bracket ${g.bracketSize} · Ngày ${g.day}</span>
+      </div>
+      <span style="font-size:11px;opacity:0.75;">BYE ${g.byeCount}</span>
+    </div>
+  `).join('');
+
+  const mainSize = state.mainBracket?.bracketSize || 0;
+  const byeCount = state.mainBracket?.byeCount || 0;
+  const totalAdvance = (state.groups?.length || 0) * (state.advancePerGroup || 0);
+  summary.textContent = `${state.groups.length} bảng × ${state.advancePerGroup} người = ${totalAdvance} người → Bracket ${mainSize}${byeCount ? ` (BYE ${byeCount})` : ' (không có BYE)'}`;
+}
+
+function applyLargeTournamentAutoSplit() {
+  const totalPlayers = parseInt(document.getElementById('large-total-players')?.value, 10);
+  const maxPerGroup = parseInt(document.getElementById('large-max-per-group')?.value, 10);
+  const totalDays = parseInt(document.getElementById('large-total-days')?.value, 10);
+  const advancePerGroup = parseInt(document.getElementById('large-advance-per-group')?.value, 10);
+
+  if (!globalThis.Live3CLargeTournament?.updateLargeTournamentConfig) return;
+
+  globalThis.Live3CLargeTournament.updateLargeTournamentConfig({
+    totalPlayers,
+    maxPerGroup,
+    totalDays,
+    advancePerGroup,
+  });
+
+  renderLargeTournamentAdminPreview();
+}
+
+function syncLargeDaysToggle() {
+  const days = parseInt(document.getElementById('large-total-days')?.value, 10);
+  document.querySelectorAll('[data-large-day-pill]').forEach((btn) => {
+    const v = parseInt(btn.getAttribute('data-large-day-pill'), 10);
+    btn.style.opacity = v === days ? '1' : '0.7';
+    btn.style.borderColor = v === days ? 'rgba(34,197,94,0.45)' : 'rgba(255,255,255,0.12)';
+    btn.style.background = v === days ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.04)';
+  });
+}
+
+function pickLargeTournamentDay(day) {
+  const input = document.getElementById('large-total-days');
+  if (!input) return;
+  input.value = day;
+  syncLargeDaysToggle();
+  applyLargeTournamentAutoSplit();
+}
+
+function openLargeTournamentAdminConfig(totalPlayers) {
+  const mod = document.getElementById('large-admin-modal');
+  if (!mod) return;
+
+  const totalPlayersInput = document.getElementById('large-total-players');
+  const maxPerGroupInput = document.getElementById('large-max-per-group');
+  const totalDaysInput = document.getElementById('large-total-days');
+  const advanceInput = document.getElementById('large-advance-per-group');
+
+  if (totalPlayersInput) totalPlayersInput.value = String(totalPlayers || 80);
+  if (maxPerGroupInput && !maxPerGroupInput.value) maxPerGroupInput.value = '20';
+  if (totalDaysInput && !totalDaysInput.value) totalDaysInput.value = '3';
+  if (advanceInput && !advanceInput.value) advanceInput.value = '4';
+
+  if (globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
+    globalThis.Live3CLargeTournament.initLargeTournamentModule({
+      totalPlayers: parseInt(totalPlayersInput?.value, 10),
+      maxPerGroup: parseInt(maxPerGroupInput?.value, 10),
+      totalDays: parseInt(totalDaysInput?.value, 10),
+      advancePerGroup: parseInt(advanceInput?.value, 10),
+    });
+  }
+
+  syncLargeDaysToggle();
+  renderLargeTournamentAdminPreview();
+  openModal('large-admin-modal');
+}
+
+function applyLargeTournamentConfig() {
+  applyLargeTournamentAutoSplit();
+  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  if (!state) return;
+
+  showToast(`✅ Đã áp dụng cấu hình Giải Lớn: ${state.totalPlayers} VĐV · ${state.groups.length} bảng · ${state.totalDays} ngày`, 'ok');
+  closeModal('large-admin-modal');
+}
+
+function resetLargeTournamentConfigDefaults() {
+  const totalPlayersInput = document.getElementById('large-total-players');
+  const maxPerGroupInput = document.getElementById('large-max-per-group');
+  const totalDaysInput = document.getElementById('large-total-days');
+  const advanceInput = document.getElementById('large-advance-per-group');
+
+  if (totalPlayersInput) totalPlayersInput.value = '80';
+  if (maxPerGroupInput) maxPerGroupInput.value = '20';
+  if (totalDaysInput) totalDaysInput.value = '3';
+  if (advanceInput) advanceInput.value = '4';
+
+  syncLargeDaysToggle();
+  applyLargeTournamentAutoSplit();
+}
+
 function switchToLargeTournamentMode() {
   const input = document.getElementById('bracket-size-input');
   const raw = parseInt(input?.value, 10);
@@ -6011,8 +6162,8 @@ function switchToLargeTournamentMode() {
     return;
   }
 
-  showToast(`🚧 Đã sẵn sàng chuyển sang Giải Lớn (${raw} VĐV). Phase 1 mới khởi tạo module khung.`, 'info');
   closeModal('count-modal');
+  openLargeTournamentAdminConfig(raw);
 }
 
 function updateBracketSize() {
@@ -7102,6 +7253,9 @@ Object.assign(globalThis, {
   toggleBracketFullscreen, toggleThemeDots, toggleLeftPanel,
   toggleBracketStyleTools, toggleBracketColorPicker, setBracketColor,
   handleBracketSizeValidation, switchToLargeTournamentMode,
+  renderLargeTournamentAdminPreview, applyLargeTournamentAutoSplit,
+  syncLargeDaysToggle, pickLargeTournamentDay, openLargeTournamentAdminConfig,
+  applyLargeTournamentConfig, resetLargeTournamentConfigDefaults,
 });
 </script>
 
