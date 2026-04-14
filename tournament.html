@@ -6256,25 +6256,65 @@ function renderLargeTournamentAdminPreview() {
 
 function syncLargeTournamentPlayersFromRegistration(state) {
   if (!state || !Array.isArray(state.groups)) return state;
-  const regs = Array.isArray(S.players) ? S.players : [];
-  const nextGroups = state.groups.map((g, idx) => {
-    const size = Math.max(1, Number(g.playerCount) || 1);
-    const offset = state.groups.slice(0, idx).reduce((sum, x) => sum + Math.max(1, Number(x.playerCount) || 1), 0);
-    const players = regs.slice(offset, offset + size).map((p, i) => ({
+  const regs = Array.isArray(S.players) ? [...S.players] : [];
+  const groupsDef = state.groups.map((g, idx) => ({
+    ...g,
+    _idx: idx,
+    _size: Math.max(1, Number(g.playerCount) || 1),
+  }));
+
+  const totalSlots = groupsDef.reduce((sum, g) => sum + g._size, 0);
+  if (!regs.length) {
+    const nextEmpty = groupsDef.map((g) => ({
+      ...g,
+      players: [],
+      matches: Array.isArray(g.matches) && g.matches.length ? g.matches : genBracket(Math.max(2, Number(g.bracketSize) || 2)),
+    }));
+    const emptyState = { ...state, groups: nextEmpty };
+    globalThis.Live3CLargeTournament?.setLargeTournamentState?.(emptyState);
+    return emptyState;
+  }
+
+  const sortedRegs = regs.map((p, i) => ({ ...p, _order: i + 1 }));
+  const nextGroups = groupsDef.map((g) => {
+    const sliceCount = Math.min(g._size, sortedRegs.length);
+    return {
+      ...g,
+      players: [],
+      matches: Array.isArray(g.matches) && g.matches.length ? g.matches : genBracket(Math.max(2, Number(g.bracketSize) || 2)),
+      _take: sliceCount,
+    };
+  });
+
+  let cursor = 0;
+  const totalPlayers = sortedRegs.length;
+  const weights = groupsDef.map((g) => g._size);
+  const totalWeight = weights.reduce((a, b) => a + b, 0) || 1;
+  const baseCounts = weights.map((w) => Math.floor((totalPlayers * w) / totalWeight));
+  let remaining = totalPlayers - baseCounts.reduce((a, b) => a + b, 0);
+  const remainders = weights.map((w, i) => ({ i, rem: (totalPlayers * w) % totalWeight }));
+  remainders.sort((a, b) => b.rem - a.rem);
+  for (let k = 0; k < remaining; k += 1) baseCounts[remainders[k % remainders.length].i] += 1;
+
+  nextGroups.forEach((g, idx) => {
+    const take = Math.min(baseCounts[idx], sortedRegs.length - cursor);
+    const players = sortedRegs.slice(cursor, cursor + take).map((p, i) => ({
       id: p.id,
       name: p.name,
       unit: p.unit || '',
-      stt: p.stt || String(offset + i + 1),
-      seed: i + 1,
+      stt: p.stt || String(cursor + i + 1),
+      seed: cursor + i + 1,
       drawn: !!p.drawn,
     }));
-    return {
-      ...g,
-      players,
-      matches: Array.isArray(g.matches) && g.matches.length ? g.matches : genBracket(Math.max(2, Number(g.bracketSize) || 2)),
-    };
+    g.players = players;
+    cursor += take;
   });
-  const nextState = { ...state, groups: nextGroups };
+
+  const nextState = {
+    ...state,
+    totalPlayers: totalPlayers,
+    groups: nextGroups.map(({ _idx, _size, _take, ...g }) => g),
+  };
   globalThis.Live3CLargeTournament?.setLargeTournamentState?.(nextState);
   return nextState;
 }
