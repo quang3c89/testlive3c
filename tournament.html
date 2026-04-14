@@ -3323,6 +3323,15 @@ function loadState() {
       }
     } catch (e) {}
   }
+  if (Array.isArray(S.players) && S.players.length && globalThis.Live3CLargeTournament?.getLargeTournamentState) {
+    try {
+      const current = globalThis.Live3CLargeTournament.getLargeTournamentState();
+      if (current && Array.isArray(current.groups) && current.groups.length) {
+        const synced = syncLargeTournamentPlayersFromRegistration(current);
+        try { localStorage.setItem('live3c_large_v1', JSON.stringify(synced)); } catch (e) {}
+      }
+    } catch (e) {}
+  }
 
   loadVideoFromDB();
 }
@@ -6220,6 +6229,30 @@ function renderLargeTournamentAdminPreview() {
   summary.textContent = `${groups.length} bảng × ${state.advancePerGroup} người = ${totalAdvance} người → Bracket ${mainSize}${byeCount ? ` (BYE ${byeCount})` : ' (không có BYE)'}`;
 }
 
+function syncLargeTournamentPlayersFromRegistration(state) {
+  if (!state || !Array.isArray(state.groups)) return state;
+  const regs = Array.isArray(S.players) ? S.players : [];
+  const nextGroups = state.groups.map((g, idx) => {
+    const size = Math.max(1, Number(g.playerCount) || 1);
+    const players = regs.slice(idx * size, idx * size + size).map((p, i) => ({
+      id: p.id,
+      name: p.name,
+      unit: p.unit || '',
+      stt: p.stt || String(i + 1),
+      seed: i + 1,
+      drawn: !!p.drawn,
+    }));
+    return {
+      ...g,
+      players,
+      matches: Array.isArray(g.matches) && g.matches.length ? g.matches : genBracket(Math.max(2, Number(g.bracketSize) || 2)),
+    };
+  });
+  const nextState = { ...state, groups: nextGroups };
+  globalThis.Live3CLargeTournament?.setLargeTournamentState?.(nextState);
+  return nextState;
+}
+
 function applyLargeTournamentAutoSplit() {
   const totalPlayers = parseInt(document.getElementById('large-total-players')?.value, 10);
   const maxPerGroup = parseInt(document.getElementById('large-max-per-group')?.value, 10);
@@ -6235,11 +6268,12 @@ function applyLargeTournamentAutoSplit() {
     advancePerGroup,
   });
 
-  try { localStorage.setItem('live3c_large_v1', JSON.stringify(state)); } catch (e) {}
+  const synced = syncLargeTournamentPlayersFromRegistration(state);
+  try { localStorage.setItem('live3c_large_v1', JSON.stringify(synced)); } catch (e) {}
   saveState();
   supaPushDebounced();
   renderLargeTournamentAdminPreview();
-  return state;
+  return synced;
 }
 
 function syncLargeDaysToggle() {
@@ -6293,7 +6327,10 @@ function openLargeTournamentAdminConfig(totalPlayers) {
     });
   }
 
-  applyLargeTournamentAutoSplit();
+  const synced = applyLargeTournamentAutoSplit();
+  if (synced) {
+    try { localStorage.setItem('live3c_large_v1', JSON.stringify(synced)); } catch (e) {}
+  }
   syncLargeDaysToggle();
   renderLargeTournamentAdminPreview();
   openModal('large-admin-modal');
