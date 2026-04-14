@@ -2766,6 +2766,18 @@ body.fs-mode #bracket-style-toggle {
   </div>
 </div>
 
+<div id="large-advance-modal" class="modal">
+  <div class="modal-c">
+    <h2 id="large-advance-title">Chọn người vào Bracket chính</h2>
+    <div id="large-advance-list" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;"></div>
+    <p id="large-advance-meta" style="font-size:11px;opacity:0.8;margin-top:8px;">Đã chọn: 0 / 0 người</p>
+    <div class="mactions">
+      <button class="mbtn pri" onclick="confirmLargeAdvanceSelection()">Xác nhận</button>
+      <button class="mbtn" onclick="closeModal('large-advance-modal')">Hủy</button>
+    </div>
+  </div>
+</div>
+
 <div id="edit-player-modal" class="modal">
   <div class="modal-c">
     <h2>✏️ Sửa cơ thủ</h2>
@@ -4517,6 +4529,7 @@ function getUndrawn() { return S.players.filter(p => !p.drawn); }
 let currentBracketTab = 'schedule';
 let isLargeTournamentMode = false;
 let largeTournamentTab = 'overview';
+let currentLargeGroupId = null;
 let registerDragPlayerId = null;
 let registerSearchKeyword = '';
 let registerSearchTimer = null;
@@ -6142,6 +6155,37 @@ function openLargeTournamentAdminConfig(totalPlayers) {
   openModal('large-admin-modal');
 }
 
+function ensureLargeGroupRuntimeState(state) {
+  if (!state || !Array.isArray(state.groups)) return;
+
+  const groups = state.groups.map((g) => ({ ...g }));
+  groups.forEach((g) => {
+    if (!Array.isArray(g.players) || !g.players.length) {
+      const count = Math.max(2, Number(g.playerCount) || 2);
+      g.players = Array.from({ length: count }, (_, i) => ({
+        id: `g${g.id}-p${i + 1}`,
+        name: `${g.name} - VĐV ${i + 1}`,
+        unit: '',
+        seed: i + 1,
+      }));
+    }
+    if (!Array.isArray(g.matches) || !g.matches.length) {
+      g.matches = genBracket(Math.max(2, Number(g.bracketSize) || 2));
+    }
+    if (!g.status) g.status = 'pending';
+    if (!Array.isArray(g.advancedPlayers)) g.advancedPlayers = [];
+  });
+
+  globalThis.Live3CLargeTournament?.updateLargeTournamentConfig?.({ groups });
+}
+
+function getLargeCurrentState() {
+  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  if (!state) return null;
+  ensureLargeGroupRuntimeState(state);
+  return globalThis.Live3CLargeTournament?.getLargeTournamentState?.() || state;
+}
+
 function getLargeTournamentPhaseStep(state) {
   if (!state) return 0;
   const groups = Array.isArray(state.groups) ? state.groups : [];
@@ -6151,14 +6195,139 @@ function getLargeTournamentPhaseStep(state) {
   return 1;
 }
 
+function openLargeAdvanceConfirm(groupId) {
+  const state = getLargeCurrentState();
+  if (!state) return;
+  const group = state.groups.find((g) => String(g.id) === String(groupId));
+  if (!group) return;
+
+  const count = Math.max(1, Number(state.advancePerGroup) || 1);
+  const picked = Array.isArray(group.advancedPlayers) && group.advancedPlayers.length
+    ? group.advancedPlayers.map((p) => p.id)
+    : group.players.slice(0, count).map((p) => p.id);
+
+  const chosen = new Set(picked);
+  const body = document.getElementById('large-advance-list');
+  const meta = document.getElementById('large-advance-meta');
+  const title = document.getElementById('large-advance-title');
+  if (!body || !meta || !title) return;
+
+  title.textContent = `Chọn ${count} người vào Bracket chính — ${group.name}`;
+  body.innerHTML = group.players.map((p, idx) => `
+    <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
+      <input type="checkbox" value="${p.id}" ${chosen.has(p.id) ? 'checked' : ''}>
+      <span style="font-size:12px;">${idx + 1}. ${p.name}</span>
+    </label>
+  `).join('');
+  meta.textContent = `Đã chọn: ${chosen.size} / ${count} người`;
+
+  body.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      const current = Array.from(body.querySelectorAll('input[type="checkbox"]:checked'));
+      if (current.length > count) cb.checked = false;
+      const total = body.querySelectorAll('input[type="checkbox"]:checked').length;
+      meta.textContent = `Đã chọn: ${total} / ${count} người`;
+    });
+  });
+
+  body.setAttribute('data-group-id', group.id);
+  openModal('large-advance-modal');
+}
+
+function confirmLargeAdvanceSelection() {
+  const state = getLargeCurrentState();
+  const body = document.getElementById('large-advance-list');
+  if (!state || !body) return;
+
+  const groupId = body.getAttribute('data-group-id');
+  const group = state.groups.find((g) => String(g.id) === String(groupId));
+  if (!group) return;
+
+  const count = Math.max(1, Number(state.advancePerGroup) || 1);
+  const selectedIds = Array.from(body.querySelectorAll('input[type="checkbox"]:checked')).map((x) => x.value);
+
+  if (selectedIds.length !== count) {
+    showToast(`⚠️ Cần chọn đúng ${count} người`, 'error');
+    return;
+  }
+
+  const selectedPlayers = group.players.filter((p) => selectedIds.includes(p.id));
+  const nextGroups = state.groups.map((g) => {
+    if (String(g.id) !== String(groupId)) return g;
+    return {
+      ...g,
+      advancedPlayers: selectedPlayers,
+      status: 'done',
+    };
+  });
+
+  const allDone = nextGroups.every((g) => g.status === 'done');
+  globalThis.Live3CLargeTournament?.updateLargeTournamentConfig?.({
+    groups: nextGroups,
+    mainBracket: {
+      ...(state.mainBracket || {}),
+      status: allDone ? 'active' : 'locked',
+    },
+  });
+
+  closeModal('large-advance-modal');
+  showToast(`✅ Đã xác nhận top ${count} cho Bảng ${group.id}`, 'ok');
+  renderLargeTournamentShell();
+}
+
+function mountLargeGroupBracket(groupId) {
+  const state = getLargeCurrentState();
+  if (!state) return;
+
+  const group = state.groups.find((g) => String(g.id) === String(groupId));
+  if (!group) return;
+
+  const header = document.getElementById('large-group-header');
+  const byeAlert = document.getElementById('large-group-bye-alert');
+  const footer = document.getElementById('large-group-footer');
+  if (!header || !byeAlert || !footer) return;
+
+  header.textContent = `${group.name} · ${group.playerCount} VĐV · Bracket ${group.bracketSize} · Ngày ${group.day}`;
+  if (group.byeCount > 0) {
+    byeAlert.style.display = '';
+    byeAlert.textContent = `${group.byeCount} bye — phân cho ${group.byeCount} VĐV seed cao nhất`;
+  } else {
+    byeAlert.style.display = 'none';
+  }
+  footer.textContent = `Top ${state.advancePerGroup} người ${group.name} → Bracket chính`;
+
+  const oldBracket = S.bracket;
+  const oldSize = S.bracketSize;
+  const oldIsAdmin = S.isAdmin;
+
+  S.bracket = group.matches;
+  S.bracketSize = group.bracketSize;
+  S.isAdmin = false;
+  renderBracket();
+  setTimeout(drawBracketLines, 40);
+
+  S.bracket = oldBracket;
+  S.bracketSize = oldSize;
+  S.isAdmin = oldIsAdmin;
+
+  const action = document.getElementById('large-group-actions');
+  if (action) {
+    action.innerHTML = S.isAdmin
+      ? `<button class="mbtn pri" onclick="openLargeAdvanceConfirm('${group.id}')">Xác nhận top ${state.advancePerGroup}</button>`
+      : '<span style="font-size:11px;opacity:0.7;">Chỉ admin có thể xác nhận top.</span>';
+  }
+}
+
 function renderLargeTournamentShell() {
   const root = document.getElementById('large-tournament-root');
   const phaseBar = document.getElementById('large-phase-bar');
   const tabBar = document.getElementById('large-tab-bar');
   const tabContent = document.getElementById('large-tab-content');
-  if (!root || !phaseBar || !tabBar || !tabContent) return;
+  const bracketContainer = document.getElementById('bracket-container');
+  const schedulePanel = document.getElementById('schedule-panel');
+  if (!root || !phaseBar || !tabBar || !tabContent || !bracketContainer || !schedulePanel) return;
 
-  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  const state = getLargeCurrentState();
   if (!state) return;
 
   const groups = Array.isArray(state.groups) ? state.groups : [];
@@ -6206,6 +6375,8 @@ function renderLargeTournamentShell() {
   }).join('');
 
   if (largeTournamentTab === 'overview') {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
     tabContent.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px;">
         <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng VĐV<br><b style="font-size:15px;">${state.totalPlayers}</b></div>
@@ -6228,13 +6399,28 @@ function renderLargeTournamentShell() {
       <div style="margin-top:10px;font-size:11px;opacity:0.8;">Ngày 1–${Math.max(1, state.totalDays - 1)}: Vòng loại ${groups.length} bảng. Ngày ${state.totalDays}: Bracket chính ${state.mainBracket?.bracketSize || 0} người.</div>
     `;
   } else if (largeTournamentTab.startsWith('group-')) {
+    bracketContainer.style.display = '';
+    schedulePanel.classList.remove('active');
     const gid = largeTournamentTab.replace('group-', '');
     const g = groups.find((x) => String(x.id) === String(gid));
-    tabContent.innerHTML = g
-      ? `<div style="font-size:12px;"><b>${g.name}</b> · ${g.playerCount} VĐV · Bracket ${g.bracketSize} · Ngày ${g.day}</div>
-         <div style="margin-top:8px;font-size:11px;opacity:0.85;">Tab bảng sẽ reuse bracket renderer hiện tại ở Phase 4. Trạng thái: ${g.status}</div>`
-      : '<div style="font-size:12px;opacity:0.7;">Không tìm thấy bảng.</div>';
+    if (!g) {
+      tabContent.innerHTML = '<div style="font-size:12px;opacity:0.7;">Không tìm thấy bảng.</div>';
+      return;
+    }
+
+    currentLargeGroupId = g.id;
+    tabContent.innerHTML = `
+      <div id="large-group-header" style="font-size:12px;font-weight:700;margin-bottom:8px;"></div>
+      <div id="large-group-bye-alert" style="display:none;font-size:11px;line-height:1.4;padding:8px 10px;border-radius:8px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.35);margin-bottom:8px;"></div>
+      <div style="font-size:11px;opacity:0.75;margin-bottom:8px;">Bracket bảng đang được render bằng renderer hiện tại ở khung trung tâm.</div>
+      <div id="large-group-footer" style="margin-top:8px;font-size:11px;opacity:0.8;"></div>
+      <div id="large-group-actions" style="margin-top:8px;"></div>
+    `;
+
+    mountLargeGroupBracket(g.id);
   } else if (largeTournamentTab === 'main') {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
     if (!mainUnlocked) {
       const remain = groups.filter((g) => g.status !== 'done').map((g) => g.name).join(', ');
       tabContent.innerHTML = `<div style="font-size:12px;">🔒 Bracket chính chưa sẵn sàng.</div><div style="margin-top:6px;font-size:11px;opacity:0.8;">Cần hoàn thành: ${remain || '—'}</div>`;
@@ -6242,8 +6428,12 @@ function renderLargeTournamentShell() {
       tabContent.innerHTML = `<div style="font-size:12px;"><b>Bracket chính</b> · ${state.mainBracket?.bracketSize || 0} VĐV · Ngày ${state.totalDays}</div><div style="margin-top:8px;font-size:11px;opacity:0.85;">Sẵn sàng cho Phase 5 render bracket chính.</div>`;
     }
   } else if (largeTournamentTab === 'schedule') {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
     tabContent.innerHTML = '<div style="font-size:12px;">Lịch thi đấu Giải Lớn sẽ hoàn thiện ở Phase 6 (filter ngày + bảng).</div>';
   } else if (largeTournamentTab === 'admin') {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
     tabContent.innerHTML = '<div style="font-size:12px;">Mở modal Admin cấu hình để chỉnh nhanh.</div><div style="margin-top:8px;"><button class="mbtn" onclick="openModal(\'large-admin-modal\')">Mở Admin Config</button></div>';
   }
 }
@@ -7407,6 +7597,7 @@ Object.assign(globalThis, {
   syncLargeDaysToggle, pickLargeTournamentDay, openLargeTournamentAdminConfig,
   applyLargeTournamentConfig, resetLargeTournamentConfigDefaults,
   renderLargeTournamentShell, switchLargeTournamentTab,
+  openLargeAdvanceConfirm, confirmLargeAdvanceSelection,
 });
 </script>
 
