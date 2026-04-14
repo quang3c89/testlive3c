@@ -1678,7 +1678,9 @@ body.fs-mode #bracket-style-toggle {
 }
 .large-tournament-mode #large-tab-bar .lt-tab,
 .large-tournament-mode #large-tab-bar button,
-.large-tournament-mode #large-tab-bar .mbtn {
+.large-tournament-mode #large-tab-bar .mbtn,
+.large-tournament-mode .mactions .mbtn,
+.large-tournament-mode .mactions .mbtn.pri {
   display: inline-flex !important;
   min-width: 88px !important;
   min-height: 34px !important;
@@ -1690,16 +1692,11 @@ body.fs-mode #bracket-style-toggle {
 }
 .large-tournament-mode #large-tab-bar .lt-tab.active,
 .large-tournament-mode #large-tab-bar button.active,
-.large-tournament-mode #large-tab-bar .mbtn.active {
+.large-tournament-mode #large-tab-bar .mbtn.active,
+.large-tournament-mode .mactions .mbtn.pri.active {
   color: #ffffff !important;
   background: linear-gradient(135deg, #c2410c, #ea580c) !important;
   border-color: rgba(255,255,255,0.9) !important;
-}
-.large-tournament-mode .mactions .mbtn,
-.large-tournament-mode .mactions .mbtn.pri {
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: inline-flex !important;
 }
 
 .btab {
@@ -6998,8 +6995,10 @@ async function applyLargeTournamentConfig() {
   if (!state) return;
 
   isLargeTournamentMode = true;
-  largeTournamentTab = 'overview';
+  largeTournamentTab = state.groups?.length ? `group-${state.groups[0].id}` : 'overview';
   saveState();
+  closeModal('large-admin-modal');
+  renderLargeTournamentShell();
   switchBracketTab('bracket');
 
   if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
@@ -7013,7 +7012,6 @@ async function applyLargeTournamentConfig() {
   }
 
   showToast(`✅ Đã áp dụng cấu hình Giải Lớn: ${state.totalPlayers} VĐV · ${state.groups.length} bảng · ${state.totalDays} ngày`, 'ok');
-  closeModal('large-admin-modal');
 }
 
 function resetLargeTournamentConfigDefaults() {
