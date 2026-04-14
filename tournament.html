@@ -1698,6 +1698,32 @@ body.fs-mode #bracket-style-toggle {
   background: linear-gradient(135deg, #c2410c, #ea580c) !important;
   border-color: rgba(255,255,255,0.9) !important;
 }
+.large-tournament-mode #large-tab-content .mbtn,
+.large-tournament-mode #large-tab-content .mactions .mbtn,
+.large-tournament-mode #large-group-actions .mbtn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  color: #ffffff !important;
+  background: rgba(15,23,42,0.92) !important;
+  border: 1px solid rgba(255,255,255,0.28) !important;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.35) !important;
+}
+.large-tournament-mode #large-tab-content .mbtn:hover,
+.large-tournament-mode #large-group-actions .mbtn:hover {
+  background: rgba(30,41,59,0.98) !important;
+  border-color: rgba(255,255,255,0.5) !important;
+}
+.large-tournament-mode #large-group-actions {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 
 .btab {
   width: 30px;
@@ -6414,6 +6440,7 @@ function openLargeTournamentAdminConfig(totalPlayers) {
       largeTournamentTab = `group-${synced.groups[0].id}`;
     }
   }
+  renderLargeTournamentShell();
   syncLargeDaysToggle();
   renderLargeTournamentAdminPreview();
   openModal('large-admin-modal');
@@ -7003,6 +7030,29 @@ function renderLargeTournamentShell() {
     renderLargeTournamentAdminPreview();
     tabContent.innerHTML = `<div style="font-size:12px;line-height:1.5;opacity:0.85;">Preview cấu hình hiện tại đang lấy theo state đã lưu.</div>`;
   }
+
+  const groupAction = document.getElementById('large-group-actions');
+  if (groupAction) {
+    groupAction.style.display = 'flex';
+    groupAction.style.flexWrap = 'wrap';
+    groupAction.style.gap = '6px';
+    groupAction.style.position = 'relative';
+    groupAction.style.zIndex = '8';
+  }
+
+  tabContent.querySelectorAll('.mactions, .mbtn').forEach((el) => {
+    if (el.classList.contains('mactions')) {
+      el.style.display = 'flex';
+      el.style.flexWrap = 'wrap';
+      el.style.gap = '8px';
+      el.style.position = 'relative';
+      el.style.zIndex = '8';
+    } else {
+      el.style.opacity = '1';
+      el.style.visibility = 'visible';
+      el.style.pointerEvents = 'auto';
+    }
+  });
 }
 
 function switchLargeTournamentTab(tab) {
