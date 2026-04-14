@@ -210,18 +210,18 @@ body.viewer-mode #fs-mini-wheel { display: none !important; }
 /* ============ CONTROLS ============ */
 .ctrl-row { display: flex; justify-content: space-between; padding: 2px 0; gap: 6px; }
 .cb {
-  width: 25px; height: 25px; border-radius: 7px; border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--card) 88%, var(--accent, #f0a500) 12%);
-  font-size: 14px; cursor: pointer; color: var(--text);
+  width: 25px; height: 25px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--accent, #f0a500) 55%, #ffffff 45%);
+  background: color-mix(in srgb, var(--card) 35%, #ffffff 65%);
+  font-size: 14px; cursor: pointer; color: #0f172a;
   transition: all 0.15s; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent, #f0a500) 18%, transparent), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent, #f0a500) 22%, transparent), 0 0 0 1px rgba(255,255,255,0.18) inset;
 }
 .cb:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent, #f0a500) 78%, #ffffff 22%);
+  color: #111827;
   transform: translateY(-1px);
-  background: color-mix(in srgb, var(--accent, #f0a500) 20%, var(--card));
-  box-shadow: 0 0 16px color-mix(in srgb, var(--accent, #f0a500) 38%, transparent), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  background: color-mix(in srgb, var(--accent, #f0a500) 42%, #ffffff 58%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent, #f0a500) 38%, transparent), 0 0 0 1px rgba(255,255,255,0.24) inset;
 }
 .cb:active { transform: translateY(0); }
 
@@ -332,7 +332,20 @@ body.viewer-mode #fs-mini-wheel { display: none !important; }
 
 /* ============ CENTER PANEL (BRACKET) ============ */
 .center { flex: 1; position: relative; overflow-x: auto; overflow-y: auto; padding: 0; background: var(--bracket-bg, var(--bg)); background-color: var(--bracket-bg, var(--bg)); isolation: isolate; }
-#center-panel { background: var(--bracket-bg, var(--bg)); background-color: var(--bracket-bg, var(--bg)); }
+#center-panel { background: var(--bracket-bg, var(--bg)); background-color: var(--bracket-bg, var(--bg)); min-height: calc(100vh - 88px); }
+#center-panel:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+#center-panel:fullscreen .bracket-wrap {
+  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
+}
 .center-top-info {
   position: relative;
   z-index: 8;
@@ -469,7 +482,7 @@ body.export-static .tourney-bar,
 body.export-static .bracket-tab-bar {
   display: none !important;
 }
-.bracket-wrap { position: relative; display: inline-flex; min-width: 100%; min-height: 100%; align-items: stretch; justify-content: flex-start; z-index: 2; background: var(--bracket-bg, var(--bg)); }
+.bracket-wrap { position: relative; display: flex; width: 100%; min-width: 100%; min-height: calc(100vh - 140px); align-items: stretch; justify-content: flex-start; z-index: 2; background: var(--bracket-bg, var(--bg)); overflow: auto; }
 .sponsor-stage { position:absolute; inset:0; z-index:3; pointer-events:none; }
 .sponsor-stage.snap-grid {
   background-image:
@@ -1221,13 +1234,13 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
 .mselect option { background: #1a1f29; }
 .mactions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
 .mbtn {
-  padding: 8px 18px; border: 1px solid var(--border); border-radius: 7px;
-  cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text);
-  font-weight: 700; font-family: inherit; transition: all 0.15s; font-size: 13px;
+  padding: 8px 18px; border: 1px solid color-mix(in srgb, var(--border) 58%, #ffffff 42%); border-radius: 7px;
+  cursor: pointer; background: color-mix(in srgb, var(--card) 65%, #ffffff 35%); color: #0f172a;
+  font-weight: 800; font-family: inherit; transition: all 0.15s; font-size: 13px;
 }
-.mbtn:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); }
-.mbtn.pri { background: linear-gradient(135deg, rgba(240,165,0,0.2), rgba(224,90,43,0.2)); border-color: var(--accent); color: var(--accent); }
-.mbtn.pri:hover { background: linear-gradient(135deg, rgba(240,165,0,0.35), rgba(224,90,43,0.35)); }
+.mbtn:hover { border-color: color-mix(in srgb, var(--accent) 55%, #ffffff 45%); background: color-mix(in srgb, var(--card) 40%, #ffffff 60%); }
+.mbtn.pri { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, #ffffff 20%), color-mix(in srgb, var(--accent2) 82%, #ffffff 18%)); border-color: color-mix(in srgb, var(--accent) 72%, #ffffff 28%); color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+.mbtn.pri:hover { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 88%, #ffffff 12%), color-mix(in srgb, var(--accent2) 88%, #ffffff 12%)); }
 .mbtn.danger { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
 .mbtn.danger:hover { background: rgba(239,68,68,0.2); }
 .sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
@@ -1561,9 +1574,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.04);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, #ffffff 45%);
+  background: color-mix(in srgb, var(--card) 35%, #ffffff 65%);
+  color: #0f172a;
   cursor: pointer;
   font-size: 13px;
   line-height: 1;
@@ -1573,9 +1586,9 @@ body.viewer-mode .ms { pointer-events: none; opacity: 0.6; }
   margin-left: 6px;
 }
 .bracket-full-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(240,165,0,0.12);
+  border-color: color-mix(in srgb, var(--accent) 80%, #ffffff 20%);
+  color: #111827;
+  background: color-mix(in srgb, var(--accent) 42%, #ffffff 58%);
 }
 .bracket-export-wrap { position: relative; display: inline-flex; }
 .bracket-export-menu {
@@ -1637,11 +1650,11 @@ body.fs-mode #bracket-style-toggle {
   height: 30px;
   padding: 0;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: rgba(255,255,255,0.03);
-  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, #ffffff 45%);
+  background: color-mix(in srgb, var(--card) 35%, #ffffff 65%);
+  color: #0f172a;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.15s;
   opacity: 0.32;
@@ -1652,8 +1665,9 @@ body.fs-mode #bracket-style-toggle {
 .btab:hover { opacity: 0.9; background: rgba(255,255,255,0.09); }
 .btab.active {
   opacity: 1;
-  background: var(--card);
-  border-color: var(--accent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, #ffffff 18%), color-mix(in srgb, var(--accent2) 84%, #ffffff 16%));
+  border-color: color-mix(in srgb, var(--accent) 78%, #ffffff 22%);
+  color: #ffffff;
   color: var(--accent);
   box-shadow: 0 0 8px rgba(240,165,0,0.16);
 }
