@@ -1682,6 +1682,9 @@ body.fs-mode #bracket-style-toggle {
   display: inline-flex !important;
   min-width: 88px !important;
   min-height: 34px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
   background: rgba(15,23,42,0.88) !important;
   border-color: rgba(255,255,255,0.22) !important;
 }
@@ -1691,6 +1694,12 @@ body.fs-mode #bracket-style-toggle {
   color: #ffffff !important;
   background: linear-gradient(135deg, #c2410c, #ea580c) !important;
   border-color: rgba(255,255,255,0.9) !important;
+}
+.large-tournament-mode .mactions .mbtn,
+.large-tournament-mode .mactions .mbtn.pri {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inline-flex !important;
 }
 
 .btab {
@@ -6192,7 +6201,10 @@ function renderLargeTournamentAdminPreview() {
   const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
   if (!state) return;
 
-  root.innerHTML = state.groups.map((g) => `
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  const mainMeta = globalThis.Live3CLargeTournament?.buildMainBracketFromGroups?.(groups, state.advancePerGroup);
+
+  root.innerHTML = groups.map((g) => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.08);border-radius:10px;background:rgba(255,255,255,0.02);">
       <div style="display:flex;flex-direction:column;gap:2px;">
         <b style="font-size:12px;">${g.name}</b>
@@ -6202,10 +6214,10 @@ function renderLargeTournamentAdminPreview() {
     </div>
   `).join('');
 
-  const mainSize = state.mainBracket?.bracketSize || 0;
-  const byeCount = state.mainBracket?.byeCount || 0;
-  const totalAdvance = (state.groups?.length || 0) * (state.advancePerGroup || 0);
-  summary.textContent = `${state.groups.length} bảng × ${state.advancePerGroup} người = ${totalAdvance} người → Bracket ${mainSize}${byeCount ? ` (BYE ${byeCount})` : ' (không có BYE)'}`;
+  const mainSize = mainMeta?.bracketSize || state.mainBracket?.bracketSize || 0;
+  const byeCount = mainMeta?.byeCount || state.mainBracket?.byeCount || 0;
+  const totalAdvance = (groups.length || 0) * (state.advancePerGroup || 0);
+  summary.textContent = `${groups.length} bảng × ${state.advancePerGroup} người = ${totalAdvance} người → Bracket ${mainSize}${byeCount ? ` (BYE ${byeCount})` : ' (không có BYE)'}`;
 }
 
 function applyLargeTournamentAutoSplit() {
