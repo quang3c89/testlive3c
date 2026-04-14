@@ -68,7 +68,7 @@ body.viewer-mode #undo-btn,body.viewer-mode #redo-btn,body.viewer-mode #theme-to
 .main { display: flex; flex: 1; overflow: hidden; }
 body.left-collapsed .left { display: none !important; }
 body.left-collapsed .center { padding-left: 12px; }
-body.left-collapsed .bracket-cols { min-height: calc(100vh - 120px); }
+body.left-collapsed .bracket-cols { min-height: calc(100vh - 120px); justify-content: center; }
 /* Schedule phải giữ nguyên bố cục dù panel bốc thăm ẩn/hiện */
 body.left-collapsed .center.schedule-active { padding-left: 12px; }
 body.left-collapsed .center.schedule-active #schedule-panel { left: 0; right: 0; }
@@ -482,7 +482,7 @@ body.export-static .tourney-bar,
 body.export-static .bracket-tab-bar {
   display: none !important;
 }
-.bracket-wrap { position: relative; display: flex; width: 100%; min-width: 100%; min-height: calc(100vh - 140px); align-items: stretch; justify-content: flex-start; z-index: 2; background: var(--bracket-bg, var(--bg)); overflow: auto; }
+.bracket-wrap { position: relative; display: flex; width: 100%; min-width: 100%; min-height: calc(100vh - 140px); align-items: stretch; justify-content: center; z-index: 2; background: var(--bracket-bg, var(--bg)); overflow: auto; }
 .sponsor-stage { position:absolute; inset:0; z-index:3; pointer-events:none; }
 .sponsor-stage.snap-grid {
   background-image:
@@ -594,7 +594,7 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   min-height: 100%;
   background: var(--bracket-bg, var(--bg));
 }
-.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: flex-start; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); }
+.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
 
 /* SYMMETRICAL BRACKET */
 .bracket-side { display: flex; gap: 0; align-items: stretch; }
@@ -3008,19 +3008,22 @@ function applyTournamentRow(t) {
   let hasLargeConfig = false;
   const cfg = t.large_tournament_config || settings.large_tournament_config || null;
   if (cfg && typeof cfg === 'object' && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
-    globalThis.Live3CLargeTournament.setLargeTournamentState(cfg);
+    const syncedCfg = syncLargeTournamentPlayersFromRegistration(cfg);
+    globalThis.Live3CLargeTournament.setLargeTournamentState(syncedCfg);
     isLargeTournamentMode = true;
     hasLargeConfig = true;
-    try { localStorage.setItem('live3c_large_v1', JSON.stringify(cfg)); } catch (e) {}
+    try { localStorage.setItem('live3c_large_v1', JSON.stringify(syncedCfg)); } catch (e) {}
   } else {
     const localLargeRaw = localStorage.getItem('live3c_large_v1') || '';
     if (localLargeRaw && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
       try {
         const localLarge = JSON.parse(localLargeRaw);
         if (localLarge && typeof localLarge === 'object') {
-          globalThis.Live3CLargeTournament.setLargeTournamentState(localLarge);
+          const syncedLocal = syncLargeTournamentPlayersFromRegistration(localLarge);
+          globalThis.Live3CLargeTournament.setLargeTournamentState(syncedLocal);
           isLargeTournamentMode = true;
           hasLargeConfig = true;
+          try { localStorage.setItem('live3c_large_v1', JSON.stringify(syncedLocal)); } catch (e) {}
         } else {
           isLargeTournamentMode = false;
         }
@@ -5625,6 +5628,9 @@ function renderBracket() {
   const rounds = S.bracket.length; // e.g. 4 for 16-player
   if (rounds === 0) return;
 
+  container.style.justifyContent = 'center';
+  container.style.margin = '0 auto';
+
   if (rounds === 1) {
     // Only final — show linearly
     container.appendChild(makeFinalCol(0));
@@ -6951,10 +6957,13 @@ function switchToLargeTournamentMode() {
   const input = document.getElementById('bracket-size-input');
   const raw = parseInt(input?.value, 10);
   if (Number.isNaN(raw) || raw <= 64) {
+    isLargeTournamentMode = false;
+    largeTournamentTab = 'overview';
     showToast('⚠️ Vui lòng nhập số lượng > 64 để dùng Giải Lớn', 'error');
     return;
   }
 
+  isLargeTournamentMode = true;
   closeModal('count-modal');
   openLargeTournamentAdminConfig(raw);
 }

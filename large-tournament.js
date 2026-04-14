@@ -69,7 +69,18 @@ function buildState(config = {}) {
   const totalDays = Math.max(2, Number(config.totalDays) || LARGE_TOURNAMENT_DEFAULTS.totalDays);
 
   const groups = Array.isArray(config.groups) && config.groups.length
-    ? config.groups
+    ? config.groups.map((g, idx) => ({
+        id: String(g.id || GROUP_LABELS[idx] || `G${idx + 1}`).toUpperCase(),
+        name: g.name || `Bảng ${GROUP_LABELS[idx] || idx + 1}`,
+        playerCount: Math.max(1, Number(g.playerCount) || 1),
+        bracketSize: Math.max(2, Number(g.bracketSize) || nextPow2(Number(g.playerCount) || 2)),
+        byeCount: Math.max(0, Number(g.byeCount) || 0),
+        day: Math.max(1, Number(g.day) || ((idx % totalDays) + 1)),
+        players: Array.isArray(g.players) ? g.players : [],
+        matches: Array.isArray(g.matches) ? g.matches : [],
+        advancedPlayers: Array.isArray(g.advancedPlayers) ? g.advancedPlayers : [],
+        status: g.status || 'pending',
+      }))
     : autoSplitGroups(totalPlayers, maxPerGroup, totalDays);
 
   const advancePerGroup = validateAdvanceCount(
@@ -100,32 +111,25 @@ function seedMainBracketPlayers(groups = [], advancePerGroup = 4) {
   if (!safeGroups.length) return [];
 
   const sorted = [...safeGroups].sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
-  const groupMap = new Map(
-    sorted.map((g) => [String(g.id || '').toUpperCase(), Array.isArray(g.advancedPlayers) ? g.advancedPlayers : []])
-  );
-
+  const seedsByRank = [];
   const rounds = Math.max(1, Number(advancePerGroup) || 1);
-  const branches = sorted.length;
-  const picks = [];
 
   for (let rank = 0; rank < rounds; rank += 1) {
-    for (let branch = 0; branch < branches; branch += 1) {
-      const source = sorted[branch];
-      const sourceLetter = String(source.id || '').toUpperCase();
-      const sourcePlayers = groupMap.get(sourceLetter) || [];
+    sorted.forEach((group, idx) => {
+      const sourcePlayers = Array.isArray(group.advancedPlayers) ? group.advancedPlayers : [];
       const player = sourcePlayers[rank];
-      if (player) {
-        picks.push({
-          ...player,
-          sourceGroup: sourceLetter,
-          sourceRank: rank + 1,
-          bracketLane: branch + 1,
-        });
-      }
-    }
+      if (!player) return;
+      if (!seedsByRank[rank]) seedsByRank[rank] = [];
+      seedsByRank[rank].push({
+        ...player,
+        sourceGroup: String(group.id || '').toUpperCase(),
+        sourceRank: rank + 1,
+        bracketLane: idx + 1,
+      });
+    });
   }
 
-  return picks;
+  return seedsByRank.flat();
 }
 
 function buildMainBracketFromGroups(groups = [], advancePerGroup = 4) {
@@ -138,19 +142,21 @@ function buildMainBracketFromGroups(groups = [], advancePerGroup = 4) {
     : [];
 
   if (Array.isArray(matches) && matches.length && Array.isArray(matches[0])) {
-    const lanes = safeGroups.sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
-    const laneCount = Math.max(1, lanes.length);
-    const perLane = Math.max(1, Math.floor(bracketSize / laneCount));
+    const sortedGroups = [...safeGroups].sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
+    const laneCount = Math.max(1, sortedGroups.length);
+    const seedsPerLane = Math.max(1, advancePerGroup);
 
     for (let i = 0; i < Math.floor(bracketSize / 2); i += 1) {
-      const p1 = seededPlayers[i * 2] || null;
-      const p2 = seededPlayers[i * 2 + 1] || null;
+      const laneA = sortedGroups[i % laneCount];
+      const laneB = sortedGroups[(i + 1) % laneCount];
+      const p1 = laneA?.advancedPlayers?.[Math.floor(i / laneCount)] || seededPlayers[i * 2] || null;
+      const p2 = laneB?.advancedPlayers?.[Math.floor(i / laneCount)] || seededPlayers[i * 2 + 1] || null;
       if (!matches[0][i]) continue;
       matches[0][i].p1 = p1;
       matches[0][i].p2 = p2;
       matches[0][i].winner = null;
       matches[0][i].sourceLane = i % laneCount;
-      matches[0][i].sourceRound = Math.floor(i / perLane) + 1;
+      matches[0][i].sourceRound = Math.floor(i / seedsPerLane) + 1;
     }
   }
 
