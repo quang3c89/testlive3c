@@ -2858,6 +2858,11 @@ body.fs-mode #bracket-style-toggle {
         <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
       </select>
     </div>
+    <div class="field-group"><label>Chọn Bảng</label>
+      <select class="mselect" id="edit-player-group">
+        <option value="none">None</option>
+      </select>
+    </div>
     <div class="mactions">
       <button class="mbtn pri" onclick="saveEditPlayer()">Lưu</button>
       <button class="mbtn" onclick="closeModal('edit-player-modal')">Hủy</button>
@@ -4608,6 +4613,17 @@ function openEditPlayer(id) {
   document.getElementById('edit-player-name').value = p.name || '';
   document.getElementById('edit-player-unit').value = p.unit || '';
   document.getElementById('edit-player-rank').value = p.rank || '';
+  const groupSelect = document.getElementById('edit-player-group');
+  if (groupSelect) {
+    const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+    const groupOptions = Array.isArray(state?.groups) && state.groups.length
+      ? state.groups.map((g) => `<option value="${String(g.id)}">${g.name}</option>`).join('')
+      : '<option value="none">None</option>';
+    groupSelect.innerHTML = `<option value="none">None</option>${groupOptions}`;
+    const currentGroup = p.largeGroupId || p.groupId || 'none';
+    groupSelect.value = currentGroup;
+    if (!groupSelect.value) groupSelect.value = 'none';
+  }
   openModal('edit-player-modal');
 }
 
@@ -4616,6 +4632,7 @@ function saveEditPlayer() {
   const name = document.getElementById('edit-player-name').value.trim();
   const unit = document.getElementById('edit-player-unit').value.trim();
   const rank = document.getElementById('edit-player-rank').value;
+  const groupId = document.getElementById('edit-player-group')?.value || 'none';
   if (!id || !name) return;
 
   const p = (S.players || []).find(x => x.id === id);
@@ -4625,6 +4642,8 @@ function saveEditPlayer() {
   p.name = name;
   p.unit = unit;
   p.rank = rank;
+  p.largeGroupId = groupId === 'none' ? '' : groupId;
+  p.groupId = p.largeGroupId;
 
   (S.bracket || []).forEach(round => round.forEach(m => {
     if (m?.p1?.id === id) {
@@ -4644,6 +4663,7 @@ function saveEditPlayer() {
     }
   }));
 
+  syncLargeTournamentPlayersFromRegistration(globalThis.Live3CLargeTournament?.getLargeTournamentState?.() || null);
   closeModal('edit-player-modal');
   saveAndRender();
   supaPushDebounced();
@@ -6260,7 +6280,6 @@ function syncLargeTournamentPlayersFromRegistration(state) {
     _size: Math.max(1, Number(g.playerCount) || 1),
   }));
 
-  const totalSlots = groupsDef.reduce((sum, g) => sum + g._size, 0);
   if (!regs.length) {
     const nextEmpty = groupsDef.map((g) => ({
       ...g,
@@ -6273,15 +6292,11 @@ function syncLargeTournamentPlayersFromRegistration(state) {
   }
 
   const sortedRegs = regs.map((p, i) => ({ ...p, _order: i + 1 }));
-  const nextGroups = groupsDef.map((g) => {
-    const sliceCount = Math.min(g._size, sortedRegs.length);
-    return {
-      ...g,
-      players: [],
-      matches: Array.isArray(g.matches) && g.matches.length ? g.matches : genBracket(Math.max(2, Number(g.bracketSize) || 2)),
-      _take: sliceCount,
-    };
-  });
+  const nextGroups = groupsDef.map((g) => ({
+    ...g,
+    players: [],
+    matches: Array.isArray(g.matches) && g.matches.length ? g.matches : genBracket(Math.max(2, Number(g.bracketSize) || 2)),
+  }));
 
   let cursor = 0;
   const totalPlayers = sortedRegs.length;
@@ -6302,6 +6317,8 @@ function syncLargeTournamentPlayersFromRegistration(state) {
       stt: p.stt || String(cursor + i + 1),
       seed: cursor + i + 1,
       drawn: !!p.drawn,
+      largeGroupId: g.id,
+      groupId: g.id,
     }));
     g.players = players;
     cursor += take;
@@ -6310,7 +6327,7 @@ function syncLargeTournamentPlayersFromRegistration(state) {
   const nextState = {
     ...state,
     totalPlayers: totalPlayers,
-    groups: nextGroups.map(({ _idx, _size, _take, ...g }) => g),
+    groups: nextGroups.map(({ _idx, _size, ...g }) => g),
   };
   globalThis.Live3CLargeTournament?.setLargeTournamentState?.(nextState);
   return nextState;
