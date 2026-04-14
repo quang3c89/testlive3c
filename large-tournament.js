@@ -166,6 +166,11 @@ function updateLargeTournamentConfig(patch = {}) {
   return getLargeTournamentState();
 }
 
+function setLargeTournamentState(state = {}) {
+  largeTournamentState = buildState(state);
+  return getLargeTournamentState();
+}
+
 function getLargeTournamentState() {
   return JSON.parse(JSON.stringify(largeTournamentState));
 }
@@ -184,6 +189,7 @@ globalThis.Live3CLargeTournament = {
   buildState,
   initLargeTournamentModule,
   updateLargeTournamentConfig,
+  setLargeTournamentState,
   getLargeTournamentState,
   isLargeTournament,
 };

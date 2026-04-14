@@ -2950,18 +2950,18 @@ function applyTournamentRow(t) {
 
   let hasLargeConfig = false;
   const cfg = t.large_tournament_config || settings.large_tournament_config || null;
-  if (cfg && typeof cfg === 'object' && globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
-    globalThis.Live3CLargeTournament.initLargeTournamentModule(cfg);
+  if (cfg && typeof cfg === 'object' && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
+    globalThis.Live3CLargeTournament.setLargeTournamentState(cfg);
     isLargeTournamentMode = true;
     hasLargeConfig = true;
     try { localStorage.setItem('live3c_large_v1', JSON.stringify(cfg)); } catch (e) {}
   } else {
     const localLargeRaw = localStorage.getItem('live3c_large_v1') || '';
-    if (localLargeRaw && globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
+    if (localLargeRaw && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
       try {
         const localLarge = JSON.parse(localLargeRaw);
         if (localLarge && typeof localLarge === 'object') {
-          globalThis.Live3CLargeTournament.initLargeTournamentModule(localLarge);
+          globalThis.Live3CLargeTournament.setLargeTournamentState(localLarge);
           isLargeTournamentMode = true;
           hasLargeConfig = true;
         } else {
@@ -3256,11 +3256,11 @@ function loadState() {
   if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [...DEFAULTS.sponsorLogos];
   if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
 
-  if (largeSavedRaw && globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
+  if (largeSavedRaw && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
     try {
       const largeSaved = JSON.parse(largeSavedRaw);
       if (largeSaved && typeof largeSaved === 'object') {
-        globalThis.Live3CLargeTournament.initLargeTournamentModule(largeSaved);
+        globalThis.Live3CLargeTournament.setLargeTournamentState(largeSaved);
         isLargeTournamentMode = true;
         largeTournamentTab = 'overview';
       }
@@ -6353,7 +6353,7 @@ function openLargeAdvanceConfirm(groupId) {
   openModal('large-advance-modal');
 }
 
-function confirmLargeAdvanceSelection() {
+async function confirmLargeAdvanceSelection() {
   const state = getLargeCurrentState();
   const body = document.getElementById('large-advance-list');
   if (!state || !body) return;
@@ -6381,15 +6381,28 @@ function confirmLargeAdvanceSelection() {
   });
 
   const allDone = nextGroups.every((g) => g.status === 'done');
-  globalThis.Live3CLargeTournament?.updateLargeTournamentConfig?.({
+  const nextState = {
+    ...state,
     groups: nextGroups,
     mainBracket: {
       ...(state.mainBracket || {}),
       status: allDone ? 'active' : 'locked',
     },
-  });
-
+  };
+  globalThis.Live3CLargeTournament?.setLargeTournamentState?.(nextState);
+  localStorage.setItem('live3c_large_v1', JSON.stringify(nextState));
   saveState();
+
+  if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
+    try {
+      await supaFetch(`tournaments?id=eq.${CURRENT_TOURNAMENT_ID}`, 'PATCH', {
+        large_tournament_config: nextState,
+      });
+    } catch (err) {
+      console.error('Push large config error:', err);
+    }
+  }
+
   closeModal('large-advance-modal');
   showToast(`✅ Đã xác nhận top ${count} cho Bảng ${group.id}`, 'ok');
   renderLargeTournamentShell();
@@ -6640,9 +6653,6 @@ function renderLargeTournamentShell() {
   tabBar.style.border = `1px solid ${palette.panelBorder}`;
   tabContent.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.1)}, ${mixHex(palette.bg, '#e2e8f0', 0.04)})`;
   tabContent.style.border = `1px solid ${palette.panelBorder}`;
-  root.style.setProperty('--large-tab-fg', palette.fg);
-  root.style.setProperty('--large-tab-inactive-fg', palette.inactiveFg);
-  root.style.setProperty('--large-tab-active-fg', palette.activeFg);
 
   const state = getLargeCurrentState();
   if (!state) return;
@@ -6686,10 +6696,10 @@ function renderLargeTournamentShell() {
     const disabled = !!t.locked;
     const statusDot = t.status === 'done' ? '✓' : t.status === 'active' ? '●' : '';
     const bg = active ? palette.activeBg : palette.inactiveBg;
-    const fg = active ? palette.activeFg : palette.inactiveFg;
-    const border = active ? palette.border : mixHex(palette.border, '#ffffff', 0.18);
+    const fg = active ? '#ffffff' : '#c8cdd6';
+    const border = active ? '#ffffff' : 'rgba(255,255,255,0.18)';
     return `<button type="button" ${disabled ? 'disabled' : ''} onclick="switchLargeTournamentTab('${t.key}')"
-      style="padding:8px 12px;border-radius:999px;border:1.5px solid ${border};background:${bg};color:${fg};font-size:11px;font-weight:800;opacity:${disabled ? '0.54' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};box-shadow:${active ? '0 6px 18px rgba(15,23,42,0.24)' : '0 3px 10px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(255,255,255,0.35)'};text-shadow:${active ? '0 1px 2px rgba(0,0,0,0.28)' : 'none'};transition:all 0.15s ease;">
+      style="padding:8px 12px;border-radius:999px;border:1.5px solid ${border};background:${bg};color:${fg};font-size:11px;font-weight:${active ? '500' : '400'};opacity:${disabled ? '0.54' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};box-shadow:${active ? '0 6px 18px rgba(15,23,42,0.24)' : '0 3px 10px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(255,255,255,0.35)'};text-shadow:${active ? '0 1px 2px rgba(0,0,0,0.28)' : 'none'};transition:all 0.15s ease;">
       ${t.label}${statusDot ? ` ${statusDot}` : ''}
     </button>`;
   }).join('');
@@ -6768,7 +6778,7 @@ function switchLargeTournamentTab(tab) {
   renderLargeTournamentShell();
 }
 
-function applyLargeTournamentConfig() {
+async function applyLargeTournamentConfig() {
   applyLargeTournamentAutoSplit();
   const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
   if (!state) return;
@@ -6778,6 +6788,16 @@ function applyLargeTournamentConfig() {
   try { localStorage.setItem('live3c_large_v1', JSON.stringify(state)); } catch (e) {}
   saveState();
   switchBracketTab('bracket');
+
+  if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
+    try {
+      await supaFetch(`tournaments?id=eq.${CURRENT_TOURNAMENT_ID}`, 'PATCH', {
+        large_tournament_config: state,
+      });
+    } catch (err) {
+      console.error('Push large config error:', err);
+    }
+  }
 
   showToast(`✅ Đã áp dụng cấu hình Giải Lớn: ${state.totalPlayers} VĐV · ${state.groups.length} bảng · ${state.totalDays} ngày`, 'ok');
   closeModal('large-admin-modal');
