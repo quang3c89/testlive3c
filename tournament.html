@@ -1711,18 +1711,27 @@ body.fs-mode #bracket-style-toggle {
   background: rgba(15,23,42,0.92) !important;
   border: 1px solid rgba(255,255,255,0.28) !important;
   text-shadow: 0 1px 1px rgba(0,0,0,0.35) !important;
+  transition: transform .14s ease, box-shadow .14s ease, background .14s ease, border-color .14s ease;
 }
 .large-tournament-mode #large-tab-content .mbtn:hover,
 .large-tournament-mode #large-group-actions .mbtn:hover {
   background: rgba(30,41,59,0.98) !important;
   border-color: rgba(255,255,255,0.5) !important;
+  transform: translateY(-1px) scale(1.01);
+}
+.large-tournament-mode #large-tab-content .mbtn:active,
+.large-tournament-mode #large-group-actions .mbtn:active,
+.large-tournament-mode #large-tab-bar button:active {
+  transform: translateY(1px) scale(0.98) !important;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.22) !important;
 }
 .large-tournament-mode #large-group-actions {
   position: relative;
-  z-index: 6;
+  z-index: 14;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  padding: 4px 0 2px;
 }
 
 .btab {
@@ -6891,18 +6900,23 @@ function renderLargeTournamentShell() {
   bracketContainer.style.zIndex = '1';
   root.style.background = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
-  phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.06)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
-  phaseBar.style.border = `1px solid ${palette.panelBorder}`;
+  phaseBar.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.08)}, ${mixHex(palette.bg, '#cbd5e1', 0.14)})`;
+  phaseBar.style.border = `1px solid ${mixHex(palette.panelBorder, '#ffffff', 0.18)}`;
+  phaseBar.style.color = palette.text;
+  phaseBar.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
   phaseBar.style.position = 'relative';
   phaseBar.style.zIndex = '12';
   phaseBar.style.isolation = 'isolate';
-  tabBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.02)}, ${mixHex(palette.bg, '#e2e8f0', 0.08)})`;
-  tabBar.style.border = `1px solid ${palette.panelBorder}`;
+  tabBar.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.04)}, ${mixHex(palette.bg, '#e2e8f0', 0.10)})`;
+  tabBar.style.border = `1px solid ${mixHex(palette.panelBorder, '#ffffff', 0.16)}`;
+  tabBar.style.color = palette.text;
+  tabBar.style.boxShadow = '0 8px 22px rgba(0,0,0,0.08)';
   tabBar.style.position = 'relative';
   tabBar.style.zIndex = '12';
   tabBar.style.isolation = 'isolate';
-  tabContent.style.background = 'rgba(15,23,42,0.92)';
-  tabContent.style.border = `1px solid ${palette.panelBorder}`;
+  tabContent.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.05)}, ${mixHex(palette.bg, '#e2e8f0', 0.08)})`;
+  tabContent.style.border = `1px solid ${mixHex(palette.panelBorder, '#ffffff', 0.14)}`;
+  tabContent.style.color = palette.text;
   tabContent.style.position = 'relative';
   tabContent.style.zIndex = '13';
   tabContent.style.isolation = 'isolate';
@@ -6949,11 +6963,11 @@ function renderLargeTournamentShell() {
     const active = t.key === largeTournamentTab;
     const disabled = !!t.locked;
     const statusDot = t.status === 'done' ? '✓' : t.status === 'active' ? '●' : '';
-    const bg = active ? '#f97316' : '#0f172a';
-    const fg = '#ffffff';
-    const border = active ? '#ffffff' : 'rgba(255,255,255,0.22)';
+    const bg = active ? 'linear-gradient(135deg, #ea580c, #f97316)' : 'linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))';
+    const fg = active ? '#ffffff' : '#0f172a';
+    const border = active ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.10)';
     return `<button type="button" class="lt-tab${active ? ' active' : ''}" ${disabled ? 'disabled' : ''} onclick="switchLargeTournamentTab('${t.key}')"
-      style="display:inline-flex !important;align-items:center !important;justify-content:center !important;min-width:110px !important;min-height:36px !important;padding:8px 14px !important;margin:0 !important;border-radius:999px !important;border:2px solid ${border} !important;background:${bg} !important;color:${fg} !important;font-size:14px !important;font-weight:800 !important;line-height:1 !important;white-space:nowrap !important;opacity:1 !important;visibility:visible !important;transform:none !important;filter:none !important;z-index:999999 !important;position:relative !important;box-shadow:${active ? '0 6px 18px rgba(15,23,42,0.24)' : '0 3px 10px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(255,255,255,0.35)'};text-shadow:${active ? '0 1px 2px rgba(0,0,0,0.28)' : 'none'};transition:all 0.15s ease;">
+      style="display:inline-flex !important;align-items:center !important;justify-content:center !important;min-width:110px !important;min-height:36px !important;padding:8px 14px !important;margin:0 !important;border-radius:999px !important;border:1px solid ${border} !important;background:${bg} !important;color:${fg} !important;font-size:13px !important;font-weight:800 !important;line-height:1 !important;white-space:nowrap !important;opacity:1 !important;visibility:visible !important;transform:none !important;filter:none !important;z-index:999999 !important;position:relative !important;box-shadow:${active ? '0 10px 22px rgba(234,88,12,0.26), inset 0 0 0 1px rgba(255,255,255,0.24)' : '0 4px 12px rgba(15,23,42,0.08)'};text-shadow:${active ? '0 1px 2px rgba(0,0,0,0.24)' : 'none'};transition:transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;">
       ${t.label}${statusDot ? ` ${statusDot}` : ''}
     </button>`;
   }).join('');
@@ -6966,7 +6980,7 @@ function renderLargeTournamentShell() {
     const groupCards = groups.map((g, idx) => {
       const colors = ['#2d5c3e','#163a72','#6e4a0a','#3a2070','#7a1a1a','#0a5c5c'];
       const color = colors[idx % colors.length];
-      return `<div style="padding:11px 12px;border-radius:12px;background:#ffffff;border:1px solid rgba(0,0,0,0.08);border-top:3px solid ${color};box-shadow:0 1px 0 rgba(0,0,0,0.02);min-height:108px;display:flex;flex-direction:column;justify-content:space-between;">
+      return `<div style="padding:11px 12px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#fbfcff);border:1px solid rgba(15,23,42,0.08);border-top:3px solid ${color};box-shadow:0 8px 18px rgba(15,23,42,0.04);min-height:112px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .15s ease, box-shadow .15s ease;">
         <div>
           <div style="font-size:13px;font-weight:800;color:#111827;margin-bottom:6px;">${g.name}</div>
           <div style="font-size:26px;font-weight:900;color:#1d4ed8;line-height:1;">${g.playerCount}</div>
