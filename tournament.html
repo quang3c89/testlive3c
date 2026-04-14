@@ -6191,6 +6191,7 @@ function handleBracketSizeValidation() {
     warning.style.display = 'none';
     smallBtn.style.display = '';
     largeBtn.style.display = 'none';
+    isLargeTournamentMode = false;
     return;
   }
 
@@ -6199,12 +6200,30 @@ function handleBracketSizeValidation() {
     warning.style.display = 'none';
     smallBtn.style.display = '';
     largeBtn.style.display = 'none';
+    isLargeTournamentMode = false;
+    if (globalThis.Live3CLargeTournament?.setLargeTournamentState) {
+      const smallModeState = globalThis.Live3CLargeTournament.buildState({
+        totalPlayers: raw,
+        maxPerGroup: raw,
+        totalDays: 3,
+        advancePerGroup: 1,
+        groups: [],
+        mainBracket: { status: 'locked', players: [], matches: [] },
+      });
+      try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
+      globalThis.Live3CLargeTournament.setLargeTournamentState(smallModeState);
+    }
+    if (currentBracketTab !== 'register') {
+      renderBracket();
+      drawBracketLines();
+    }
   } else {
     badge.style.display = 'none';
     warning.style.display = 'block';
     warning.textContent = `Giải có ${raw} người vượt giới hạn 64. Chuyển sang chế độ Giải Lớn để chia bảng và quản lý nhiều ngày.`;
     smallBtn.style.display = 'none';
     largeBtn.style.display = '';
+    isLargeTournamentMode = true;
   }
 }
 
@@ -6240,11 +6259,12 @@ function syncLargeTournamentPlayersFromRegistration(state) {
   const regs = Array.isArray(S.players) ? S.players : [];
   const nextGroups = state.groups.map((g, idx) => {
     const size = Math.max(1, Number(g.playerCount) || 1);
-    const players = regs.slice(idx * size, idx * size + size).map((p, i) => ({
+    const offset = state.groups.slice(0, idx).reduce((sum, x) => sum + Math.max(1, Number(x.playerCount) || 1), 0);
+    const players = regs.slice(offset, offset + size).map((p, i) => ({
       id: p.id,
       name: p.name,
       unit: p.unit || '',
-      stt: p.stt || String(i + 1),
+      stt: p.stt || String(offset + i + 1),
       seed: i + 1,
       drawn: !!p.drawn,
     }));
@@ -7320,6 +7340,10 @@ function applyMobileBracketOverview() {
     reset();
     return;
   }
+  if (isLargeTournamentMode && (currentBracketTab === 'schedule' || currentBracketTab === 'register')) {
+    reset();
+    return;
+  }
 
   // Mobile thường: để dọc bình thường, không xoay
   if (!isFsCenter) {
@@ -7329,6 +7353,9 @@ function applyMobileBracketOverview() {
 
   // Mobile fullscreen: tự xoay ngang + fit 100% sơ đồ
   document.body.classList.add('mobile-bracket-overview');
+  if (!document.body.classList.contains('tab-center')) {
+    document.body.classList.add('tab-center');
+  }
 
   const w = bc.scrollWidth || bc.offsetWidth;
   const h = bc.scrollHeight || bc.offsetHeight;
