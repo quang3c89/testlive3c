@@ -2954,8 +2954,10 @@ function applyTournamentRow(t) {
     globalThis.Live3CLargeTournament.initLargeTournamentModule(cfg);
     isLargeTournamentMode = true;
     hasLargeConfig = true;
+    try { localStorage.setItem('live3c_large_v1', JSON.stringify(cfg)); } catch (e) {}
   } else {
     isLargeTournamentMode = false;
+    try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
   }
   if (hasLargeConfig) {
     largeTournamentTab = 'overview';
@@ -3210,6 +3212,7 @@ function loadState() {
   // Supabase credentials: ưu tiên localStorage, fallback DEFAULT hardcode
   let supaUrl = localStorage.getItem('live3c_supaUrl') || '';
   let supaKey = localStorage.getItem('live3c_supaKey') || '';
+  const largeSavedRaw = localStorage.getItem('live3c_large_v1') || '';
 
   // Thiết bị mới chưa có localStorage → dùng DEFAULT
   if (!supaUrl && DEFAULT_SUPA_URL) supaUrl = DEFAULT_SUPA_URL;
@@ -3237,6 +3240,18 @@ function loadState() {
   S.bracketColors = { ...DEFAULTS.bracketColors, ...(S.bracketColors || {}) };
   if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [...DEFAULTS.sponsorLogos];
   if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
+
+  if (largeSavedRaw && globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
+    try {
+      const largeSaved = JSON.parse(largeSavedRaw);
+      if (largeSaved && typeof largeSaved === 'object') {
+        globalThis.Live3CLargeTournament.initLargeTournamentModule(largeSaved);
+        isLargeTournamentMode = true;
+        largeTournamentTab = 'overview';
+      }
+    } catch (e) {}
+  }
+
   loadVideoFromDB();
 }
 
@@ -3248,6 +3263,13 @@ function saveState() {
   const s = { ...S, wheelRotation: 0, isSpinning: false, isAdmin: false };
   try { localStorage.setItem('live3c_v4', JSON.stringify(s)); } catch(e) {
     try { localStorage.setItem('live3c_v4', JSON.stringify({...s, bracket:[]})); } catch(e2){}
+  }
+
+  if (isLargeTournamentMode && globalThis.Live3CLargeTournament?.getLargeTournamentState) {
+    try {
+      const largeState = globalThis.Live3CLargeTournament.getLargeTournamentState();
+      localStorage.setItem('live3c_large_v1', JSON.stringify(largeState));
+    } catch (e) {}
   }
 }
 
@@ -6303,6 +6325,7 @@ function confirmLargeAdvanceSelection() {
     },
   });
 
+  saveState();
   closeModal('large-advance-modal');
   showToast(`✅ Đã xác nhận top ${count} cho Bảng ${group.id}`, 'ok');
   renderLargeTournamentShell();
@@ -6375,6 +6398,7 @@ function createLargeMainBracket() {
     },
   });
 
+  saveState();
   showToast('✅ Đã tạo Bracket chính', 'ok');
   renderLargeTournamentShell();
 }
@@ -6585,7 +6609,7 @@ function renderLargeTournamentShell() {
     const disabled = !!t.locked;
     const statusDot = t.status === 'done' ? '✓' : t.status === 'active' ? '●' : '';
     return `<button type="button" ${disabled ? 'disabled' : ''} onclick="switchLargeTournamentTab('${t.key}')"
-      style="padding:6px 10px;border-radius:999px;border:1px solid ${active ? 'rgba(251,191,36,0.45)' : 'rgba(255,255,255,0.14)'};background:${active ? 'rgba(251,191,36,0.14)' : 'rgba(255,255,255,0.04)'};color:inherit;font-size:11px;opacity:${disabled ? '0.5' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};">
+      style="padding:7px 11px;border-radius:999px;border:1px solid ${active ? 'rgba(245,158,11,0.9)' : 'rgba(148,163,184,0.65)'};background:${active ? 'linear-gradient(135deg, rgba(245,158,11,0.95), rgba(249,115,22,0.92))' : 'rgba(255,255,255,0.9)'};color:${active ? '#ffffff' : '#111827'};font-size:11px;font-weight:700;opacity:${disabled ? '0.58' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};box-shadow:${active ? '0 4px 14px rgba(245,158,11,0.35)' : '0 2px 8px rgba(15,23,42,0.12)'};">
       ${t.label}${statusDot ? ` ${statusDot}` : ''}
     </button>`;
   }).join('');
@@ -6671,6 +6695,8 @@ function applyLargeTournamentConfig() {
 
   isLargeTournamentMode = true;
   largeTournamentTab = 'overview';
+  try { localStorage.setItem('live3c_large_v1', JSON.stringify(state)); } catch (e) {}
+  saveState();
   switchBracketTab('bracket');
 
   showToast(`✅ Đã áp dụng cấu hình Giải Lớn: ${state.totalPlayers} VĐV · ${state.groups.length} bảng · ${state.totalDays} ngày`, 'ok');
