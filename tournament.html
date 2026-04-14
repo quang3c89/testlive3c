@@ -6214,7 +6214,7 @@ function applyLargeTournamentAutoSplit() {
   const totalDays = parseInt(document.getElementById('large-total-days')?.value, 10);
   const advancePerGroup = parseInt(document.getElementById('large-advance-per-group')?.value, 10);
 
-  if (!globalThis.Live3CLargeTournament?.updateLargeTournamentConfig) return;
+  if (!globalThis.Live3CLargeTournament?.updateLargeTournamentConfig) return null;
 
   const state = globalThis.Live3CLargeTournament.updateLargeTournamentConfig({
     totalPlayers,
@@ -6223,6 +6223,9 @@ function applyLargeTournamentAutoSplit() {
     advancePerGroup,
   });
 
+  try { localStorage.setItem('live3c_large_v1', JSON.stringify(state)); } catch (e) {}
+  saveState();
+  supaPushDebounced();
   renderLargeTournamentAdminPreview();
   return state;
 }
@@ -6268,6 +6271,7 @@ function openLargeTournamentAdminConfig(totalPlayers) {
     });
   }
 
+  applyLargeTournamentAutoSplit();
   syncLargeDaysToggle();
   renderLargeTournamentAdminPreview();
   openModal('large-admin-modal');
@@ -6847,7 +6851,6 @@ async function applyLargeTournamentConfig() {
 
   isLargeTournamentMode = true;
   largeTournamentTab = 'overview';
-  try { localStorage.setItem('live3c_large_v1', JSON.stringify(state)); } catch (e) {}
   saveState();
   switchBracketTab('bracket');
 
