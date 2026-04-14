@@ -6257,10 +6257,20 @@ function openLargeTournamentAdminConfig(totalPlayers) {
   const totalDaysInput = document.getElementById('large-total-days');
   const advanceInput = document.getElementById('large-advance-per-group');
 
-  if (totalPlayersInput) totalPlayersInput.value = String(totalPlayers || 80);
-  if (maxPerGroupInput && !maxPerGroupInput.value) maxPerGroupInput.value = '20';
-  if (totalDaysInput && !totalDaysInput.value) totalDaysInput.value = '3';
-  if (advanceInput && !advanceInput.value) advanceInput.value = '4';
+  const saved = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  const savedCfg = saved && typeof saved === 'object' ? saved : null;
+
+  if (savedCfg) {
+    if (totalPlayersInput) totalPlayersInput.value = String(savedCfg.totalPlayers || totalPlayers || 80);
+    if (maxPerGroupInput) maxPerGroupInput.value = String(savedCfg.maxPerGroup || 20);
+    if (totalDaysInput) totalDaysInput.value = String(savedCfg.totalDays || 3);
+    if (advanceInput) advanceInput.value = String(savedCfg.advancePerGroup || 4);
+  } else {
+    if (totalPlayersInput) totalPlayersInput.value = String(totalPlayers || 80);
+    if (maxPerGroupInput && !maxPerGroupInput.value) maxPerGroupInput.value = '20';
+    if (totalDaysInput && !totalDaysInput.value) totalDaysInput.value = '3';
+    if (advanceInput && !advanceInput.value) advanceInput.value = '4';
+  }
 
   if (globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
     globalThis.Live3CLargeTournament.initLargeTournamentModule({
@@ -6830,13 +6840,18 @@ function renderLargeTournamentShell() {
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="mbtn pri" type="button" onclick="openLargeTournamentAdminConfig(${state.totalPlayers || 80})">Mở Admin Config</button>
-          <button class="mbtn" type="button" onclick="renderLargeTournamentAdminPreview(); openModal('large-admin-modal')">Xem nhanh preview</button>
+          <button class="mbtn" type="button" onclick="largeTournamentTab='admin-preview'; renderLargeTournamentShell()">Xem nhanh preview</button>
         </div>
         <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;line-height:1.6;">
           <b>Chú ý:</b> Nút Admin chỉ hiện khi bạn đã đăng nhập quyền admin.
         </div>
       </div>
     `;
+  } else if (largeTournamentTab === 'admin-preview') {
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
+    renderLargeTournamentAdminPreview();
+    tabContent.innerHTML = `<div style="font-size:12px;line-height:1.5;opacity:0.85;">Preview cấu hình hiện tại đang lấy theo state đã lưu.</div>`;
   }
 }
 
