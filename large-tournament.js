@@ -24,12 +24,11 @@ function autoSplitGroups(totalPlayers, maxPerGroup = 20, totalDays = 3) {
 
   const base = Math.floor(safeTotal / numGroups);
   const extra = safeTotal % numGroups;
-  const dayBuckets = Math.max(1, safeDays - 1);
 
   return Array.from({ length: numGroups }, (_, i) => {
     const playerCount = base + (i < extra ? 1 : 0);
     const bracketSize = nextPow2(playerCount);
-    const day = Math.min(safeDays, Math.floor((i / numGroups) * dayBuckets) + 1);
+    const day = (i % safeDays) + 1;
     return {
       id: GROUP_LABELS[i] || `G${i + 1}`,
       name: `Bảng ${GROUP_LABELS[i] || i + 1}`,
@@ -129,7 +128,8 @@ function seedMainBracketPlayers(groups = [], advancePerGroup = 4) {
 
 function buildMainBracketFromGroups(groups = [], advancePerGroup = 4) {
   const seededPlayers = seedMainBracketPlayers(groups, advancePerGroup);
-  const bracketSize = nextPow2(Math.max(2, seededPlayers.length || 2));
+  const meta = calcMainBracket(groups, advancePerGroup);
+  const bracketSize = meta.bracketSize;
   const matches = globalThis.generateBracket
     ? globalThis.generateBracket(bracketSize)
     : [];

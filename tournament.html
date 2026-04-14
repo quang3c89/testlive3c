@@ -6216,7 +6216,7 @@ function applyLargeTournamentAutoSplit() {
 
   if (!globalThis.Live3CLargeTournament?.updateLargeTournamentConfig) return;
 
-  globalThis.Live3CLargeTournament.updateLargeTournamentConfig({
+  const state = globalThis.Live3CLargeTournament.updateLargeTournamentConfig({
     totalPlayers,
     maxPerGroup,
     totalDays,
@@ -6224,6 +6224,7 @@ function applyLargeTournamentAutoSplit() {
   });
 
   renderLargeTournamentAdminPreview();
+  return state;
 }
 
 function syncLargeDaysToggle() {
@@ -6828,8 +6829,7 @@ function switchLargeTournamentTab(tab) {
 }
 
 async function applyLargeTournamentConfig() {
-  applyLargeTournamentAutoSplit();
-  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  const state = applyLargeTournamentAutoSplit();
   if (!state) return;
 
   isLargeTournamentMode = true;
