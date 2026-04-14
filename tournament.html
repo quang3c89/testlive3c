@@ -6894,16 +6894,17 @@ function renderLargeTournamentShell() {
   phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.06)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
   phaseBar.style.border = `1px solid ${palette.panelBorder}`;
   phaseBar.style.position = 'relative';
-  phaseBar.style.zIndex = '8';
+  phaseBar.style.zIndex = '12';
   tabBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.02)}, ${mixHex(palette.bg, '#e2e8f0', 0.08)})`;
   tabBar.style.border = `1px solid ${palette.panelBorder}`;
   tabBar.style.position = 'relative';
-  tabBar.style.zIndex = '8';
+  tabBar.style.zIndex = '12';
   tabContent.style.background = 'rgba(15,23,42,0.92)';
   tabContent.style.border = `1px solid ${palette.panelBorder}`;
   tabContent.style.position = 'relative';
-  tabContent.style.zIndex = '9';
+  tabContent.style.zIndex = '13';
   tabContent.style.isolation = 'isolate';
+  tabContent.style.marginTop = '6px';
 
   const state = getLargeCurrentState();
   if (!state) return;
@@ -6959,11 +6960,11 @@ function renderLargeTournamentShell() {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
     tabContent.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px;">
-        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng VĐV<br><b style="font-size:15px;">${state.totalPlayers}</b></div>
-        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Số bảng<br><b style="font-size:15px;">${groups.length}</b></div>
-        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng trận (ước tính)<br><b style="font-size:15px;">${totalRounds}</b></div>
-        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Số ngày<br><b style="font-size:15px;">${state.totalDays}</b></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div style="flex:1 1 140px;min-width:140px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng VĐV<br><b style="font-size:15px;">${state.totalPlayers}</b></div>
+        <div style="flex:1 1 140px;min-width:140px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Số bảng<br><b style="font-size:15px;">${groups.length}</b></div>
+        <div style="flex:1 1 140px;min-width:140px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng trận (ước tính)<br><b style="font-size:15px;">${totalRounds}</b></div>
+        <div style="flex:1 1 140px;min-width:140px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Số ngày<br><b style="font-size:15px;">${state.totalDays}</b></div>
       </div>
       <div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;margin-bottom:8px;">
         <div style="height:100%;width:${progressPct}%;background:linear-gradient(90deg,#22c55e,#84cc16);"></div>
