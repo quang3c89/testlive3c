@@ -2934,6 +2934,19 @@ function applyTournamentRow(t) {
 
   if (t.bracket_size) S.bracketSize = t.bracket_size;
 
+  let hasLargeConfig = false;
+  const cfg = t.large_tournament_config || settings.large_tournament_config || null;
+  if (cfg && typeof cfg === 'object' && globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
+    globalThis.Live3CLargeTournament.initLargeTournamentModule(cfg);
+    isLargeTournamentMode = true;
+    hasLargeConfig = true;
+  } else {
+    isLargeTournamentMode = false;
+  }
+  if (hasLargeConfig) {
+    largeTournamentTab = 'overview';
+  }
+
   const themeChanged =
     prevTheme !== S.theme ||
     prevTitleFont !== S.titleFont ||
@@ -3343,6 +3356,10 @@ async function supaPush(showSuccessToast = true) {
   setSyncProgress(20);
   isPushingNow = true;
   try {
+    const largeConfig = isLargeTournamentMode
+      ? (globalThis.Live3CLargeTournament?.getLargeTournamentState?.() || null)
+      : null;
+
     const tourney = {
       name:          S.tbVals[0] || '',
       date_str:      S.tbVals[1] || '',
@@ -3351,6 +3368,7 @@ async function supaPush(showSuccessToast = true) {
       prize:         S.tbVals[4] || '',
       bracket_state: JSON.stringify(S.bracket),
       bracket_size:  S.bracketSize,
+      large_tournament_config: largeConfig,
       // gom dữ liệu mở rộng vào settings để tránh lỗi thiếu cột
       settings: {
         theme: S.theme,
@@ -3363,7 +3381,8 @@ async function supaPush(showSuccessToast = true) {
         sponsor_pos: Array.isArray(S.sponsorPos) ? S.sponsorPos : [],
         sponsor_snap: !!S.sponsorSnap,
         cti: S.cti || DEFAULTS.cti,
-        cti_snap: !!S.ctiSnap
+        cti_snap: !!S.ctiSnap,
+        large_tournament_config: largeConfig
       }
     };
     if (!CURRENT_TOURNAMENT_ID) {
