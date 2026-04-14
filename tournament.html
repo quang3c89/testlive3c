@@ -6410,6 +6410,9 @@ function openLargeTournamentAdminConfig(totalPlayers) {
   const synced = applyLargeTournamentAutoSplit();
   if (synced) {
     try { localStorage.setItem('live3c_large_v1', JSON.stringify(synced)); } catch (e) {}
+    if (Array.isArray(synced.groups) && synced.groups.length) {
+      largeTournamentTab = `group-${synced.groups[0].id}`;
+    }
   }
   syncLargeDaysToggle();
   renderLargeTournamentAdminPreview();
@@ -6639,16 +6642,16 @@ function mountLargeGroupBracket(groupId) {
     if (bc) bc.style.justifyContent = 'center';
   }, 40);
 
+  const action = document.getElementById('large-group-actions');
+  if (action) {
+    action.innerHTML = oldIsAdmin
+      ? `<button class="mbtn pri" type="button" onclick="openLargeAdvanceConfirm('${group.id}')">Xác nhận top ${state.advancePerGroup}</button>`
+      : '<span style="font-size:11px;opacity:0.7;">Chỉ admin có thể xác nhận top.</span>';
+  }
+
   S.bracket = oldBracket;
   S.bracketSize = oldSize;
   S.isAdmin = oldIsAdmin;
-
-  const action = document.getElementById('large-group-actions');
-  if (action) {
-    action.innerHTML = S.isAdmin
-      ? `<button class="mbtn pri" onclick="openLargeAdvanceConfirm('${group.id}')">Xác nhận top ${state.advancePerGroup}</button>`
-      : '<span style="font-size:11px;opacity:0.7;">Chỉ admin có thể xác nhận top.</span>';
-  }
 }
 
 function createLargeMainBracket() {
@@ -7017,6 +7020,9 @@ async function applyLargeTournamentConfig() {
   closeModal('large-admin-modal');
   renderLargeTournamentShell();
   switchBracketTab('bracket');
+  setTimeout(() => {
+    renderLargeTournamentShell();
+  }, 80);
 
   if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
     try {
