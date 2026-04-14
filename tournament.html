@@ -3028,7 +3028,7 @@ const DEFAULTS = {
 };
 
 const genBracket = generateBracket;
-
+globalThis.generateBracket = generateBracket;
 
 
 let S = {
@@ -6318,6 +6318,76 @@ function mountLargeGroupBracket(groupId) {
   }
 }
 
+function createLargeMainBracket() {
+  const state = getLargeCurrentState();
+  if (!state) return;
+
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  const notDone = groups.filter((g) => g.status !== 'done');
+  if (notDone.length) {
+    showToast(`⚠️ Cần hoàn thành: ${notDone.map((g) => g.name).join(', ')}`, 'error');
+    return;
+  }
+
+  const built = globalThis.Live3CLargeTournament?.buildMainBracketFromGroups?.(groups, state.advancePerGroup);
+  if (!built) return;
+
+  globalThis.Live3CLargeTournament?.updateLargeTournamentConfig?.({
+    mainBracket: {
+      bracketSize: built.bracketSize,
+      byeCount: built.byeCount,
+      players: built.players,
+      matches: built.matches,
+      status: built.status,
+    },
+  });
+
+  showToast('✅ Đã tạo Bracket chính', 'ok');
+  renderLargeTournamentShell();
+}
+
+function mountLargeMainBracket() {
+  const state = getLargeCurrentState();
+  if (!state) return;
+
+  const header = document.getElementById('large-main-header');
+  const source = document.getElementById('large-main-source');
+  const actions = document.getElementById('large-main-actions');
+  if (!header || !source || !actions) return;
+
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  const main = state.mainBracket || {};
+
+  header.textContent = `Bracket chính · ${main.bracketSize || 0} VĐV · Ngày ${state.totalDays}`;
+  source.innerHTML = groups.map((g) => {
+    const count = Array.isArray(g.advancedPlayers) ? g.advancedPlayers.length : 0;
+    return `<span style="padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);font-size:11px;">${g.name}: ${count} người</span>`;
+  }).join(' ');
+
+  if (!Array.isArray(main.matches) || !main.matches.length) {
+    actions.innerHTML = S.isAdmin
+      ? '<button class="mbtn pri" onclick="createLargeMainBracket()">Tạo bracket chính</button>'
+      : '<span style="font-size:11px;opacity:0.7;">Chờ admin tạo bracket chính.</span>';
+    return;
+  }
+
+  actions.innerHTML = '<span style="font-size:11px;opacity:0.75;">Seeding: Top 1 các bảng được tách nhánh trước bán kết.</span>';
+
+  const oldBracket = S.bracket;
+  const oldSize = S.bracketSize;
+  const oldIsAdmin = S.isAdmin;
+
+  S.bracket = main.matches;
+  S.bracketSize = main.bracketSize || 2;
+  S.isAdmin = false;
+  renderBracket();
+  setTimeout(drawBracketLines, 40);
+
+  S.bracket = oldBracket;
+  S.bracketSize = oldSize;
+  S.isAdmin = oldIsAdmin;
+}
+
 function renderLargeTournamentShell() {
   const root = document.getElementById('large-tournament-root');
   const phaseBar = document.getElementById('large-phase-bar');
@@ -6419,13 +6489,18 @@ function renderLargeTournamentShell() {
 
     mountLargeGroupBracket(g.id);
   } else if (largeTournamentTab === 'main') {
-    bracketContainer.style.display = 'none';
+    bracketContainer.style.display = '';
     schedulePanel.classList.remove('active');
     if (!mainUnlocked) {
       const remain = groups.filter((g) => g.status !== 'done').map((g) => g.name).join(', ');
       tabContent.innerHTML = `<div style="font-size:12px;">🔒 Bracket chính chưa sẵn sàng.</div><div style="margin-top:6px;font-size:11px;opacity:0.8;">Cần hoàn thành: ${remain || '—'}</div>`;
     } else {
-      tabContent.innerHTML = `<div style="font-size:12px;"><b>Bracket chính</b> · ${state.mainBracket?.bracketSize || 0} VĐV · Ngày ${state.totalDays}</div><div style="margin-top:8px;font-size:11px;opacity:0.85;">Sẵn sàng cho Phase 5 render bracket chính.</div>`;
+      tabContent.innerHTML = `
+        <div id="large-main-header" style="font-size:12px;font-weight:700;margin-bottom:8px;"></div>
+        <div id="large-main-source" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+        <div id="large-main-actions" style="margin-bottom:8px;"></div>
+      `;
+      mountLargeMainBracket();
     }
   } else if (largeTournamentTab === 'schedule') {
     bracketContainer.style.display = 'none';
@@ -7598,6 +7673,7 @@ Object.assign(globalThis, {
   applyLargeTournamentConfig, resetLargeTournamentConfigDefaults,
   renderLargeTournamentShell, switchLargeTournamentTab,
   openLargeAdvanceConfirm, confirmLargeAdvanceSelection,
+  createLargeMainBracket,
 });
 </script>
 
