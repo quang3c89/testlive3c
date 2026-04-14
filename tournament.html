@@ -6265,6 +6265,56 @@ function getLargeTournamentPhaseStep(state) {
   return 1;
 }
 
+function hexToRgb(hex) {
+  const m = String(hex || '').trim().match(/^#?([a-f\d]{6}|[a-f\d]{3})$/i);
+  if (!m) return null;
+  let v = m[1];
+  if (v.length === 3) v = v.split('').map((c) => c + c).join('');
+  const n = parseInt(v, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function rgbToHex(r, g, b) {
+  const to = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+
+function mixHex(aHex, bHex, weight = 0.5) {
+  const a = hexToRgb(aHex);
+  const b = hexToRgb(bHex);
+  if (!a) return bHex || '#ffffff';
+  if (!b) return aHex || '#ffffff';
+  const w = Math.max(0, Math.min(1, weight));
+  return rgbToHex(a.r * (1 - w) + b.r * w, a.g * (1 - w) + b.g * w, a.b * (1 - w) + b.b * w);
+}
+
+function getContrastTextColor(bgHex) {
+  const rgb = hexToRgb(bgHex);
+  if (!rgb) return '#ffffff';
+  const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+  return luminance > 0.58 ? '#0f172a' : '#ffffff';
+}
+
+function getLargeContrastPalette() {
+  const root = getComputedStyle(document.documentElement);
+  const bg = root.getPropertyValue('--bracket-bg').trim() || root.getPropertyValue('--bg').trim() || '#0f172a';
+  const lightBg = mixHex(bg, '#ffffff', 0.88);
+  const darkBg = mixHex(bg, '#0f172a', 0.32);
+  const accent = mixHex(bg, '#f59e0b', 0.72);
+  const accent2 = mixHex(bg, '#f97316', 0.68);
+  return {
+    panelBg: `linear-gradient(135deg, ${darkBg}, ${mixHex(bg, '#334155', 0.32)})`,
+    panelBorder: mixHex(bg, '#94a3b8', 0.55),
+    bg: lightBg,
+    fg: getContrastTextColor(lightBg),
+    border: mixHex(bg, '#64748b', 0.5),
+    activeBg: `linear-gradient(135deg, ${accent}, ${accent2})`,
+    activeFg: getContrastTextColor(accent),
+    inactiveBg: `linear-gradient(135deg, ${mixHex(bg, '#ffffff', 0.9)}, ${mixHex(bg, '#f8fafc', 0.82)})`,
+    inactiveFg: getContrastTextColor(lightBg),
+  };
+}
+
 function openLargeAdvanceConfirm(groupId) {
   const state = getLargeCurrentState();
   if (!state) return;
@@ -6585,11 +6635,11 @@ function renderLargeTournamentShell() {
   const palette = getLargeContrastPalette();
   root.style.background = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
-  phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.12)}, ${mixHex(palette.bg, '#94a3b8', 0.16)})`;
+  phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.06)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
   phaseBar.style.border = `1px solid ${palette.panelBorder}`;
-  tabBar.style.background = palette.panelBg;
+  tabBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.02)}, ${mixHex(palette.bg, '#e2e8f0', 0.08)})`;
   tabBar.style.border = `1px solid ${palette.panelBorder}`;
-  tabContent.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.16)}, ${mixHex(palette.bg, '#e2e8f0', 0.1)})`;
+  tabContent.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.1)}, ${mixHex(palette.bg, '#e2e8f0', 0.04)})`;
   tabContent.style.border = `1px solid ${palette.panelBorder}`;
 
   const state = getLargeCurrentState();
@@ -6635,7 +6685,7 @@ function renderLargeTournamentShell() {
     const statusDot = t.status === 'done' ? '✓' : t.status === 'active' ? '●' : '';
     const bg = active ? palette.activeBg : palette.inactiveBg;
     const fg = active ? palette.activeFg : palette.fg;
-    const border = active ? palette.border : mixHex(palette.border, '#ffffff', 0.25);
+    const border = active ? palette.border : mixHex(palette.border, '#ffffff', 0.18);
     return `<button type="button" ${disabled ? 'disabled' : ''} onclick="switchLargeTournamentTab('${t.key}')"
       style="padding:8px 12px;border-radius:999px;border:1.5px solid ${border};background:${bg};color:${fg};font-size:11px;font-weight:800;opacity:${disabled ? '0.54' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};box-shadow:${active ? '0 6px 18px rgba(15,23,42,0.24)' : '0 3px 10px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(255,255,255,0.35)'};text-shadow:${active ? '0 1px 2px rgba(0,0,0,0.28)' : 'none'};transition:all 0.15s ease;">
       ${t.label}${statusDot ? ` ${statusDot}` : ''}
