@@ -2956,8 +2956,23 @@ function applyTournamentRow(t) {
     hasLargeConfig = true;
     try { localStorage.setItem('live3c_large_v1', JSON.stringify(cfg)); } catch (e) {}
   } else {
-    isLargeTournamentMode = false;
-    try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
+    const localLargeRaw = localStorage.getItem('live3c_large_v1') || '';
+    if (localLargeRaw && globalThis.Live3CLargeTournament?.initLargeTournamentModule) {
+      try {
+        const localLarge = JSON.parse(localLargeRaw);
+        if (localLarge && typeof localLarge === 'object') {
+          globalThis.Live3CLargeTournament.initLargeTournamentModule(localLarge);
+          isLargeTournamentMode = true;
+          hasLargeConfig = true;
+        } else {
+          isLargeTournamentMode = false;
+        }
+      } catch (e) {
+        isLargeTournamentMode = false;
+      }
+    } else {
+      isLargeTournamentMode = false;
+    }
   }
   if (hasLargeConfig) {
     largeTournamentTab = 'overview';
@@ -6609,7 +6624,7 @@ function renderLargeTournamentShell() {
     const disabled = !!t.locked;
     const statusDot = t.status === 'done' ? '✓' : t.status === 'active' ? '●' : '';
     return `<button type="button" ${disabled ? 'disabled' : ''} onclick="switchLargeTournamentTab('${t.key}')"
-      style="padding:7px 11px;border-radius:999px;border:1px solid ${active ? 'rgba(245,158,11,0.9)' : 'rgba(148,163,184,0.65)'};background:${active ? 'linear-gradient(135deg, rgba(245,158,11,0.95), rgba(249,115,22,0.92))' : 'rgba(255,255,255,0.9)'};color:${active ? '#ffffff' : '#111827'};font-size:11px;font-weight:700;opacity:${disabled ? '0.58' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};box-shadow:${active ? '0 4px 14px rgba(245,158,11,0.35)' : '0 2px 8px rgba(15,23,42,0.12)'};">
+      style="padding:8px 12px;border-radius:999px;border:1.5px solid ${active ? '#f59e0b' : 'rgba(148,163,184,0.72)'};background:${active ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'linear-gradient(135deg, rgba(255,255,255,0.98), rgba(241,245,249,0.96))'};color:${active ? '#ffffff' : '#0f172a'};font-size:11px;font-weight:800;opacity:${disabled ? '0.54' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};box-shadow:${active ? '0 6px 18px rgba(245,158,11,0.42)' : '0 3px 10px rgba(15,23,42,0.16), inset 0 0 0 1px rgba(255,255,255,0.35)'};text-shadow:${active ? '0 1px 2px rgba(0,0,0,0.35)' : 'none'};">
       ${t.label}${statusDot ? ` ${statusDot}` : ''}
     </button>`;
   }).join('');
