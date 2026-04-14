@@ -2707,9 +2707,14 @@ body.fs-mode #bracket-style-toggle {
   <div class="modal-c">
     <h2>🔢 Cỡ Bracket</h2>
     <p style="font-size:11px;opacity:0.5;font-family:var(--font-main);">Làm tròn lên số chẵn lũy thừa 2. Sẽ reset bracket!</p>
-    <div class="field-group"><label>Số lượng tay vợt</label><input class="minput" type="number" id="bracket-size-input" placeholder="e.g. 16" min="4" autocomplete="off"></div>
+    <div class="field-group"><label>Số lượng tay vợt</label><input class="minput" type="number" id="bracket-size-input" placeholder="e.g. 16" min="4" autocomplete="off" oninput="handleBracketSizeValidation()"></div>
+    <div id="bracket-size-validation" style="display:flex;flex-direction:column;gap:8px;">
+      <div id="small-tournament-badge" style="display:none;font-size:11px;font-weight:700;padding:6px 10px;border-radius:999px;background:rgba(34,197,94,0.14);color:#22c55e;width:fit-content;">Chế độ giải nhỏ (≤64 người)</div>
+      <div id="large-tournament-warning" style="display:none;font-size:11px;line-height:1.5;padding:10px;border-radius:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;"></div>
+    </div>
     <div class="mactions">
-      <button class="mbtn pri" onclick="updateBracketSize()">Tạo bracket</button>
+      <button class="mbtn pri" id="create-small-bracket-btn" onclick="updateBracketSize()">Tạo bracket</button>
+      <button class="mbtn pri" id="switch-large-mode-btn" style="display:none;" onclick="switchToLargeTournamentMode()">Chuyển sang Giải Lớn</button>
       <button class="mbtn" onclick="closeModal('count-modal')">Hủy</button>
     </div>
   </div>
@@ -2788,6 +2793,7 @@ body.fs-mode #bracket-style-toggle {
   </div>
 </div>
 
+<script type="module" src="./large-tournament.js"></script>
 <script type="module">
 import { isAdmin as authIsAdmin, logout as authLogout } from './assets/js/auth.js';
 import { resolveSupabaseClient } from './assets/js/supabase.js';
@@ -5966,6 +5972,49 @@ function drawBracketLines() {
 /* ================================================================
    BRACKET SIZE
    ================================================================ */
+function handleBracketSizeValidation() {
+  const input = document.getElementById('bracket-size-input');
+  const badge = document.getElementById('small-tournament-badge');
+  const warning = document.getElementById('large-tournament-warning');
+  const smallBtn = document.getElementById('create-small-bracket-btn');
+  const largeBtn = document.getElementById('switch-large-mode-btn');
+  if (!input || !badge || !warning || !smallBtn || !largeBtn) return;
+
+  const raw = parseInt(input.value, 10);
+  if (Number.isNaN(raw)) {
+    badge.style.display = 'none';
+    warning.style.display = 'none';
+    smallBtn.style.display = '';
+    largeBtn.style.display = 'none';
+    return;
+  }
+
+  if (raw <= 64) {
+    badge.style.display = 'block';
+    warning.style.display = 'none';
+    smallBtn.style.display = '';
+    largeBtn.style.display = 'none';
+  } else {
+    badge.style.display = 'none';
+    warning.style.display = 'block';
+    warning.textContent = `Giải có ${raw} người vượt giới hạn 64. Chuyển sang chế độ Giải Lớn để chia bảng và quản lý nhiều ngày.`;
+    smallBtn.style.display = 'none';
+    largeBtn.style.display = '';
+  }
+}
+
+function switchToLargeTournamentMode() {
+  const input = document.getElementById('bracket-size-input');
+  const raw = parseInt(input?.value, 10);
+  if (Number.isNaN(raw) || raw <= 64) {
+    showToast('⚠️ Vui lòng nhập số lượng > 64 để dùng Giải Lớn', 'error');
+    return;
+  }
+
+  showToast(`🚧 Đã sẵn sàng chuyển sang Giải Lớn (${raw} VĐV). Phase 1 mới khởi tạo module khung.`, 'info');
+  closeModal('count-modal');
+}
+
 function updateBracketSize() {
   let raw = parseInt(document.getElementById('bracket-size-input').value);
   if (isNaN(raw) || raw < 2) raw = 4;
