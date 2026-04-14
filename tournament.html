@@ -2633,6 +2633,13 @@ body.fs-mode #bracket-style-toggle {
       <button class="bracket-full-btn" id="bracket-full-btn" onclick="toggleBracketFullscreen()" title="Toàn màn hình">⛶</button>
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
+
+    <div id="large-tournament-root" style="display:none;padding:12px 12px 16px;overflow:auto;">
+      <div id="large-phase-bar" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:10px;overflow:auto;"></div>
+      <div id="large-tab-bar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0;margin-bottom:10px;"></div>
+      <div id="large-tab-content" style="padding:10px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);"></div>
+    </div>
+
     <div class="bracket-color-tools" id="bracket-color-tools">
       <div class="bct-item" data-k="bg"><button class="bct-btn" type="button" title="Màu nền bracket" onclick="toggleBracketColorPicker(event, 'bg')">🎨</button><input class="bct-picker" id="bct-bg" type="color" value="#0d1117" oninput="setBracketColor('bg', this.value)"></div>
       <div class="bct-item" data-k="matchBg"><button class="bct-btn" type="button" title="Màu ô trận" onclick="toggleBracketColorPicker(event, 'matchBg')">◼</button><input class="bct-picker" id="bct-matchBg" type="color" value="#ffdf80" oninput="setBracketColor('matchBg', this.value)"></div>
@@ -3850,6 +3857,9 @@ function renderAll() {
   renderTopInfo();
   buildCtiToolOptions();
   renderSponsorMarquee();
+  if (isLargeTournamentMode && currentBracketTab !== 'register') {
+    renderLargeTournamentShell();
+  }
 }
 
 /* ================================================================
@@ -4505,6 +4515,8 @@ function saveAndRender() {
 function getUndrawn() { return S.players.filter(p => !p.drawn); }
 
 let currentBracketTab = 'schedule';
+let isLargeTournamentMode = false;
+let largeTournamentTab = 'overview';
 let registerDragPlayerId = null;
 let registerSearchKeyword = '';
 let registerSearchTimer = null;
@@ -6130,10 +6142,125 @@ function openLargeTournamentAdminConfig(totalPlayers) {
   openModal('large-admin-modal');
 }
 
+function getLargeTournamentPhaseStep(state) {
+  if (!state) return 0;
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  const doneCount = groups.filter((g) => g.status === 'done').length;
+  if (doneCount < groups.length) return 0;
+  if ((state.mainBracket?.status || 'locked') === 'done') return 2;
+  return 1;
+}
+
+function renderLargeTournamentShell() {
+  const root = document.getElementById('large-tournament-root');
+  const phaseBar = document.getElementById('large-phase-bar');
+  const tabBar = document.getElementById('large-tab-bar');
+  const tabContent = document.getElementById('large-tab-content');
+  if (!root || !phaseBar || !tabBar || !tabContent) return;
+
+  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  if (!state) return;
+
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  const doneCount = groups.filter((g) => g.status === 'done').length;
+  const totalRounds = groups.reduce((sum, g) => sum + Math.max(0, Number(g.bracketSize || 0) - 1), 0);
+  const progressPct = totalRounds > 0 ? Math.round((doneCount / groups.length) * 100) : 0;
+  const mainUnlocked = groups.length > 0 && doneCount === groups.length;
+
+  const phaseStep = getLargeTournamentPhaseStep(state);
+  const phaseItems = [
+    { key: 'qualifier', label: 'Vòng loại' },
+    { key: 'main', label: 'Bracket chính' },
+    { key: 'final', label: 'Chung kết' },
+  ];
+
+  phaseBar.innerHTML = phaseItems.map((p, idx) => {
+    const active = idx === phaseStep;
+    const done = idx < phaseStep;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid ${active ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'};background:${active ? 'rgba(255,255,255,0.08)' : 'transparent'};opacity:${done ? '0.9' : active ? '1' : '0.7'};">
+      <span style="width:8px;height:8px;border-radius:50%;background:${done ? '#22c55e' : active ? '#fbbf24' : 'rgba(255,255,255,0.4)'};"></span>
+      <span style="font-size:11px;font-weight:700;">${p.label}</span>
+    </div>`;
+  }).join('');
+
+  const tabs = [
+    { key: 'overview', label: 'Tổng quan' },
+    ...groups.map((g) => ({ key: `group-${g.id}`, label: g.name, status: g.status })),
+    { key: 'main', label: `Bracket chính ${mainUnlocked ? '✅' : '🔒'}`, locked: !mainUnlocked },
+    { key: 'schedule', label: 'Lịch' },
+    ...(S.isAdmin ? [{ key: 'admin', label: 'Admin ⚙' }] : []),
+  ];
+
+  if (!tabs.find((t) => t.key === largeTournamentTab)) {
+    largeTournamentTab = 'overview';
+  }
+
+  tabBar.innerHTML = tabs.map((t) => {
+    const active = t.key === largeTournamentTab;
+    const disabled = !!t.locked;
+    const statusDot = t.status === 'done' ? '✓' : t.status === 'active' ? '●' : '';
+    return `<button type="button" ${disabled ? 'disabled' : ''} onclick="switchLargeTournamentTab('${t.key}')"
+      style="padding:6px 10px;border-radius:999px;border:1px solid ${active ? 'rgba(251,191,36,0.45)' : 'rgba(255,255,255,0.14)'};background:${active ? 'rgba(251,191,36,0.14)' : 'rgba(255,255,255,0.04)'};color:inherit;font-size:11px;opacity:${disabled ? '0.5' : '1'};cursor:${disabled ? 'not-allowed' : 'pointer'};">
+      ${t.label}${statusDot ? ` ${statusDot}` : ''}
+    </button>`;
+  }).join('');
+
+  if (largeTournamentTab === 'overview') {
+    tabContent.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px;">
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng VĐV<br><b style="font-size:15px;">${state.totalPlayers}</b></div>
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Số bảng<br><b style="font-size:15px;">${groups.length}</b></div>
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Tổng trận (ước tính)<br><b style="font-size:15px;">${totalRounds}</b></div>
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;">Số ngày<br><b style="font-size:15px;">${state.totalDays}</b></div>
+      </div>
+      <div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;margin-bottom:8px;">
+        <div style="height:100%;width:${progressPct}%;background:linear-gradient(90deg,#22c55e,#84cc16);"></div>
+      </div>
+      <div style="font-size:11px;opacity:0.8;margin-bottom:10px;">Tiến độ vòng loại: ${doneCount}/${groups.length} bảng (${progressPct}%)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;">
+        ${groups.map((g) => `<div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);font-size:11px;">
+          <b>${g.name}</b><br>
+          ${g.playerCount} VĐV · Ngày ${g.day}<br>
+          Trạng thái: ${g.status === 'done' ? 'Xong' : g.status === 'active' ? 'Đang thi đấu' : 'Chờ'}<br>
+          Top ${state.advancePerGroup} → Bracket chính
+        </div>`).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:11px;opacity:0.8;">Ngày 1–${Math.max(1, state.totalDays - 1)}: Vòng loại ${groups.length} bảng. Ngày ${state.totalDays}: Bracket chính ${state.mainBracket?.bracketSize || 0} người.</div>
+    `;
+  } else if (largeTournamentTab.startsWith('group-')) {
+    const gid = largeTournamentTab.replace('group-', '');
+    const g = groups.find((x) => String(x.id) === String(gid));
+    tabContent.innerHTML = g
+      ? `<div style="font-size:12px;"><b>${g.name}</b> · ${g.playerCount} VĐV · Bracket ${g.bracketSize} · Ngày ${g.day}</div>
+         <div style="margin-top:8px;font-size:11px;opacity:0.85;">Tab bảng sẽ reuse bracket renderer hiện tại ở Phase 4. Trạng thái: ${g.status}</div>`
+      : '<div style="font-size:12px;opacity:0.7;">Không tìm thấy bảng.</div>';
+  } else if (largeTournamentTab === 'main') {
+    if (!mainUnlocked) {
+      const remain = groups.filter((g) => g.status !== 'done').map((g) => g.name).join(', ');
+      tabContent.innerHTML = `<div style="font-size:12px;">🔒 Bracket chính chưa sẵn sàng.</div><div style="margin-top:6px;font-size:11px;opacity:0.8;">Cần hoàn thành: ${remain || '—'}</div>`;
+    } else {
+      tabContent.innerHTML = `<div style="font-size:12px;"><b>Bracket chính</b> · ${state.mainBracket?.bracketSize || 0} VĐV · Ngày ${state.totalDays}</div><div style="margin-top:8px;font-size:11px;opacity:0.85;">Sẵn sàng cho Phase 5 render bracket chính.</div>`;
+    }
+  } else if (largeTournamentTab === 'schedule') {
+    tabContent.innerHTML = '<div style="font-size:12px;">Lịch thi đấu Giải Lớn sẽ hoàn thiện ở Phase 6 (filter ngày + bảng).</div>';
+  } else if (largeTournamentTab === 'admin') {
+    tabContent.innerHTML = '<div style="font-size:12px;">Mở modal Admin cấu hình để chỉnh nhanh.</div><div style="margin-top:8px;"><button class="mbtn" onclick="openModal(\'large-admin-modal\')">Mở Admin Config</button></div>';
+  }
+}
+
+function switchLargeTournamentTab(tab) {
+  largeTournamentTab = tab;
+  renderLargeTournamentShell();
+}
+
 function applyLargeTournamentConfig() {
   applyLargeTournamentAutoSplit();
   const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
   if (!state) return;
+
+  isLargeTournamentMode = true;
+  largeTournamentTab = 'overview';
+  switchBracketTab('bracket');
 
   showToast(`✅ Đã áp dụng cấu hình Giải Lớn: ${state.totalPlayers} VĐV · ${state.groups.length} bảng · ${state.totalDays} ngày`, 'ok');
   closeModal('large-admin-modal');
@@ -6551,9 +6678,32 @@ function switchBracketTab(tab) {
   const btabRegister = document.getElementById('btab-register');
   const btabBracket = document.getElementById('btab-bracket');
   const btabSchedule = document.getElementById('btab-schedule');
+  const largeRoot = document.getElementById('large-tournament-root');
 
-  if (!bracketContainer || !schedulePanel || !registerPanel || !centerPanel || !btabBracket || !btabSchedule || !btabRegister) return;
+  if (!bracketContainer || !schedulePanel || !registerPanel || !centerPanel || !btabBracket || !btabSchedule || !btabRegister || !largeRoot) return;
 
+  if (isLargeTournamentMode) {
+    btabRegister.classList.toggle('active', tab === 'register');
+    btabBracket.classList.toggle('active', tab !== 'register');
+    btabSchedule.classList.toggle('active', false);
+
+    registerPanel.classList.toggle('active', tab === 'register');
+    bracketContainer.style.display = 'none';
+    schedulePanel.classList.remove('active');
+    largeRoot.style.display = tab === 'register' ? 'none' : '';
+    centerPanel.classList.remove('schedule-active');
+
+    if (tab === 'register') {
+      renderRegisterCards();
+    } else {
+      renderLargeTournamentShell();
+    }
+
+    applyMobileBracketOverview();
+    return;
+  }
+
+  largeRoot.style.display = 'none';
   registerPanel.classList.remove('active');
 
   btabRegister.classList.toggle('active', tab === 'register');
@@ -7256,6 +7406,7 @@ Object.assign(globalThis, {
   renderLargeTournamentAdminPreview, applyLargeTournamentAutoSplit,
   syncLargeDaysToggle, pickLargeTournamentDay, openLargeTournamentAdminConfig,
   applyLargeTournamentConfig, resetLargeTournamentConfigDefaults,
+  renderLargeTournamentShell, switchLargeTournamentTab,
 });
 </script>
 
