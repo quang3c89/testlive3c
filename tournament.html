@@ -1647,18 +1647,18 @@ body.fs-mode #bracket-style-toggle {
 #fs-draw-stage { display: none; }
 
 /* Large tournament tabs: force visibility regardless of parent theme/CSS */
-#large-tournament-root,
-#large-phase-bar,
-#large-tab-bar,
-#large-tab-content {
+.large-tournament-mode #large-tab-bar,
+.large-tournament-mode #large-phase-bar,
+.large-tournament-mode #large-tab-content {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
+  display: flex !important;
 }
-#large-tab-bar .lt-tab,
-#large-tab-bar button,
-#large-tab-bar .mbtn,
-.lt-nav .lt-tab {
+.large-tournament-mode #large-tab-bar .lt-tab,
+.large-tournament-mode #large-tab-bar button,
+.large-tournament-mode #large-tab-bar .mbtn,
+.large-tournament-mode .lt-nav .lt-tab {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -1667,15 +1667,15 @@ body.fs-mode #bracket-style-toggle {
   visibility: visible !important;
   pointer-events: auto !important;
 }
-#large-tab-bar .lt-tab,
-#large-tab-bar button,
-#large-tab-bar .mbtn {
+.large-tournament-mode #large-tab-bar .lt-tab,
+.large-tournament-mode #large-tab-bar button,
+.large-tournament-mode #large-tab-bar .mbtn {
   background: rgba(15,23,42,0.88) !important;
   border-color: rgba(255,255,255,0.22) !important;
 }
-#large-tab-bar .lt-tab.active,
-#large-tab-bar button.active,
-#large-tab-bar .mbtn.active {
+.large-tournament-mode #large-tab-bar .lt-tab.active,
+.large-tournament-mode #large-tab-bar button.active,
+.large-tournament-mode #large-tab-bar .mbtn.active {
   color: #ffffff !important;
   background: linear-gradient(135deg, #c2410c, #ea580c) !important;
   border-color: rgba(255,255,255,0.9) !important;
@@ -6681,6 +6681,7 @@ function renderLargeTournamentShell() {
   if (!root || !phaseBar || !tabBar || !tabContent || !bracketContainer || !schedulePanel) return;
 
   const palette = getLargeContrastPalette();
+  root.classList.add('large-tournament-mode');
   root.style.background = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
   phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.06)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
