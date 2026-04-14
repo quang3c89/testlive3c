@@ -6819,7 +6819,20 @@ function renderLargeTournamentShell() {
   } else if (largeTournamentTab === 'admin') {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
-    tabContent.innerHTML = '<div style="font-size:12px;">Mở modal Admin cấu hình để chỉnh nhanh.</div><div style="margin-top:8px;"><button class="mbtn" onclick="openModal(\'large-admin-modal\')">Mở Admin Config</button></div>';
+    tabContent.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:12px;line-height:1.5;opacity:0.85;">
+          Mở cấu hình Giải Lớn để chỉnh tổng VĐV, số bảng, số ngày và số người vào bracket chính.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mbtn pri" type="button" onclick="openLargeTournamentAdminConfig(${state.totalPlayers || 80})">Mở Admin Config</button>
+          <button class="mbtn" type="button" onclick="renderLargeTournamentAdminPreview(); openModal('large-admin-modal')">Xem nhanh preview</button>
+        </div>
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:11px;line-height:1.6;">
+          <b>Chú ý:</b> Nút Admin chỉ hiện khi bạn đã đăng nhập quyền admin.
+        </div>
+      </div>
+    `;
   }
 }
 

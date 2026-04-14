@@ -99,18 +99,19 @@ function seedMainBracketPlayers(groups = [], advancePerGroup = 4) {
   const safeGroups = Array.isArray(groups) ? groups : [];
   if (!safeGroups.length) return [];
 
-  const letters = safeGroups.map((g) => String(g.id || '').toUpperCase());
+  const sorted = [...safeGroups].sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
   const groupMap = new Map(
-    safeGroups.map((g) => [String(g.id || '').toUpperCase(), Array.isArray(g.advancedPlayers) ? g.advancedPlayers : []])
+    sorted.map((g) => [String(g.id || '').toUpperCase(), Array.isArray(g.advancedPlayers) ? g.advancedPlayers : []])
   );
 
   const rounds = Math.max(1, Number(advancePerGroup) || 1);
-  const branches = letters.length;
+  const branches = sorted.length;
   const picks = [];
 
   for (let rank = 0; rank < rounds; rank += 1) {
     for (let branch = 0; branch < branches; branch += 1) {
-      const sourceLetter = letters[(branch + rank) % branches];
+      const source = sorted[branch];
+      const sourceLetter = String(source.id || '').toUpperCase();
       const sourcePlayers = groupMap.get(sourceLetter) || [];
       const player = sourcePlayers[rank];
       if (player) {
@@ -118,6 +119,7 @@ function seedMainBracketPlayers(groups = [], advancePerGroup = 4) {
           ...player,
           sourceGroup: sourceLetter,
           sourceRank: rank + 1,
+          bracketLane: branch + 1,
         });
       }
     }
@@ -127,14 +129,19 @@ function seedMainBracketPlayers(groups = [], advancePerGroup = 4) {
 }
 
 function buildMainBracketFromGroups(groups = [], advancePerGroup = 4) {
-  const seededPlayers = seedMainBracketPlayers(groups, advancePerGroup);
-  const meta = calcMainBracket(groups, advancePerGroup);
+  const safeGroups = Array.isArray(groups) ? [...groups] : [];
+  const seededPlayers = seedMainBracketPlayers(safeGroups, advancePerGroup);
+  const meta = calcMainBracket(safeGroups, advancePerGroup);
   const bracketSize = meta.bracketSize;
   const matches = globalThis.generateBracket
     ? globalThis.generateBracket(bracketSize)
     : [];
 
   if (Array.isArray(matches) && matches.length && Array.isArray(matches[0])) {
+    const lanes = safeGroups.sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
+    const laneCount = Math.max(1, lanes.length);
+    const perLane = Math.max(1, Math.floor(bracketSize / laneCount));
+
     for (let i = 0; i < Math.floor(bracketSize / 2); i += 1) {
       const p1 = seededPlayers[i * 2] || null;
       const p2 = seededPlayers[i * 2 + 1] || null;
@@ -142,6 +149,8 @@ function buildMainBracketFromGroups(groups = [], advancePerGroup = 4) {
       matches[0][i].p1 = p1;
       matches[0][i].p2 = p2;
       matches[0][i].winner = null;
+      matches[0][i].sourceLane = i % laneCount;
+      matches[0][i].sourceRound = Math.floor(i / perLane) + 1;
     }
   }
 
