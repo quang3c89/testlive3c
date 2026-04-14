@@ -6615,7 +6615,15 @@ function mountLargeGroupBracket(groupId) {
   S.bracketSize = group.bracketSize;
   S.isAdmin = false;
   renderBracket();
-  setTimeout(drawBracketLines, 40);
+  const bc = document.getElementById('bracket-container');
+  if (bc) {
+    bc.style.justifyContent = 'center';
+    bc.style.alignItems = 'flex-start';
+  }
+  setTimeout(() => {
+    drawBracketLines();
+    if (bc) bc.style.justifyContent = 'center';
+  }, 40);
 
   S.bracket = oldBracket;
   S.bracketSize = oldSize;
@@ -6693,7 +6701,15 @@ function mountLargeMainBracket() {
   S.bracketSize = main.bracketSize || 2;
   S.isAdmin = false;
   renderBracket();
-  setTimeout(drawBracketLines, 40);
+  const bc = document.getElementById('bracket-container');
+  if (bc) {
+    bc.style.justifyContent = 'center';
+    bc.style.alignItems = 'flex-start';
+  }
+  setTimeout(() => {
+    drawBracketLines();
+    if (bc) bc.style.justifyContent = 'center';
+  }, 40);
 
   S.bracket = oldBracket;
   S.bracketSize = oldSize;
@@ -6824,6 +6840,8 @@ function renderLargeTournamentShell() {
 
   const palette = getLargeContrastPalette();
   root.classList.add('large-tournament-mode');
+  bracketContainer.style.justifyContent = 'center';
+  bracketContainer.style.alignItems = 'flex-start';
   root.style.background = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
   phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.06)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
