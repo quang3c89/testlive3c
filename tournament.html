@@ -6441,6 +6441,7 @@ function openLargeTournamentAdminConfig(totalPlayers) {
     }
   }
   renderLargeTournamentShell();
+  requestAnimationFrame(() => renderLargeTournamentShell());
   syncLargeDaysToggle();
   renderLargeTournamentAdminPreview();
   openModal('large-admin-modal');
@@ -6886,14 +6887,23 @@ function renderLargeTournamentShell() {
   root.classList.add('large-tournament-mode');
   bracketContainer.style.justifyContent = 'center';
   bracketContainer.style.alignItems = 'flex-start';
+  bracketContainer.style.position = 'relative';
+  bracketContainer.style.zIndex = '1';
   root.style.background = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
   phaseBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.06)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
   phaseBar.style.border = `1px solid ${palette.panelBorder}`;
+  phaseBar.style.position = 'relative';
+  phaseBar.style.zIndex = '8';
   tabBar.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.02)}, ${mixHex(palette.bg, '#e2e8f0', 0.08)})`;
   tabBar.style.border = `1px solid ${palette.panelBorder}`;
-  tabContent.style.background = `linear-gradient(135deg, ${mixHex(palette.bg, '#ffffff', 0.1)}, ${mixHex(palette.bg, '#e2e8f0', 0.04)})`;
+  tabBar.style.position = 'relative';
+  tabBar.style.zIndex = '8';
+  tabContent.style.background = 'rgba(15,23,42,0.92)';
   tabContent.style.border = `1px solid ${palette.panelBorder}`;
+  tabContent.style.position = 'relative';
+  tabContent.style.zIndex = '9';
+  tabContent.style.isolation = 'isolate';
 
   const state = getLargeCurrentState();
   if (!state) return;
@@ -7072,6 +7082,7 @@ async function applyLargeTournamentConfig() {
   switchBracketTab('bracket');
   setTimeout(() => {
     renderLargeTournamentShell();
+    requestAnimationFrame(() => renderLargeTournamentShell());
   }, 80);
 
   if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
