@@ -6388,6 +6388,119 @@ function mountLargeMainBracket() {
   S.isAdmin = oldIsAdmin;
 }
 
+function getLargeScheduleTagStyle(tag) {
+  const map = {
+    'Bảng A': { bg: 'rgba(45,92,62,0.18)', bd: 'rgba(45,92,62,0.45)', tx: '#b7f0ca' },
+    'Bảng B': { bg: 'rgba(22,58,114,0.18)', bd: 'rgba(22,58,114,0.45)', tx: '#b7d4ff' },
+    'Bảng C': { bg: 'rgba(110,74,10,0.2)', bd: 'rgba(110,74,10,0.45)', tx: '#ffe2a6' },
+    'Bảng D': { bg: 'rgba(58,32,112,0.2)', bd: 'rgba(58,32,112,0.45)', tx: '#d6c3ff' },
+    'Bracket chính': { bg: 'rgba(139,92,246,0.2)', bd: 'rgba(139,92,246,0.5)', tx: '#e9d5ff' },
+  };
+  return map[tag] || { bg: 'rgba(255,255,255,0.08)', bd: 'rgba(255,255,255,0.18)', tx: '#fff' };
+}
+
+function buildLargeScheduleItems() {
+  const state = getLargeCurrentState();
+  if (!state) return [];
+
+  const items = [];
+  const groups = Array.isArray(state.groups) ? state.groups : [];
+  let idx = 0;
+
+  const pushFromMatches = (matches, day, tag) => {
+    (matches || []).forEach((round, rIdx) => {
+      (round || []).forEach((m, mIdx) => {
+        if (isByeMatch(m)) return;
+        const p1 = m?.p1?.name || 'TBD';
+        const p2 = m?.p2?.name || 'TBD';
+        const baseHour = 8 + Math.floor((idx % 18) / 2);
+        const minute = idx % 2 === 0 ? '00' : '30';
+        const time = `${String(baseHour).padStart(2, '0')}:${minute}`;
+        const status = getMatchLiveStatus(m);
+        items.push({
+          id: `${tag}-${rIdx}-${mIdx}`,
+          day,
+          group: tag,
+          time,
+          text: `${p1} vs ${p2}`,
+          status,
+          round: rIdx + 1,
+        });
+        idx += 1;
+      });
+    });
+  };
+
+  groups.forEach((g) => pushFromMatches(g.matches, g.day || 1, g.name || `Bảng ${g.id}`));
+  const main = state.mainBracket || {};
+  if (Array.isArray(main.matches) && main.matches.length) {
+    pushFromMatches(main.matches, state.totalDays, 'Bracket chính');
+  }
+
+  return items;
+}
+
+function renderLargeScheduleTab() {
+  const box = document.getElementById('large-tab-content');
+  if (!box) return;
+  const state = getLargeCurrentState();
+  if (!state) return;
+
+  const days = Array.from({ length: Math.max(2, Number(state.totalDays) || 3) }, (_, i) => i + 1);
+  const groups = (state.groups || []).map((g) => g.name);
+  const groupFilters = [...groups, 'Bracket chính'];
+
+  const items = buildLargeScheduleItems();
+  const selectedDay = Number(box.getAttribute('data-filter-day') || 0);
+  const selectedGroup = box.getAttribute('data-filter-group') || 'all';
+
+  const filtered = items.filter((x) => {
+    const dayOk = selectedDay ? x.day === selectedDay : true;
+    const groupOk = selectedGroup === 'all' ? true : x.group === selectedGroup;
+    return dayOk && groupOk;
+  });
+
+  const rows = filtered.length
+    ? filtered.map((x) => {
+      const c = getLargeScheduleTagStyle(x.group);
+      return `<div style="display:grid;grid-template-columns:58px 1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid ${x.status === 'live' ? 'rgba(34,197,94,0.45)' : 'rgba(255,255,255,0.08)'};background:${x.status === 'live' ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.02)'};">
+        <b style="font-size:11px;">${x.time}</b>
+        <span style="font-size:11px;${x.status === 'done' ? 'text-decoration:line-through;opacity:0.72;' : ''}">${x.text}</span>
+        <span style="font-size:10px;padding:3px 7px;border-radius:999px;border:1px solid ${c.bd};background:${c.bg};color:${c.tx};">${x.group}</span>
+        ${x.status === 'live' ? '<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.45);">LIVE</span>' : x.status === 'done' ? '<span style="font-size:10px;opacity:0.65;">Kết quả</span>' : '<span style="font-size:10px;opacity:0.55;">—</span>'}
+      </div>`;
+    }).join('')
+    : '<div style="font-size:11px;opacity:0.65;padding:8px 2px;">Không có trận theo bộ lọc hiện tại.</div>';
+
+  box.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button class="mbtn" onclick="setLargeScheduleFilterDay(0)">Tất cả</button>
+        ${days.map((d) => `<button class="mbtn" onclick="setLargeScheduleFilterDay(${d})" style="${selectedDay === d ? 'border-color:rgba(34,197,94,0.45);background:rgba(34,197,94,0.14);' : ''}">Ngày ${d}</button>`).join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button class="mbtn" onclick="setLargeScheduleFilterGroup('all')">Tất cả bảng</button>
+        ${groupFilters.map((g) => `<button class="mbtn" onclick="setLargeScheduleFilterGroup('${g.replace(/'/g, "\\'")}')" style="${selectedGroup === g ? 'border-color:rgba(34,197,94,0.45);background:rgba(34,197,94,0.14);' : ''}">${g}</button>`).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
+    </div>
+  `;
+}
+
+function setLargeScheduleFilterDay(day) {
+  const box = document.getElementById('large-tab-content');
+  if (!box) return;
+  box.setAttribute('data-filter-day', String(day || 0));
+  renderLargeScheduleTab();
+}
+
+function setLargeScheduleFilterGroup(group) {
+  const box = document.getElementById('large-tab-content');
+  if (!box) return;
+  box.setAttribute('data-filter-group', String(group || 'all'));
+  renderLargeScheduleTab();
+}
+
 function renderLargeTournamentShell() {
   const root = document.getElementById('large-tournament-root');
   const phaseBar = document.getElementById('large-phase-bar');
@@ -6505,7 +6618,7 @@ function renderLargeTournamentShell() {
   } else if (largeTournamentTab === 'schedule') {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
-    tabContent.innerHTML = '<div style="font-size:12px;">Lịch thi đấu Giải Lớn sẽ hoàn thiện ở Phase 6 (filter ngày + bảng).</div>';
+    renderLargeScheduleTab();
   } else if (largeTournamentTab === 'admin') {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
@@ -7674,6 +7787,7 @@ Object.assign(globalThis, {
   renderLargeTournamentShell, switchLargeTournamentTab,
   openLargeAdvanceConfirm, confirmLargeAdvanceSelection,
   createLargeMainBracket,
+  setLargeScheduleFilterDay, setLargeScheduleFilterGroup,
 });
 </script>
 
