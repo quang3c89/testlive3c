@@ -2740,7 +2740,7 @@ body.fs-mode #bracket-style-toggle {
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
 
-    <div id="large-tournament-root" style="display:none;padding:12px 12px 16px;overflow:auto;align-items:flex-start;">
+    <div id="large-tournament-root" style="display:none;padding:12px 12px 16px;overflow:auto;align-items:flex-start;justify-content:flex-start;">
       <div id="large-phase-bar" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:12px;margin-bottom:10px;overflow:auto;"></div>
       <div id="large-tab-bar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;margin-bottom:10px;border-radius:12px;"></div>
       <div id="large-tab-content" style="padding:10px;border-radius:12px;"></div>
@@ -3200,6 +3200,7 @@ let autoSpinEnabled = false;
 let autoSpinStopRequested = false;
 let fsMiniWheelArmed = false;
 let drawPlanQueue = [];
+let currentSpinGroupId = null;
 let spinAudioCtx = null;
 let spinTickTimer = null;
 
@@ -5163,10 +5164,19 @@ function spinWheel() {
   const undrawn = getUndrawn();
   if (undrawn.length === 0) { showToast('🏁 Đã bốc hết!'); return; }
 
-  ensureDrawPlan();
-  const planItem = consumeDrawPlanItem();
-  if (!planItem) { showToast('🏆 Bracket đã đầy!'); return; }
-  const slot = planItem.slot;
+  let slot = null;
+  let planItem = null;
+  if (isLargeTournamentMode && currentSpinGroupId) {
+    slot = findNextSlotInGroup(currentSpinGroupId);
+    if (!slot) { showToast(`🏁 Bảng ${currentSpinGroupId} đã bốc hết!`); return; }
+    const nextPlayer = undrawn[0];
+    planItem = { player: nextPlayer, slot };
+  } else {
+    ensureDrawPlan();
+    planItem = consumeDrawPlanItem();
+    if (!planItem) { showToast('🏆 Bracket đã đầy!'); return; }
+    slot = planItem.slot;
+  }
 
   document.querySelectorAll('.mp.pending-slot').forEach(el => el.classList.remove('pending-slot'));
   const pendingEl = document.getElementById(`match-${slot.r}-${slot.m}-${slot.pKey}`);
@@ -5490,12 +5500,24 @@ function ensureDrawPlan() {
 
   if (!validQueue.length) {
     const precomputed = buildDrawPlan();
-    // reveal order must follow layout order, not random order
     drawPlanQueue = precomputed.sort((a, b) => slotOrderKey(a.slot) - slotOrderKey(b.slot));
   } else {
-    // keep current remaining order by layout
     drawPlanQueue = validQueue.sort((a, b) => slotOrderKey(a.slot) - slotOrderKey(b.slot));
   }
+}
+
+function findNextSlotInGroup(groupId) {
+  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  if (!state) return null;
+  const group = (state.groups || []).find((g) => String(g.id) === String(groupId));
+  if (!group || !Array.isArray(group.matches) || !group.matches[0]) return null;
+
+  const r0 = group.matches[0];
+  for (let m = 0; m < r0.length; m++) {
+    if (!r0[m].p1 || r0[m].p1.isBye) return { r: 0, m, pKey: 'p1' };
+    if (!r0[m].p2 || r0[m].p2.isBye) return { r: 0, m, pKey: 'p2' };
+  }
+  return null;
 }
 
 function consumeDrawPlanItem() {
@@ -5643,14 +5665,33 @@ function flyPlayer(player, slot, spinAgain = false) {
 }
 
 function commitPlayer(player, slot) {
-  // Mark drawn trong S.players
+  if (isLargeTournamentMode && currentSpinGroupId) {
+    const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+    if (state) {
+      const groups = (state.groups || []).map((g) => {
+        if (String(g.id) !== String(currentSpinGroupId)) return g;
+        const matches = JSON.parse(JSON.stringify(g.matches || []));
+        if (matches[slot.r] && matches[slot.r][slot.m]) {
+          matches[slot.r][slot.m][slot.pKey] = { ...player, drawn: true, isBye: false };
+        }
+        const players = (g.players || []).map((p) => p.id === player.id ? { ...p, drawn: true } : p);
+        return { ...g, matches, players };
+      });
+      globalThis.Live3CLargeTournament.updateLargeTournamentConfig({ groups });
+      try { localStorage.setItem('live3c_large_v1', JSON.stringify(globalThis.Live3CLargeTournament.getLargeTournamentState())); } catch (e) {}
+      S.players.forEach(p => { if (p.id === player.id) p.drawn = true; });
+      renderLargeTournamentShell();
+      renderPlayers();
+      drawWheel();
+      saveState();
+      supaPushDebounced();
+      return;
+    }
+  }
+
   S.players.forEach(p => { if (p.id === player.id) p.drawn = true; });
-  // Ghi vào bracket
   S.bracket[slot.r][slot.m][slot.pKey] = { ...player, drawn: true, isBye: false };
-
   syncRound1ByesToRound2();
-
-  // Render lại toàn bộ
   renderBracket();
   renderPlayers();
   if (currentBracketTab === 'register') {
@@ -7303,9 +7344,41 @@ function renderLargeTournamentShell() {
   });
 }
 
+function updateSpinGroupContext() {
+  const indicator = document.getElementById('spin-group-indicator');
+  if (!indicator) return;
+
+  if (!isLargeTournamentMode) {
+    indicator.style.display = 'none';
+    return;
+  }
+
+  const state = globalThis.Live3CLargeTournament?.getLargeTournamentState?.();
+  if (!state || !Array.isArray(state.groups)) {
+    indicator.style.display = 'none';
+    return;
+  }
+
+  indicator.style.display = '';
+  const currentGid = largeTournamentTab.startsWith('group-') ? largeTournamentTab.replace('group-', '') : null;
+  indicator.innerHTML = `
+    <div style="font-size:10px;color:var(--text);opacity:0.6;margin-bottom:4px;">Bốc thăm cho:</div>
+    <select id="spin-group-select" style="width:100%;padding:4px 8px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:11px;font-family:inherit;" onchange="setSpinGroupContext(this.value)">
+      ${state.groups.map((g) => `<option value="${g.id}" ${String(g.id) === String(currentGid) ? 'selected' : ''}>${g.name}</option>`).join('')}
+    </select>
+  `;
+  if (currentGid) currentSpinGroupId = currentGid;
+  else if (!currentSpinGroupId) currentSpinGroupId = state.groups[0]?.id;
+}
+
+function setSpinGroupContext(groupId) {
+  currentSpinGroupId = groupId;
+}
+
 function switchLargeTournamentTab(tab) {
   largeTournamentTab = tab;
   renderLargeTournamentShell();
+  updateSpinGroupContext();
 }
 
 async function applyLargeTournamentConfig() {
