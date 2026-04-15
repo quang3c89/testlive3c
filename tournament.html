@@ -593,7 +593,6 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   height: 100%;
   min-height: 100%;
   background: var(--bracket-bg, var(--bg));
-  align-items: flex-start;
 }
 .bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
 
@@ -607,8 +606,6 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   display: flex; flex-direction: column;
   width: 168px; padding: 0 6px;
   position: relative;
-  align-self: flex-start;
-  justify-content: flex-start;
 }
 .round-label {
   text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase;
@@ -5813,7 +5810,7 @@ function makeHalfRoundCol(r, side, totalRounds) {
   col.appendChild(lbl);
 
   const matchesWrap = document.createElement('div');
-  matchesWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;flex:0 0 auto;';
+  matchesWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:space-around;flex:1;';
 
   const allMatches = S.bracket[r];
   const half = allMatches.length / 2;
@@ -6867,17 +6864,16 @@ function mountLargeGroupBracket(groupId) {
 
   bracketContainer.style.display = '';
   bracketContainer.style.justifyContent = 'center';
-  bracketContainer.style.alignItems = 'flex-start';
-  bracketContainer.style.alignContent = 'flex-start';
-  bracketContainer.style.alignSelf = 'flex-start';
-  bracketContainer.style.flex = '0 0 auto';
-  bracketContainer.style.height = 'auto';
-  bracketContainer.style.minHeight = '0';
+  bracketContainer.style.alignItems = 'center';
+  bracketContainer.style.alignContent = 'center';
+  bracketContainer.style.alignSelf = 'auto';
+  bracketContainer.style.flex = '1 1 auto';
+  bracketContainer.style.height = '';
+  bracketContainer.style.minHeight = '';
 
   renderBracket();
   setTimeout(() => {
     drawBracketLines();
-    if (bracketContainer) bracketContainer.style.justifyContent = 'center';
   }, 40);
 
   S.bracket = oldBracket;
@@ -6957,17 +6953,16 @@ function mountLargeMainBracket() {
   const bc = document.getElementById('bracket-container');
   if (bc) {
     bc.style.justifyContent = 'center';
-    bc.style.alignItems = 'flex-start';
-    bc.style.alignContent = 'flex-start';
-    bc.style.alignSelf = 'flex-start';
-    bc.style.flex = '0 0 auto';
-    bc.style.height = 'auto';
-    bc.style.minHeight = '0';
+    bc.style.alignItems = 'center';
+    bc.style.alignContent = 'center';
+    bc.style.alignSelf = 'auto';
+    bc.style.flex = '1 1 auto';
+    bc.style.height = '';
+    bc.style.minHeight = '';
   }
   renderBracket();
   setTimeout(() => {
     drawBracketLines();
-    if (bc) bc.style.justifyContent = 'center';
   }, 40);
 
   S.bracket = oldBracket;
