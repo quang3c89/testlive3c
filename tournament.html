@@ -6986,13 +6986,14 @@ function renderLargeTournamentShell() {
 
   const palette = getLargeContrastPalette();
   root.classList.add('large-tournament-mode');
+  root.style.backgroundColor = palette.panelBg.includes('linear-gradient') ? 'transparent' : palette.panelBg;
   bracketContainer.style.justifyContent = 'center';
   bracketContainer.style.alignItems = 'flex-start';
   bracketContainer.style.position = 'relative';
   bracketContainer.style.zIndex = '1';
-  root.style.background = palette.panelBg;
+  root.style.background = 'transparent';
+  root.style.backgroundImage = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
-  root.style.backgroundImage = `linear-gradient(180deg, ${mixHex(palette.panelBg || palette.bg, '#ffffff', 0.10)}, ${mixHex(palette.panelBg || palette.bg, '#cbd5e1', 0.16)})`;
   root.style.color = palette.text;
   root.style.boxShadow = '0 14px 28px rgba(0,0,0,0.10)';
   root.style.borderRadius = '16px';
