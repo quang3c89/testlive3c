@@ -6845,8 +6845,8 @@ function mountLargeGroupBracket(groupId) {
   const byeAlert = document.getElementById('large-group-bye-alert');
   const footer = document.getElementById('large-group-footer');
   const action = document.getElementById('large-group-actions');
-  const embed = document.getElementById('large-bracket-embed');
-  if (!header || !byeAlert || !footer || !embed) return;
+  const bracketContainer = document.getElementById('bracket-container');
+  if (!header || !byeAlert || !footer || !bracketContainer) return;
 
   header.textContent = `${group.name} · ${group.playerCount} VĐV · Bracket ${group.bracketSize} · Ngày ${group.day}`;
   if (group.byeCount > 0) {
@@ -6864,7 +6864,22 @@ function mountLargeGroupBracket(groupId) {
   S.bracket = group.matches;
   S.bracketSize = group.bracketSize;
   S.isAdmin = false;
-  embed.innerHTML = buildInlineBracketHTML(group.matches, group.bracketSize, state.advancePerGroup, group.name);
+
+  bracketContainer.style.display = '';
+  bracketContainer.style.justifyContent = 'center';
+  bracketContainer.style.alignItems = 'flex-start';
+  bracketContainer.style.alignContent = 'flex-start';
+  bracketContainer.style.alignSelf = 'flex-start';
+  bracketContainer.style.flex = '0 0 auto';
+  bracketContainer.style.height = 'auto';
+  bracketContainer.style.minHeight = '0';
+
+  renderBracket();
+  setTimeout(() => {
+    drawBracketLines();
+    if (bracketContainer) bracketContainer.style.justifyContent = 'center';
+  }, 40);
+
   S.bracket = oldBracket;
   S.bracketSize = oldSize;
   S.isAdmin = oldIsAdmin;
@@ -6939,15 +6954,17 @@ function mountLargeMainBracket() {
   S.bracket = main.matches;
   S.bracketSize = main.bracketSize || 2;
   S.isAdmin = false;
-  renderBracket();
   const bc = document.getElementById('bracket-container');
   if (bc) {
     bc.style.justifyContent = 'center';
     bc.style.alignItems = 'flex-start';
     bc.style.alignContent = 'flex-start';
+    bc.style.alignSelf = 'flex-start';
+    bc.style.flex = '0 0 auto';
     bc.style.height = 'auto';
     bc.style.minHeight = '0';
   }
+  renderBracket();
   setTimeout(() => {
     drawBracketLines();
     if (bc) bc.style.justifyContent = 'center';
