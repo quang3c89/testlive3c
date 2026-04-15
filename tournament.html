@@ -7092,7 +7092,7 @@ function renderLargeTournamentShell() {
     }).join('');
 
     tabContent.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px;align-items:stretch;">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px;align-items:stretch;position:relative;z-index:2;">
         <div style="padding:12px 10px;border-radius:14px;background:rgba(255,255,255,0.9);border:1px solid ${palette.border};text-align:center;height:128px;display:flex;flex-direction:column;justify-content:center;">
           <div style="font-size:22px;font-weight:900;color:${palette.accent};line-height:1;">${state.totalPlayers}</div>
           <div style="font-size:11px;color:${palette.textMuted || '#8b6a52'};margin-top:4px;">Tổng VĐV</div>
@@ -7111,8 +7111,8 @@ function renderLargeTournamentShell() {
         </div>
       </div>
 
-      <div style="margin-bottom:10px;font-size:12px;color:${palette.textMuted || '#6b7280'};font-weight:800;letter-spacing:.02em;">PHÂN BỔ BẢNG ĐẤU</div>
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:stretch;">${groupCards}</div>
+      <div style="margin:14px 0 10px;font-size:12px;color:${palette.textMuted || '#6b7280'};font-weight:800;letter-spacing:.02em;position:relative;z-index:2;">PHÂN BỔ BẢNG ĐẤU</div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:stretch;position:relative;z-index:1;">${groupCards}</div>
     `;
   } else if (largeTournamentTab.startsWith('group-')) {
     bracketContainer.style.display = '';
