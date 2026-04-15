@@ -607,6 +607,8 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   display: flex; flex-direction: column;
   width: 168px; padding: 0 6px;
   position: relative;
+  align-self: flex-start;
+  justify-content: flex-start;
 }
 .round-label {
   text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase;
@@ -5765,7 +5767,7 @@ function makeHalfRoundCol(r, side, totalRounds) {
   col.appendChild(lbl);
 
   const matchesWrap = document.createElement('div');
-  matchesWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:space-around;flex:1;';
+  matchesWrap.style.cssText = 'display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;flex:0 0 auto;';
 
   const allMatches = S.bracket[r];
   const half = allMatches.length / 2;
@@ -5846,7 +5848,7 @@ function renderLinearBracket(container) {
     lbl.textContent = getRoundName(r, S.bracket.length);
     col.appendChild(lbl);
     const mw = document.createElement('div');
-    mw.style.cssText = 'display:flex;flex-direction:column;justify-content:space-around;flex:1;';
+    mw.style.cssText = 'display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;flex:0 0 auto;';
     matches.forEach((m, mi) => {
       const bx = document.createElement('div');
       bx.className = 'mb'; bx.id = `mb-${r}-${mi}`;
@@ -6771,6 +6773,13 @@ function mountLargeGroupBracket(groupId) {
     bc.style.flex = '0 0 auto';
     bc.style.height = 'auto';
     bc.style.minHeight = '0';
+  }
+  const cols = document.getElementById('bracket-columns');
+  if (cols) {
+    cols.style.alignItems = 'flex-start';
+    cols.style.alignContent = 'flex-start';
+    cols.style.justifyContent = 'center';
+    cols.style.minHeight = '0';
   }
   setTimeout(() => {
     drawBracketLines();
