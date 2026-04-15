@@ -3203,6 +3203,11 @@ let drawPlanQueue = [];
 let currentSpinGroupId = null;
 let spinAudioCtx = null;
 let spinTickTimer = null;
+let _renderLargeDebounceTimer = null;
+const renderLargeTournamentShellDebounced = () => {
+  clearTimeout(_renderLargeDebounceTimer);
+  _renderLargeDebounceTimer = setTimeout(() => renderLargeTournamentShell(), 30);
+};
 
 /* ================================================================
    UNDO / REDO
@@ -4049,7 +4054,7 @@ function renderAll() {
   buildCtiToolOptions();
   renderSponsorMarquee();
   if (isLargeTournamentMode && currentBracketTab !== 'register') {
-    renderLargeTournamentShell();
+    renderLargeTournamentShellDebounced();
   }
 }
 
@@ -5680,7 +5685,7 @@ function commitPlayer(player, slot) {
       globalThis.Live3CLargeTournament.updateLargeTournamentConfig({ groups });
       try { localStorage.setItem('live3c_large_v1', JSON.stringify(globalThis.Live3CLargeTournament.getLargeTournamentState())); } catch (e) {}
       S.players.forEach(p => { if (p.id === player.id) p.drawn = true; });
-      renderLargeTournamentShell();
+      renderLargeTournamentShellDebounced();
       renderPlayers();
       drawWheel();
       saveState();
@@ -6590,8 +6595,8 @@ function openLargeTournamentAdminConfig(totalPlayers) {
       largeTournamentTab = `group-${synced.groups[0].id}`;
     }
   }
-  renderLargeTournamentShell();
-  requestAnimationFrame(() => renderLargeTournamentShell());
+  renderLargeTournamentShellDebounced();
+  requestAnimationFrame(() => renderLargeTournamentShellDebounced());
   syncLargeDaysToggle();
   renderLargeTournamentAdminPreview();
   openModal('large-admin-modal');
@@ -6790,7 +6795,7 @@ async function confirmLargeAdvanceSelection() {
 
   closeModal('large-advance-modal');
   showToast(`✅ Đã xác nhận top ${count} cho Bảng ${group.id}`, 'ok');
-  renderLargeTournamentShell();
+  renderLargeTournamentShellDebounced();
 }
 
 function buildInlineBracketHTML(matches, bracketSize, advancePerGroup, groupName) {
@@ -6897,7 +6902,7 @@ function createLargeMainBracket() {
 
   saveState();
   showToast('✅ Đã tạo Bracket chính', 'ok');
-  renderLargeTournamentShell();
+  renderLargeTournamentShellDebounced();
 }
 
 function mountLargeMainBracket() {
@@ -7378,7 +7383,7 @@ function setSpinGroupContext(groupId) {
 
 function switchLargeTournamentTab(tab) {
   largeTournamentTab = tab;
-  renderLargeTournamentShell();
+  renderLargeTournamentShellDebounced();
   updateSpinGroupContext();
 }
 
