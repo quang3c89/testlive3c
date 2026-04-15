@@ -7025,29 +7025,30 @@ function renderLargeScheduleTab() {
     return dayOk && groupOk;
   });
 
+  const dayBtns = [`<button class="sch-filter-day-btn ${!selectedDay ? 'active' : ''}" onclick="setLargeScheduleFilterDay(0)">Tất cả</button>`, ...days.map((d) => `<button class="sch-filter-day-btn ${selectedDay === d ? 'active' : ''}" onclick="setLargeScheduleFilterDay(${d})">Ngày ${d}</button>`)].join('');
+  const groupBtns = groupFilters.map((g) => {
+    const val = g;
+    const isActive = selectedGroup === g || (g === 'Bracket chính' && selectedGroup === 'Bracket chính');
+    return `<button class="sch-filter-group-btn ${isActive ? 'active' : ''}" onclick="setLargeScheduleFilterGroup('${val.replace(/'/g, "\\'")}')">${g}</button>`;
+  }).join('');
+
   const rows = filtered.length
     ? filtered.map((x) => {
       const c = getLargeScheduleTagStyle(x.group);
-      return `<div style="display:grid;grid-template-columns:58px 1fr auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid ${x.status === 'live' ? 'rgba(34,197,94,0.45)' : 'rgba(255,255,255,0.08)'};background:${x.status === 'live' ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.02)'};">
-        <b style="font-size:11px;">${x.time}</b>
-        <span style="font-size:11px;${x.status === 'done' ? 'text-decoration:line-through;opacity:0.72;' : ''}">${x.text}</span>
-        <span style="font-size:10px;padding:3px 7px;border-radius:999px;border:1px solid ${c.bd};background:${c.bg};color:${c.tx};">${x.group}</span>
-        ${x.status === 'live' ? '<span style="font-size:10px;padding:2px 6px;border-radius:999px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.45);">LIVE</span>' : x.status === 'done' ? '<span style="font-size:10px;opacity:0.65;">Kết quả</span>' : '<span style="font-size:10px;opacity:0.55;">—</span>'}
+      return `<div class="sch-item-row ${x.status === 'live' ? 'live-row' : ''}">
+        <b style="font-size:11px;color:var(--text);opacity:0.7;">${x.time}</b>
+        <span style="font-size:12px;color:var(--text);${x.status === 'done' ? 'text-decoration:line-through;opacity:0.6;' : ''}">${x.text}</span>
+        <span style="font-size:10px;padding:3px 9px;border-radius:999px;border:1px solid ${c.bd};background:${c.bg};color:${c.tx};white-space:nowrap;">${x.group}</span>
+        ${x.status === 'live' ? '<span style="font-size:10px;padding:2px 7px;border-radius:999px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.45);color:#4ade80;">LIVE</span>' : x.status === 'done' ? '<span style="font-size:10px;opacity:0.5;color:var(--text);">✓ Xong</span>' : '<span style="font-size:10px;opacity:0.4;color:var(--text);">Chờ</span>'}
       </div>`;
     }).join('')
-    : '<div style="font-size:11px;opacity:0.65;padding:8px 2px;">Không có trận theo bộ lọc hiện tại.</div>';
+    : '<div style="padding:20px;text-align:center;font-size:12px;opacity:0.5;color:var(--text);">Không có trận theo bộ lọc này.</div>';
 
   box.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        <button class="mbtn" onclick="setLargeScheduleFilterDay(0)">Tất cả</button>
-        ${days.map((d) => `<button class="mbtn" onclick="setLargeScheduleFilterDay(${d})" style="${selectedDay === d ? 'border-color:rgba(34,197,94,0.45);background:rgba(34,197,94,0.14);' : ''}">Ngày ${d}</button>`).join('')}
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        <button class="mbtn" onclick="setLargeScheduleFilterGroup('all')">Tất cả bảng</button>
-        ${groupFilters.map((g) => `<button class="mbtn" onclick="setLargeScheduleFilterGroup('${g.replace(/'/g, "\\'")}')" style="${selectedGroup === g ? 'border-color:rgba(34,197,94,0.45);background:rgba(34,197,94,0.14);' : ''}">${g}</button>`).join('')}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${dayBtns}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${groupBtns}</div>
+      <div style="display:flex;flex-direction:column;gap:0;padding:4px 0;">${rows}</div>
     </div>
   `;
 }
