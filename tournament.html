@@ -7876,7 +7876,7 @@ function switchBracketTab(tab) {
     registerPanel.classList.toggle('active', tab === 'register');
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
-    largeRoot.style.display = tab === 'register' ? 'none' : '';
+    largeRoot.style.display = '';
     centerPanel.classList.remove('schedule-active');
 
     if (tab === 'register') {
