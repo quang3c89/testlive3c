@@ -2738,7 +2738,7 @@ body.fs-mode #bracket-style-toggle {
     </div>
     <div class="bracket-tool-zone" id="bracket-tool-zone"></div>
 
-    <div id="large-tournament-root" style="display:none;padding:12px 12px 16px;overflow:auto;">
+    <div id="large-tournament-root" style="display:none;padding:12px 12px 16px;overflow:auto;align-items:flex-start;">
       <div id="large-phase-bar" style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:12px;margin-bottom:10px;overflow:auto;"></div>
       <div id="large-tab-bar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;margin-bottom:10px;border-radius:12px;"></div>
       <div id="large-tab-content" style="padding:10px;border-radius:12px;"></div>
@@ -6767,6 +6767,8 @@ function mountLargeGroupBracket(groupId) {
     bc.style.justifyContent = 'center';
     bc.style.alignItems = 'flex-start';
     bc.style.alignContent = 'flex-start';
+    bc.style.alignSelf = 'flex-start';
+    bc.style.flex = '0 0 auto';
     bc.style.height = 'auto';
     bc.style.minHeight = '0';
   }
@@ -6997,8 +6999,12 @@ function renderLargeTournamentShell() {
   bracketContainer.style.justifyContent = 'center';
   bracketContainer.style.alignItems = 'flex-start';
   bracketContainer.style.alignContent = 'flex-start';
+  bracketContainer.style.alignSelf = 'flex-start';
+  bracketContainer.style.flex = '0 0 auto';
   bracketContainer.style.position = 'relative';
   bracketContainer.style.zIndex = '1';
+  bracketContainer.style.height = 'auto';
+  bracketContainer.style.minHeight = '0';
   root.style.background = 'transparent';
   root.style.backgroundImage = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
