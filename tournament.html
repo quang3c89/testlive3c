@@ -593,6 +593,7 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   height: 100%;
   min-height: 100%;
   background: var(--bracket-bg, var(--bg));
+  align-items: flex-start;
 }
 .bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
 
@@ -6765,6 +6766,9 @@ function mountLargeGroupBracket(groupId) {
   if (bc) {
     bc.style.justifyContent = 'center';
     bc.style.alignItems = 'flex-start';
+    bc.style.alignContent = 'flex-start';
+    bc.style.height = 'auto';
+    bc.style.minHeight = '0';
   }
   setTimeout(() => {
     drawBracketLines();
@@ -6851,6 +6855,9 @@ function mountLargeMainBracket() {
   if (bc) {
     bc.style.justifyContent = 'center';
     bc.style.alignItems = 'flex-start';
+    bc.style.alignContent = 'flex-start';
+    bc.style.height = 'auto';
+    bc.style.minHeight = '0';
   }
   setTimeout(() => {
     drawBracketLines();
@@ -6989,6 +6996,7 @@ function renderLargeTournamentShell() {
   root.style.backgroundColor = palette.panelBg.includes('linear-gradient') ? 'transparent' : palette.panelBg;
   bracketContainer.style.justifyContent = 'center';
   bracketContainer.style.alignItems = 'flex-start';
+  bracketContainer.style.alignContent = 'flex-start';
   bracketContainer.style.position = 'relative';
   bracketContainer.style.zIndex = '1';
   root.style.background = 'transparent';
