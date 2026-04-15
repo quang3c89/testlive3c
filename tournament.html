@@ -6747,6 +6747,42 @@ async function confirmLargeAdvanceSelection() {
   renderLargeTournamentShell();
 }
 
+function buildInlineBracketHTML(matches, bracketSize, advancePerGroup, groupName) {
+  if (!Array.isArray(matches) || !matches.length) {
+    return '<div style="padding:20px;text-align:center;opacity:0.5;font-size:12px;">Bracket chưa được tạo. Cần bốc thăm trước.</div>';
+  }
+
+  const rounds = matches;
+  let html = '<div style="display:flex;gap:6px;overflow-x:auto;padding:8px 4px;align-items:flex-start;">';
+
+  rounds.forEach((roundMatches, rIdx) => {
+    const roundName = getRoundName(rIdx, rounds.length);
+    html += `<div style="display:flex;flex-direction:column;min-width:140px;flex:0 0 auto;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);opacity:0.55;text-align:center;padding:4px 0 8px;">${roundName}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;">`;
+
+    roundMatches.forEach((m) => {
+      const p1 = m?.p1;
+      const p2 = m?.p2;
+      const w1 = m?.winner && p1 && m.winner.id === p1.id;
+      const w2 = m?.winner && p2 && m.winner.id === p2.id;
+      const isByeM = isByeMatch(m);
+      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;min-width:128px;">
+        ${isByeM
+          ? `<div style="padding:6px 10px;font-size:10px;font-weight:700;color:var(--accent);">${(p1 && !p1.isBye) ? p1.name : (p2 && !p2.isBye) ? p2.name : '—'} <span style="font-size:9px;opacity:0.5;">(BYE)</span></div>`
+          : `<div style="padding:5px 10px;font-size:10px;${w1 ? 'font-weight:700;color:var(--accent);' : 'color:var(--text);opacity:0.8;'} border-bottom:1px solid var(--border);">${p1?.name || '—'} ${m?.s1 !== undefined && m.s1 !== '' ? `<span style="float:right;font-weight:700;">${m.s1}</span>` : ''}</div>
+             <div style="padding:5px 10px;font-size:10px;${w2 ? 'font-weight:700;color:var(--accent);' : 'color:var(--text);opacity:0.8;'}">${p2?.name || '—'} ${m?.s2 !== undefined && m.s2 !== '' ? `<span style="float:right;font-weight:700;">${m.s2}</span>` : ''}</div>`}
+      </div>`;
+    });
+
+    html += '</div></div>';
+    if (rIdx < rounds.length - 1) html += '<div style="display:flex;align-items:center;padding:0 2px;color:var(--text);opacity:0.3;font-size:16px;padding-top:22px;flex:0 0 auto;">›</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
 function mountLargeGroupBracket(groupId) {
   const state = getLargeCurrentState();
   if (!state) return;
@@ -6757,7 +6793,9 @@ function mountLargeGroupBracket(groupId) {
   const header = document.getElementById('large-group-header');
   const byeAlert = document.getElementById('large-group-bye-alert');
   const footer = document.getElementById('large-group-footer');
-  if (!header || !byeAlert || !footer) return;
+  const action = document.getElementById('large-group-actions');
+  const embed = document.getElementById('large-bracket-embed');
+  if (!header || !byeAlert || !footer || !embed) return;
 
   header.textContent = `${group.name} · ${group.playerCount} VĐV · Bracket ${group.bracketSize} · Ngày ${group.day}`;
   if (group.byeCount > 0) {
@@ -6775,39 +6813,16 @@ function mountLargeGroupBracket(groupId) {
   S.bracket = group.matches;
   S.bracketSize = group.bracketSize;
   S.isAdmin = false;
-  renderBracket();
-  const bc = document.getElementById('bracket-container');
-  if (bc) {
-    bc.style.justifyContent = 'center';
-    bc.style.alignItems = 'flex-start';
-    bc.style.alignContent = 'flex-start';
-    bc.style.alignSelf = 'flex-start';
-    bc.style.flex = '0 0 auto';
-    bc.style.height = 'auto';
-    bc.style.minHeight = '0';
-  }
-  const cols = document.getElementById('bracket-columns');
-  if (cols) {
-    cols.style.alignItems = 'flex-start';
-    cols.style.alignContent = 'flex-start';
-    cols.style.justifyContent = 'center';
-    cols.style.minHeight = '0';
-  }
-  setTimeout(() => {
-    drawBracketLines();
-    if (bc) bc.style.justifyContent = 'center';
-  }, 40);
+  embed.innerHTML = buildInlineBracketHTML(group.matches, group.bracketSize, state.advancePerGroup, group.name);
+  S.bracket = oldBracket;
+  S.bracketSize = oldSize;
+  S.isAdmin = oldIsAdmin;
 
-  const action = document.getElementById('large-group-actions');
   if (action) {
     action.innerHTML = oldIsAdmin
       ? `<button class="mbtn pri" type="button" onclick="openLargeAdvanceConfirm('${group.id}')">Xác nhận top ${state.advancePerGroup}</button>`
       : '<span style="font-size:11px;opacity:0.7;">Chỉ admin có thể xác nhận top.</span>';
   }
-
-  S.bracket = oldBracket;
-  S.bracketSize = oldSize;
-  S.isAdmin = oldIsAdmin;
 }
 
 function createLargeMainBracket() {
@@ -7151,7 +7166,7 @@ function renderLargeTournamentShell() {
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:stretch;position:relative;z-index:1;">${groupCards}</div>
     `;
   } else if (largeTournamentTab.startsWith('group-')) {
-    bracketContainer.style.display = '';
+    bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
     const gid = largeTournamentTab.replace('group-', '');
     const g = groups.find((x) => String(x.id) === String(gid));
@@ -7167,6 +7182,7 @@ function renderLargeTournamentShell() {
       <div style="font-size:11px;opacity:0.75;margin-bottom:8px;">Bracket bảng đang được render bằng renderer hiện tại ở khung trung tâm.</div>
       <div id="large-group-footer" style="margin-top:8px;font-size:11px;opacity:0.8;"></div>
       <div id="large-group-actions" style="margin-top:8px;"></div>
+      <div id="large-bracket-embed" style="width:100%;overflow-x:auto;margin-top:10px;"></div>
     `;
 
     mountLargeGroupBracket(g.id);
