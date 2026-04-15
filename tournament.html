@@ -7229,8 +7229,54 @@ function renderLargeTournamentShell() {
   } else if (largeTournamentTab === 'admin-preview') {
     bracketContainer.style.display = 'none';
     schedulePanel.classList.remove('active');
-    renderLargeTournamentAdminPreview();
-    tabContent.innerHTML = `<div style="font-size:12px;line-height:1.5;opacity:0.85;">Preview cấu hình hiện tại đang lấy theo state đã lưu.</div>`;
+    const state = getLargeCurrentState();
+    if (!state) {
+      tabContent.innerHTML = '<div style="font-size:12px;opacity:0.7;">Không có dữ liệu preview.</div>';
+    } else {
+      const groups = Array.isArray(state.groups) ? state.groups : [];
+      const totalAdv = groups.length * (state.advancePerGroup || 4);
+      const np2 = (n) => { let p = 1; while (p < n) p *= 2; return p; };
+      const mainBk = np2(totalAdv || 2);
+      const mainBye = mainBk - totalAdv;
+      tabContent.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="padding:12px;border-radius:12px;background:${palette.cardBg};border:1px solid ${palette.border};">
+            <div style="font-size:11px;font-weight:700;color:${palette.textMuted || palette.text};opacity:0.6;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Tổng quan cấu trúc</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${[
+                { label: 'Tổng VĐV', val: state.totalPlayers },
+                { label: 'Số bảng', val: groups.length },
+                { label: 'Người/bảng advance', val: state.advancePerGroup },
+                { label: 'Ngày thi đấu', val: state.totalDays },
+                { label: 'Bracket chính', val: `${mainBk} slot` },
+                { label: 'Bye bracket chính', val: mainBye > 0 ? mainBye : 'Không có' },
+              ].map((x) => `<div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid ${palette.border};text-align:center;min-width:100px;">
+                <div style="font-size:20px;font-weight:700;color:${palette.accent};">${x.val}</div>
+                <div style="font-size:10px;color:${palette.text};opacity:0.6;margin-top:3px;">${x.label}</div>
+              </div>`).join('')}
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:${palette.text};opacity:0.6;letter-spacing:.06em;text-transform:uppercase;margin-top:4px;">Chi tiết các bảng</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;">
+            ${groups.map((g, i) => {
+              const colors = ['#f0a500', '#3b82f6', '#22c55e', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899'];
+              const c = colors[i % colors.length];
+              return `<div style="padding:12px;border-radius:12px;background:${palette.cardBg};border:1px solid ${palette.border};border-top:3px solid ${c};">
+                <div style="font-size:12px;font-weight:700;color:${palette.text};margin-bottom:6px;">${g.name}</div>
+                <div style="font-size:18px;font-weight:700;color:${c};line-height:1;">${g.playerCount}</div>
+                <div style="font-size:10px;color:${palette.text};opacity:0.6;margin-top:4px;">VĐV · Bracket ${g.bracketSize}</div>
+                <div style="font-size:10px;color:${palette.text};opacity:0.6;">${g.byeCount} bye · Ngày ${g.day}</div>
+                <div style="margin-top:8px;font-size:10px;font-weight:600;color:${c};">↑ Top ${state.advancePerGroup} → chính</div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button class="mbtn" type="button" onclick="largeTournamentTab='admin';renderLargeTournamentShell()">← Quay lại Admin</button>
+            <button class="mbtn pri" type="button" onclick="openLargeTournamentAdminConfig(${state.totalPlayers || 80})">Chỉnh cấu hình</button>
+          </div>
+        </div>
+      `;
+    }
   }
 
   const groupAction = document.getElementById('large-group-actions');
