@@ -6623,21 +6623,33 @@ function getContrastTextColor(bgHex) {
 
 function getLargeContrastPalette() {
   const root = getComputedStyle(document.documentElement);
-  const bg = root.getPropertyValue('--bracket-bg').trim() || root.getPropertyValue('--bg').trim() || '#0f172a';
-  const lightBg = mixHex(bg, '#ffffff', 0.88);
-  const darkBg = mixHex(bg, '#0f172a', 0.32);
-  const accent = mixHex(bg, '#f59e0b', 0.72);
-  const accent2 = mixHex(bg, '#f97316', 0.68);
+  const bg = root.getPropertyValue('--bg').trim() || '#0f172a';
+  const card = root.getPropertyValue('--card').trim() || '#1a1f2e';
+  const text = root.getPropertyValue('--text').trim() || '#e6edf3';
+  const border = root.getPropertyValue('--border').trim() || 'rgba(255,255,255,0.12)';
+  const accent = root.getPropertyValue('--accent').trim() || '#f0a500';
+  const accent2 = root.getPropertyValue('--accent2').trim() || '#e05a2b';
+  const bracketBg = root.getPropertyValue('--bracket-bg').trim() || bg;
+  const cardRgb = hexToRgb(card);
+  const luminance = cardRgb ? (0.2126 * cardRgb.r + 0.7152 * cardRgb.g + 0.0722 * cardRgb.b) / 255 : 0;
+  const isLight = luminance > 0.5;
+
   return {
-    panelBg: `linear-gradient(135deg, ${darkBg}, ${mixHex(bg, '#334155', 0.32)})`,
-    panelBorder: mixHex(bg, '#94a3b8', 0.55),
-    bg: lightBg,
-    fg: getContrastTextColor(lightBg),
-    border: mixHex(bg, '#64748b', 0.5),
+    panelBg: isLight
+      ? `linear-gradient(135deg, ${mixHex(card, '#f8fafc', 0.3)}, ${mixHex(card, '#f1f5f9', 0.2)})`
+      : `linear-gradient(135deg, ${card}, ${mixHex(card, '#000000', 0.2)})`,
+    panelBorder: border,
+    bg,
+    text,
+    textMuted: isLight ? mixHex(text, '#000000', 0.4) : mixHex(text, '#ffffff', 0.5),
+    border,
+    accent,
+    accent2,
     activeBg: `linear-gradient(135deg, ${accent}, ${accent2})`,
     activeFg: getContrastTextColor(accent),
-    inactiveBg: `linear-gradient(135deg, ${mixHex(bg, '#ffffff', 0.9)}, ${mixHex(bg, '#f8fafc', 0.82)})`,
-    inactiveFg: getContrastTextColor(lightBg),
+    surfaceBorder: border,
+    cardBg: card,
+    bracketBg,
   };
 }
 
@@ -7014,8 +7026,8 @@ function renderLargeTournamentShell() {
   bracketContainer.style.zIndex = '1';
   bracketContainer.style.height = 'auto';
   bracketContainer.style.minHeight = '0';
-  root.style.background = 'transparent';
-  root.style.backgroundImage = palette.panelBg;
+  root.style.background = palette.panelBg;
+  root.style.backgroundImage = 'none';
   root.style.border = `1px solid ${palette.panelBorder}`;
   root.style.color = palette.text;
   root.style.boxShadow = '0 14px 28px rgba(0,0,0,0.10)';
@@ -7023,22 +7035,22 @@ function renderLargeTournamentShell() {
   root.style.overflow = 'hidden';
   root.style.padding = '12px';
   root.style.minHeight = 'calc(100vh - 110px)';
-  phaseBar.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.08)}, ${mixHex(palette.bg, '#cbd5e1', 0.14)})`;
-  phaseBar.style.border = `1px solid ${mixHex(palette.panelBorder, '#ffffff', 0.18)}`;
+  phaseBar.style.background = palette.cardBg;
+  phaseBar.style.border = `1px solid ${palette.border}`;
   phaseBar.style.color = palette.text;
   phaseBar.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
   phaseBar.style.position = 'relative';
   phaseBar.style.zIndex = '12';
   phaseBar.style.isolation = 'isolate';
-  tabBar.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.04)}, ${mixHex(palette.bg, '#e2e8f0', 0.10)})`;
-  tabBar.style.border = `1px solid ${mixHex(palette.panelBorder, '#ffffff', 0.16)}`;
+  tabBar.style.background = palette.cardBg;
+  tabBar.style.border = `1px solid ${palette.border}`;
   tabBar.style.color = palette.text;
   tabBar.style.boxShadow = '0 8px 22px rgba(0,0,0,0.08)';
   tabBar.style.position = 'relative';
   tabBar.style.zIndex = '12';
   tabBar.style.isolation = 'isolate';
-  tabContent.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.05)}, ${mixHex(palette.bg, '#e2e8f0', 0.08)})`;
-  tabContent.style.border = `1px solid ${mixHex(palette.panelBorder, '#ffffff', 0.14)}`;
+  tabContent.style.background = palette.cardBg;
+  tabContent.style.border = `1px solid ${palette.border}`;
   tabContent.style.color = palette.text;
   tabContent.style.position = 'relative';
   tabContent.style.zIndex = '13';
@@ -7102,7 +7114,7 @@ function renderLargeTournamentShell() {
     const totalAdvance = groups.length * state.advancePerGroup;
     const groupCards = groups.map((g, idx) => {
       const color = [palette.accent, palette.accent2, palette.surfaceBorder, palette.border][idx % 4];
-      return `<div style="padding:10px 12px;border-radius:14px;background:rgba(255,255,255,0.96);border:1px solid ${palette.border};border-top:3px solid ${color};box-shadow:0 1px 0 rgba(0,0,0,0.02);height:128px;display:flex;flex-direction:column;justify-content:space-between;">
+      return `<div style="padding:10px 12px;border-radius:14px;background:${palette.cardBg};border:1px solid ${palette.border};border-top:3px solid ${color};box-shadow:0 1px 0 rgba(0,0,0,0.02);height:128px;display:flex;flex-direction:column;justify-content:space-between;">
         <div>
           <div style="font-size:13px;font-weight:800;color:${palette.text};margin-bottom:6px;">${g.name}</div>
           <div style="font-size:24px;font-weight:900;color:${palette.accent};line-height:1;">${g.playerCount}</div>
@@ -7117,7 +7129,7 @@ function renderLargeTournamentShell() {
 
     tabContent.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px;align-items:stretch;position:relative;z-index:2;">
-        <div style="padding:12px 10px;border-radius:14px;background:rgba(255,255,255,0.9);border:1px solid ${palette.border};text-align:center;height:128px;display:flex;flex-direction:column;justify-content:center;">
+        <div style="padding:12px 10px;border-radius:14px;background:${palette.cardBg};border:1px solid ${palette.border};text-align:center;height:128px;display:flex;flex-direction:column;justify-content:center;">
           <div style="font-size:22px;font-weight:900;color:${palette.accent};line-height:1;">${state.totalPlayers}</div>
           <div style="font-size:11px;color:${palette.textMuted || '#8b6a52'};margin-top:4px;">Tổng VĐV</div>
         </div>
