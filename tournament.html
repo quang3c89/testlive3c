@@ -6900,7 +6900,7 @@ function renderLargeTournamentShell() {
   bracketContainer.style.zIndex = '1';
   root.style.background = palette.panelBg;
   root.style.border = `1px solid ${palette.panelBorder}`;
-  root.style.backgroundImage = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.07)}, ${mixHex(palette.bg, '#cbd5e1', 0.12)})`;
+  root.style.backgroundImage = `linear-gradient(180deg, ${mixHex(palette.panelBg || palette.bg, '#ffffff', 0.07)}, ${mixHex(palette.panelBg || palette.bg, '#cbd5e1', 0.12)})`;
   root.style.color = palette.text;
   root.style.boxShadow = '0 14px 28px rgba(0,0,0,0.10)';
   phaseBar.style.background = `linear-gradient(180deg, ${mixHex(palette.bg, '#ffffff', 0.08)}, ${mixHex(palette.bg, '#cbd5e1', 0.14)})`;
@@ -6982,11 +6982,11 @@ function renderLargeTournamentShell() {
     const mainSize = state.mainBracket?.bracketSize || 0;
     const groupCards = groups.map((g, idx) => {
       const color = [palette.accent, palette.accent2, palette.surfaceBorder, palette.border][idx % 4];
-      return `<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.96);border:1px solid ${palette.border};border-top:3px solid ${color};box-shadow:0 1px 0 rgba(0,0,0,0.02);height:126px;display:flex;flex-direction:column;justify-content:space-between;">
+      return `<div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.96);border:1px solid ${palette.border};border-top:3px solid ${color};box-shadow:0 1px 0 rgba(0,0,0,0.02);height:122px;display:flex;flex-direction:column;justify-content:space-between;">
         <div>
           <div style="font-size:13px;font-weight:800;color:${palette.text};margin-bottom:6px;">${g.name}</div>
           <div style="font-size:24px;font-weight:900;color:${palette.accent};line-height:1;">${g.playerCount}</div>
-          <div style="font-size:11px;color:${palette.textMuted || '#6b7280'};margin-top:6px;line-height:1.4;">VĐV · ${g.bracketSize} slot · ${g.byeCount} bye</div>
+          <div style="font-size:11px;color:${palette.textMuted || '#6b7280'};margin-top:6px;line-height:1.35;">VĐV · ${g.bracketSize} slot · ${g.byeCount} bye</div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
           <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.96);border:1px solid ${palette.border};font-size:11px;font-weight:700;color:${palette.text};">Ngày ${g.day}</span>
