@@ -6537,6 +6537,11 @@ function openLargeTournamentAdminConfig(totalPlayers) {
     });
   }
 
+  setTimeout(() => {
+    attachConfigListeners();
+    updateConfigPreview();
+  }, 50);
+
   const synced = applyLargeTournamentAutoSplit();
   if (synced) {
     try { localStorage.setItem('live3c_large_v1', JSON.stringify(synced)); } catch (e) {}
@@ -7258,31 +7263,43 @@ function switchLargeTournamentTab(tab) {
 }
 
 async function applyLargeTournamentConfig() {
-  const state = applyLargeTournamentAutoSplit();
-  if (!state) return;
+  const totalPlayers = parseInt(document.getElementById('large-total-players')?.value, 10) || 80;
+  const maxPerGroup = parseInt(document.getElementById('large-max-per-group')?.value, 10) || 20;
+  const totalDays = parseInt(document.getElementById('large-total-days')?.value, 10) || 3;
+  const advancePerGroup = parseInt(document.getElementById('large-advance-per-group')?.value, 10) || 4;
+
+  if (!globalThis.Live3CLargeTournament?.updateLargeTournamentConfig) return;
+
+  const state = globalThis.Live3CLargeTournament.updateLargeTournamentConfig({
+    totalPlayers,
+    maxPerGroup,
+    totalDays,
+    advancePerGroup,
+  });
+
+  const synced = syncLargeTournamentPlayersFromRegistration(state);
+  try {
+    localStorage.setItem('live3c_large_v1', JSON.stringify(synced));
+  } catch (e) {}
 
   isLargeTournamentMode = true;
-  largeTournamentTab = state.groups?.length ? `group-${state.groups[0].id}` : 'overview';
+  largeTournamentTab = synced.groups?.length ? `group-${synced.groups[0].id}` : 'overview';
   saveState();
   closeModal('large-admin-modal');
+  await new Promise((r) => setTimeout(r, 50));
   renderLargeTournamentShell();
-  switchBracketTab('bracket');
-  setTimeout(() => {
-    renderLargeTournamentShell();
-    requestAnimationFrame(() => renderLargeTournamentShell());
-  }, 80);
 
   if (CURRENT_TOURNAMENT_ID && S.supaUrl && S.supaKey) {
     try {
       await supaFetch(`tournaments?id=eq.${CURRENT_TOURNAMENT_ID}`, 'PATCH', {
-        large_tournament_config: state,
+        large_tournament_config: synced,
       });
     } catch (err) {
       console.error('Push large config error:', err);
     }
   }
 
-  showToast(`✅ Đã áp dụng cấu hình Giải Lớn: ${state.totalPlayers} VĐV · ${state.groups.length} bảng · ${state.totalDays} ngày`, 'ok');
+  showToast(`✅ Đã áp dụng: ${synced.totalPlayers} VĐV · ${synced.groups.length} bảng · ${synced.totalDays} ngày`, 'ok');
 }
 
 function resetLargeTournamentConfigDefaults() {
