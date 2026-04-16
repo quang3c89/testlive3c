@@ -386,7 +386,153 @@
 </div>
 
 <script type="module">
-// SCRIPTS SẼ THÊM Ở PROMPT SAU
+import { generateBracket, nextPowerOfTwo, generateSeedOrder, getRoundName, THEMES, applyTheme as applyThemeFromModule } from './assets/js/tournament.js';
+
+const DEFAULTS = {
+  size: 16,
+  tbVals: ['GIẢI CAROM 3 BĂNG SERI B MỞ RỘNG', '10-11/04/2026', 'CLB HOLLYWOOD', '25 ĐIỂM/35 LƯỢT CƠ', '20,000,000đ', ''],
+  tbBg: '#0d1117', tbFont: "'Be Vietnam Pro', sans-serif",
+  titleFont: "'Be Vietnam Pro', sans-serif",
+  theme: 'aurora-navy',
+  bracketColors: {
+    bg: '#0d1117',
+    matchBg: '#FFDF80',
+    matchBorder: '#78580c',
+    line: '#fff6d9',
+    nameColor: '#1f2937',
+    unitColor: '#5b4a16',
+  },
+  sponsorLogos: [],
+  sponsorPos: [],
+  sponsorSnap: false,
+  ctiSnap: false,
+  cti: {
+    titleText: '',
+    metaText: '',
+    titleX: 8, titleY: 4,
+    titleXPct: 0.02, titleYPct: 0.12,
+    metaX: 220, metaY: 8,
+    metaXPct: 0.42, metaYPct: 0.18,
+    titleFont: "'Be Vietnam Pro', sans-serif",
+    metaFont: "'JetBrains Mono', monospace",
+    titleSize: 16,
+    titleColor: '#ffffff',
+    metaColor: '#c9d1d9',
+    panelBg: 'rgba(18,22,30,0.75)'
+  }
+};
+
+let S = {
+  players: [], bracketSize: DEFAULTS.size, bracket: [],
+  theme: DEFAULTS.theme, wheelRotation: 0, isSpinning: false,
+  drawMode: 'one',
+  tbVals: [...DEFAULTS.tbVals], tbBg: DEFAULTS.tbBg, tbFont: DEFAULTS.tbFont,
+  titleFont: DEFAULTS.titleFont,
+  bracketColors: { ...DEFAULTS.bracketColors },
+  sponsorLogos: [...DEFAULTS.sponsorLogos],
+  cti: { ...DEFAULTS.cti },
+  supaUrl: '', supaKey: '',
+  isAdmin: false
+};
+
+function loadState() {
+  let supaUrl = localStorage.getItem('live3c_supaUrl') || '';
+  let supaKey = localStorage.getItem('live3c_supaKey') || '';
+  const saved = localStorage.getItem('live3c_v4');
+  if (saved) {
+    try {
+      const p = JSON.parse(saved);
+      S = { ...S, ...p };
+    } catch(e) {}
+  }
+  if (supaUrl) S.supaUrl = supaUrl;
+  if (supaKey) S.supaKey = supaKey;
+  if (!S.bracket || S.bracket.length === 0) S.bracket = generateBracket(S.bracketSize);
+  if (!S.tbVals || S.tbVals.length < 6) S.tbVals = [...DEFAULTS.tbVals];
+  if (!S.titleFont) S.titleFont = DEFAULTS.titleFont;
+  S.bracketColors = { ...DEFAULTS.bracketColors, ...(S.bracketColors || {}) };
+  if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [...DEFAULTS.sponsorLogos];
+  if (!S.cti) S.cti = { ...DEFAULTS.cti };
+}
+
+function saveState() {
+  localStorage.setItem('live3c_v4', JSON.stringify(S));
+  localStorage.setItem('live3c_supaUrl', S.supaUrl || '');
+  localStorage.setItem('live3c_supaKey', S.supaKey || '');
+}
+
+function drawWheel(rotation = 0) {
+  const canvas = document.getElementById('wheel-canvas');
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const cx = size/2, cy = size/2, radius = cx - 2;
+  ctx.clearRect(0, 0, size, size);
+  const undrawn = (S.players || []).filter(p => !p.drawn);
+  if (undrawn.length === 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--card').trim() || '#161b22';
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 18px "Barlow Condensed", sans-serif';
+    ctx.fillText('ALL DRAWN', cx, cy);
+    return;
+  }
+  const sportColors = [
+    ['#f0a500','#000'], ['#e05a2b','#fff'], ['#3b82f6','#fff'],
+    ['#22c55e','#000'], ['#bf00ff','#fff'], ['#38bdf8','#000'],
+    ['#ef4444','#fff'], ['#fbbf24','#000'], ['#818cf8','#fff'],
+    ['#4ade80','#000'], ['#f97316','#fff'], ['#06b6d4','#000'],
+  ];
+  const slice = (2 * Math.PI) / undrawn.length;
+  const rot = (rotation * Math.PI) / 180;
+  const glow = ctx.createRadialGradient(cx,cy,radius*0.85,cx,cy,radius);
+  glow.addColorStop(0,'transparent');
+  glow.addColorStop(1,'rgba(240,165,0,0.08)');
+  ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2);
+  ctx.fillStyle = glow; ctx.fill();
+  for (let i = 0; i < undrawn.length; i++) {
+    const sa = rot + i * slice;
+    const ea = rot + (i+1) * slice;
+    const [fill, textFill] = sportColors[i % sportColors.length];
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, sa, ea);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.stroke();
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(sa + slice / 2);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const maxLen = undrawn.length > 20 ? 8 : undrawn.length > 12 ? 12 : 16;
+    const name = undrawn[i].name.length > maxLen ? undrawn[i].name.substring(0,maxLen-1)+'…' : undrawn[i].name;
+    const fs = undrawn.length > 20 ? 9 : undrawn.length > 12 ? 12 : 15;
+    ctx.font = `800 ${fs}px "Barlow Condensed", sans-serif`;
+    ctx.fillStyle = textFill;
+    ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 3;
+    ctx.fillText(name, radius - 10, 0);
+    ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, 28, 0, Math.PI*2);
+  const capGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,28);
+  capGrad.addColorStop(0,'#2a2a2a'); capGrad.addColorStop(1,'#111');
+  ctx.fillStyle = capGrad; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  if (!S.bracket || S.bracket.length === 0) S.bracket = generateBracket(S.bracketSize);
+  drawWheel(S.wheelRotation);
+  document.getElementById('player-count').textContent = S.players.length;
+  renderPlayers();
+  document.getElementById('loading-screen').style.display = 'none';
+});
+
+function renderPlayers() { /* TODO */ }
+
+globalThis.switchTab = switchTab;
+function switchTab(tab) {
+  document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('btab-' + tab)?.classList.add('active');
+  document.getElementById(tab + '-panel')?.classList.add('active');
+}
 </script>
 </body>
 </html>
