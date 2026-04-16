@@ -594,7 +594,7 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   min-height: 100%;
   background: var(--bracket-bg, var(--bg));
 }
-.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
+.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: flex-start; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
 
 /* SYMMETRICAL BRACKET */
 .bracket-side { display: flex; gap: 0; align-items: stretch; }
@@ -606,6 +606,7 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   display: flex; flex-direction: column;
   width: 168px; padding: 0 6px;
   position: relative;
+  align-self: flex-start;
 }
 .round-label {
   text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase;
@@ -3359,7 +3360,11 @@ function loadState() {
   if (!Array.isArray(S.sponsorLogos)) S.sponsorLogos = [...DEFAULTS.sponsorLogos];
   if (!Array.isArray(S.sponsorPos)) S.sponsorPos = [];
 
-  if (largeSavedRaw && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
+  if (S.bracketSize <= 64) {
+    try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
+    isLargeTournamentMode = false;
+    largeTournamentTab = 'overview';
+  } else if (largeSavedRaw && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
     try {
       const largeSaved = JSON.parse(largeSavedRaw);
       if (largeSaved && typeof largeSaved === 'object') {
