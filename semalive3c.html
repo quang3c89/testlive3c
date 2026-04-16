@@ -159,7 +159,29 @@
   </div>
 </div>
 <div class="app-shell">
-  <aside class="panel-left" id="panel-left"><!-- sẽ điền ở prompt sau --></aside>
+  <aside class="panel-left" id="panel-left">
+    <div class="wheel-section">
+      <div class="wheel-wrap-sm">
+        <div class="wheel-ptr">▼</div>
+        <div class="wheel-inner-sm">
+          <canvas id="wheel-canvas" width="300" height="300"></canvas>
+        </div>
+        <button id="spin-btn" class="spin-btn-sm">SPIN</button>
+      </div>
+      <div class="wheel-controls-row">
+        <button class="cb" id="btn-add" title="Thêm cơ thủ">➕</button>
+        <button class="cb" id="btn-import" title="Import Excel">📥</button>
+        <button class="cb" id="btn-size" title="Cỡ bracket">🔢</button>
+        <input type="file" id="import-excel" accept=".xlsx,.xls" style="display:none">
+      </div>
+    </div>
+    <div class="player-list-section">
+      <div class="pls-header">
+        <span class="pls-title">Cơ thủ (<span id="player-count">0</span>)</span>
+      </div>
+      <div class="pls-grid" id="player-list"></div>
+    </div>
+  </aside>
   <section class="panel-center" id="panel-center">
     <div class="center-top-info" id="center-top-info">
       <div class="cti-title" id="cti-title">Giải Carom 3 Băng</div>
