@@ -68,6 +68,63 @@
   .panel-right {
     display: none;
   }
+  .tourney-bar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: color-mix(in srgb, var(--tb-bg, #0d1117) 90%, #000 10%);
+    font-family: var(--tb-font);
+    border-bottom: 1px solid var(--border);
+    min-height: 34px;
+    backdrop-filter: blur(8px);
+    position: relative;
+    z-index: 100;
+  }
+  .tb-left-actions,.tb-right-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+  .tb-main-info{display:none !important;}
+  .tvi { display:flex; align-items:center; gap:4px; padding:0 8px; font-size:11px; white-space:nowrap; border-right:1px solid color-mix(in srgb,var(--border) 70%, transparent); color:var(--text); min-width:0; }
+  .tvi:last-child{border-right:none}
+  .tvi .tvi-icon { font-size: 10px; opacity: 0.7; flex-shrink: 0; }
+  .tvi [contenteditable] { background:none; border:none; outline:none; color:var(--text); font:inherit; cursor:default; min-width:20px; overflow:hidden; text-overflow:ellipsis; }
+  body.admin-mode .tvi [contenteditable] { cursor:text; }
+  #tb-v0{font-size:13px;font-weight:800;font-family:var(--title-font)}
+  .tb-sync-status { display:flex; align-items:center; gap:4px; font-size:9px; font-family:var(--font-mono); opacity:.6; padding:0 6px; }
+  #theme-dots { display:none; position:absolute; right:0; top:0; gap:6px; align-items:center; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:rgba(8,12,20,.95); z-index:120; }
+  .tourney-bar.theme-open #theme-dots { display:flex; }
+  .t-dot { width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.15); cursor:pointer; transition:transform .15s, box-shadow .15s; }
+  .t-dot:hover { transform:scale(1.2); }
+  .t-dot.active { border-color:var(--accent); transform:scale(1.2); box-shadow:0 0 0 2px var(--accent),0 0 10px var(--glow); }
+  .gear-btn { width:22px; height:22px; border-radius:6px; border:1px solid var(--border); background:var(--card); font-size:10px; cursor:pointer; color:var(--text); transition:all .15s; display:flex; align-items:center; justify-content:center; }
+  .gear-btn:hover { background:rgba(255,255,255,.08); border-color:var(--accent); }
+  body.viewer-mode #undo-btn,body.viewer-mode #redo-btn,body.viewer-mode #theme-toggle-btn,body.viewer-mode .tb-actions,body.viewer-mode .admin-only{display:none !important}
+  .center-top-info {
+    position: relative;
+    z-index: 8;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    border-radius: 10px;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--card) 90%, #fff 10%), color-mix(in srgb, var(--card) 82%, #000 18%));
+    box-shadow: 0 8px 20px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    margin-bottom: 8px;
+    overflow: hidden;
+    min-height: 45px;
+  }
+  .cti-title, .cti-meta {
+    position:absolute;
+    cursor:move;
+    user-select:none;
+    touch-action:none;
+    white-space: nowrap;
+    max-width:none;
+    z-index: 4;
+  }
+  .cti-title { font-family: var(--title-font); font-weight: 900; font-size: 16px; letter-spacing: -0.2px; left:10px; top:8px; }
+  .cti-meta { font-family: var(--font-mono); font-size: 12px; opacity: 1; right:10px; left:auto; top:10px; text-align:right; }
+  .cti-title::before { content:'🏆 '; opacity:.9; }
+  .cti-meta::before { content:'📍 '; opacity:.9; }
+  .cti-tools { position:absolute; top:2px; right:3px; display:flex; gap:2px; opacity:0; pointer-events:none; transition:opacity .15s ease; }
+  .center-top-info:hover .cti-tools { opacity:.95; pointer-events:auto; }
+  .panel-center > #bracket-area { flex: 1; min-height: 0; }
   @media (max-width: 768px) {
     .panel-left {
       flex-basis: 100%;
@@ -79,9 +136,43 @@
 </head>
 <body>
 <div id="loading-screen">...</div>
+<div class="tourney-bar" id="tourney-bar">
+  <div class="tb-left-actions">
+    <button class="gear-btn" type="button" title="Trang chủ" onclick="window.location.href='index.html'">🏠</button>
+    <button class="gear-btn" id="undo-btn" onclick="undo()" title="Hoàn tác (Ctrl+Z)" disabled>↩</button>
+    <button class="gear-btn" id="redo-btn" onclick="redo()" title="Làm lại (Ctrl+Y)" disabled>↪</button>
+  </div>
+  <div class="tb-main-info">
+    <div class="tvi"><span class="tvi-icon">🏆</span><div contenteditable="false" id="tb-v0" spellcheck="false"></div></div>
+    <div class="tvi"><span class="tvi-icon">🕒</span><div contenteditable="false" id="tb-v1" spellcheck="false"></div></div>
+    <div class="tvi"><span class="tvi-icon">📍</span><div contenteditable="false" id="tb-v2" spellcheck="false"></div></div>
+    <div class="tb-sync-status" id="tb-sync-status"><span id="tb-sync-time">—</span></div>
+    <div style="display:none"><div id="tb-v3"></div><div id="tb-v4"></div><div id="tb-video-url-wrap"><div id="tb-v5"></div></div></div>
+  </div>
+  <div class="tb-right-actions admin-only">
+    <button class="gear-btn" title="Settings" onclick="openModal('settings-modal')">⚙️</button>
+    <button class="gear-btn" id="theme-toggle-btn" type="button" onclick="toggleThemeDots()" title="Theme">🎨</button>
+    <div class="tb-actions">
+      <input type="color" id="tb-bg-color" title="Màu header">
+    </div>
+    <div id="theme-dots"></div>
+  </div>
+</div>
 <div class="app-shell">
   <aside class="panel-left" id="panel-left"><!-- sẽ điền ở prompt sau --></aside>
-  <section class="panel-center" id="panel-center"><!-- sẽ điền ở prompt sau --></section>
+  <section class="panel-center" id="panel-center">
+    <div class="center-top-info" id="center-top-info">
+      <div class="cti-title" id="cti-title">Giải Carom 3 Băng</div>
+      <div class="cti-meta" id="cti-meta">TP.HCM · 2025</div>
+      <div class="cti-tools">
+        <select class="cti-mini-select" id="cti-font-select" title="Font" onchange="setCtiFont(this.value)"></select>
+        <input class="cti-mini-color" id="cti-color-select" title="Màu chữ" type="color" onchange="setCtiColor(this.value)">
+        <select class="cti-mini-select" id="cti-size-select" title="Kích thước" onchange="setCtiSize(this.value)"></select>
+        <input class="cti-mini-color" id="cti-bg-select" title="Màu nền" type="color" onchange="setCtiBg(this.value)">
+      </div>
+    </div>
+    <div id="bracket-area"></div>
+  </section>
 </div>
 
 <script type="module">
