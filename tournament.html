@@ -594,18 +594,19 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   min-height: 100%;
   background: var(--bracket-bg, var(--bg));
 }
-.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: stretch; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
+.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 0 16px; align-items: flex-start; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
 
 /* SYMMETRICAL BRACKET */
-.bracket-side { display: flex; gap: 0; align-items: stretch; }
+.bracket-side { display: flex; gap: 0; align-items: flex-start; }
 .bracket-side.left-side { flex-direction: row; }
 .bracket-side.right-side { flex-direction: row-reverse; }
-.bracket-center { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; gap: 10px; flex-shrink: 0; }
+.bracket-center { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 0 20px; gap: 10px; flex-shrink: 0; }
 
 .round-col {
   display: flex; flex-direction: column;
   width: 168px; padding: 0 6px;
   position: relative;
+  align-self: flex-start;
 }
 .round-label {
   text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase;
@@ -3363,6 +3364,7 @@ function loadState() {
     try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
     isLargeTournamentMode = false;
     largeTournamentTab = 'overview';
+    currentBracketTab = 'bracket';
   } else if (largeSavedRaw && globalThis.Live3CLargeTournament?.setLargeTournamentState) {
     try {
       const largeSaved = JSON.parse(largeSavedRaw);
@@ -3789,10 +3791,19 @@ async function init() {
   setupTopBar();
   updateBcName();
   renderAll();
-  switchBracketTab((S.bracketSize && S.bracketSize <= 64) ? 'bracket' : 'schedule');
-  if ((S.bracketSize || 0) <= 64) {
+  const shouldUseBracketView = (S.bracketSize || 0) <= 64;
+  if (shouldUseBracketView) {
+    isLargeTournamentMode = false;
+    largeTournamentTab = 'overview';
+    currentBracketTab = 'bracket';
+    try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
+    renderBracket();
+    switchBracketTab('bracket');
     const smallBadge = document.getElementById('small-tournament-badge');
     if (smallBadge) smallBadge.style.display = 'block';
+  } else {
+    currentBracketTab = 'schedule';
+    switchBracketTab('schedule');
   }
 
   setSyncProgress(100);
@@ -7876,7 +7887,7 @@ function switchBracketTab(tab) {
 
   if (!bracketContainer || !schedulePanel || !registerPanel || !centerPanel || !btabBracket || !btabSchedule || !btabRegister) return;
 
-  if (isLargeTournamentMode && largeRoot) {
+  if (isLargeTournamentMode && largeRoot && (S.bracketSize || 0) > 64) {
     btabRegister.classList.toggle('active', tab === 'register');
     btabBracket.classList.toggle('active', tab !== 'register');
     btabSchedule.classList.toggle('active', false);
@@ -8566,7 +8577,6 @@ function switchTab(tab) {
   });
 
   if (tab === 'center') {
-    switchBracketTab('bracket');
     const center = document.getElementById('center-panel');
     const bc = document.getElementById('bracket-container');
     if (center) center.style.display = 'flex';
