@@ -68,7 +68,7 @@ body.viewer-mode #undo-btn,body.viewer-mode #redo-btn,body.viewer-mode #theme-to
 .main { display: flex; flex: 1; overflow: hidden; }
 body.left-collapsed .left { display: none !important; }
 body.left-collapsed .center { padding-left: 12px; }
-body.left-collapsed .bracket-cols { min-height: calc(100vh - 120px); justify-content: center; }
+body.left-collapsed .bracket-cols { min-height: calc(100vh - 120px); justify-content: center; align-items: flex-start; }
 /* Schedule phải giữ nguyên bố cục dù panel bốc thăm ẩn/hiện */
 body.left-collapsed .center.schedule-active { padding-left: 12px; }
 body.left-collapsed .center.schedule-active #schedule-panel { left: 0; right: 0; }
@@ -594,7 +594,7 @@ body.viewer-mode #bracket-export-btn { display: none !important; }
   min-height: 100%;
   background: var(--bracket-bg, var(--bg));
 }
-.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 20px 16px; align-items: flex-start; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
+.bracket-cols { display: flex; gap: 0; z-index: 2; padding: 8px 16px 20px; align-items: flex-start; justify-content: center; width: max-content; min-width: 100%; min-height: calc(100vh - 120px); margin: 0 auto; }
 
 /* SYMMETRICAL BRACKET */
 .bracket-side { display: flex; gap: 0; align-items: stretch; }
@@ -3790,7 +3790,15 @@ async function init() {
   setupTopBar();
   updateBcName();
   renderAll();
-  switchBracketTab((S.bracketSize && S.bracketSize <= 64) ? 'bracket' : 'schedule');
+  if ((S.bracketSize || 0) <= 64) {
+    isLargeTournamentMode = false;
+    largeTournamentTab = 'overview';
+    currentBracketTab = 'bracket';
+    try { localStorage.removeItem('live3c_large_v1'); } catch (e) {}
+    switchBracketTab('bracket');
+  } else {
+    switchBracketTab('schedule');
+  }
 
   setSyncProgress(100);
   loadTxt.textContent = 'SẴN SÀNG';
@@ -8563,7 +8571,10 @@ function switchTab(tab) {
   });
 
   if (tab === 'center') {
-    switchBracketTab('bracket');
+    if ((S.bracketSize || 0) <= 64) {
+      switchBracketTab('bracket');
+      currentBracketTab = 'bracket';
+    }
     const center = document.getElementById('center-panel');
     const bc = document.getElementById('bracket-container');
     if (center) center.style.display = 'flex';
