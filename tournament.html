@@ -7908,7 +7908,7 @@ function switchBracketTab(tab) {
     return;
   }
 
-  largeRoot.style.display = 'none';
+  if (largeRoot) largeRoot.style.display = 'none';
   registerPanel.classList.remove('active');
 
   btabRegister.classList.toggle('active', tab === 'register');
@@ -8577,6 +8577,7 @@ function switchTab(tab) {
   });
 
   if (tab === 'center') {
+    switchBracketTab('bracket');
     const center = document.getElementById('center-panel');
     const bc = document.getElementById('bracket-container');
     if (center) center.style.display = 'flex';
