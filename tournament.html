@@ -3785,7 +3785,7 @@ async function init() {
   setupTopBar();
   updateBcName();
   renderAll();
-  switchBracketTab('schedule');
+  switchBracketTab((S.bracketSize && S.bracketSize <= 64) ? 'bracket' : 'schedule');
 
   setSyncProgress(100);
   loadTxt.textContent = 'SẴN SÀNG';
