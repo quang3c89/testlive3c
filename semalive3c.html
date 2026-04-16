@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live3C — Nền tảng quản lý giải đấu Billiards Carom 3 Băng">
+<meta property="og:title" content="Live3C">
+<meta property="og:image" content="/assets/og-image.jpg">
+<title>Live3C — Billiards Carom 3 Băng</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/variables.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/animations.css">
+<link rel="stylesheet" href="assets/css/tournament-header.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image-more/3.3.0/dom-to-image-more.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-main);
+  }
+  #loading-screen {
+    flex: 0 0 auto;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.18);
+  }
+  .app-shell {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .panel-left {
+    flex: 0 0 22%;
+    min-width: 240px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    background: rgba(0,0,0,0.15);
+    min-height: 0;
+  }
+  .panel-center {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .panel-right {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .panel-left {
+      flex-basis: 100%;
+      max-width: none;
+      min-width: 0;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="loading-screen">...</div>
+<div class="app-shell">
+  <aside class="panel-left" id="panel-left"><!-- sẽ điền ở prompt sau --></aside>
+  <section class="panel-center" id="panel-center"><!-- sẽ điền ở prompt sau --></section>
+</div>
+
+<script type="module">
+// SCRIPTS SẼ THÊM Ở PROMPT SAU
+</script>
+</body>
+</html>
